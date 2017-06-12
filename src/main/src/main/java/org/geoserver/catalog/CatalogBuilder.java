@@ -23,6 +23,7 @@ import org.geoserver.catalog.impl.ResourceInfoImpl;
 import org.geoserver.catalog.impl.StoreInfoImpl;
 import org.geoserver.catalog.impl.StyleInfoImpl;
 import org.geoserver.catalog.impl.WMSStoreInfoImpl;
+import org.geoserver.catalog.impl.WMTSStoreInfoImpl;
 import org.geoserver.data.util.CoverageStoreUtils;
 import org.geoserver.data.util.CoverageUtils;
 import org.geoserver.ows.util.OwsUtils;
@@ -166,6 +167,18 @@ public class CatalogBuilder {
      */
     public void updateWMSStore(WMSStoreInfo original, WMSStoreInfo update) {
         update(original, update, WMSStoreInfo.class);
+    }
+
+    /**
+     * Updates a wmts store with the properties of another.
+     *
+     * @param original
+     *            The wmts store being updated.
+     * @param update
+     *            The wmts store containing the new values.
+     */
+    public void updateWMTSStore(WMTSStoreInfo original, WMTSStoreInfo update) {
+        update(original, update, WMTSStoreInfo.class);
     }
 
     /**
@@ -313,10 +326,10 @@ public class CatalogBuilder {
     public WMTSStoreInfo buildWMTSStore(String name) throws IOException {
         WMTSStoreInfo info = catalog.getFactory().createWebMapTileServer();
         buildStore(info, name);
-        info.setType("WMS");
-        info.setMaxConnections(WMSStoreInfoImpl.DEFAULT_MAX_CONNECTIONS);
-        info.setConnectTimeout(WMSStoreInfoImpl.DEFAULT_CONNECT_TIMEOUT);
-        info.setReadTimeout(WMSStoreInfoImpl.DEFAULT_READ_TIMEOUT);
+        info.setType("WMTS");
+        info.setMaxConnections(WMTSStoreInfoImpl.DEFAULT_MAX_CONNECTIONS);
+        info.setConnectTimeout(WMTSStoreInfoImpl.DEFAULT_CONNECT_TIMEOUT);
+        info.setReadTimeout(WMTSStoreInfoImpl.DEFAULT_READ_TIMEOUT);
 
         return info;
     }
@@ -627,6 +640,12 @@ public class CatalogBuilder {
             // the logic to compute the native bounds is pretty convoluted,
             // let's rebuild the layer info
             WMSLayerInfo rebuilt = buildWMSLayer(rinfo.getStore(), rinfo.getNativeName());
+            bounds = rebuilt.getNativeBoundingBox();
+
+        } else if(rinfo instanceof WMTSLayerInfo) {
+            // the logic to compute the native bounds is pretty convoluted,
+            // let's rebuild the layer info
+            WMTSLayerInfo rebuilt = buildWMTSLayer(rinfo.getStore(), rinfo.getNativeName());
             bounds = rebuilt.getNativeBoundingBox();
         }
 

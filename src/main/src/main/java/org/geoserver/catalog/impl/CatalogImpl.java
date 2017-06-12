@@ -1637,6 +1637,9 @@ public class CatalogImpl implements Catalog {
         if(r instanceof WMSLayerInfo){
             resolve((WMSLayerInfo) resource);
         }
+        if(r instanceof WMTSLayerInfo){
+            resolve((WMTSLayerInfo) resource);
+        }
         
         return resource;
     }
@@ -1669,6 +1672,12 @@ public class CatalogImpl implements Catalog {
         WMSLayerInfoImpl impl = (WMSLayerInfoImpl) wmsLayer;
         resolveCollections(impl);
         return wmsLayer;
+    }
+
+    private WMTSLayerInfo resolve(WMTSLayerInfo wmtsLayer) {
+        WMTSLayerInfoImpl impl = (WMTSLayerInfoImpl) wmtsLayer;
+        resolveCollections(impl);
+        return wmtsLayer;
     }
 
     protected LayerInfo resolve(LayerInfo layer) {
