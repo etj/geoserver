@@ -69,6 +69,7 @@ import org.opengis.parameter.GeneralParameterValue;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.vividsolutions.jts.geom.Envelope;
+import org.geoserver.ows.Dispatcher;
 
 /**
  * WMS GetMap operation default implementation.
@@ -610,10 +611,13 @@ public class GetMap {
                 WebMapTileServer wmts = wmtsLayer.getStore().getWebMapTileServer(null);
                 Layer gt2Layer = wmtsLayer.getWMTSLayer(null);
 
-                
-                WMTSMapLayer Layer = new WMTSMapLayer(wmts, gt2Layer);
-                Layer.setTitle(wmtsLayer.prefixedName());
-                mapContent.addLayer(Layer);
+
+                WMTSMapLayer mapLayer = new WMTSMapLayer(wmts, gt2Layer);
+                mapLayer.setTitle(wmtsLayer.prefixedName());
+
+                mapLayer.setRawTime((String)Dispatcher.REQUEST.get().getRawKvp().get("time"));
+
+                mapContent.addLayer(mapLayer);
                 
             } else {
                 throw new IllegalArgumentException("Unknown layer type " + layerType);
