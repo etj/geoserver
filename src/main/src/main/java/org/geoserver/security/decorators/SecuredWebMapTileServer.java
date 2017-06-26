@@ -14,20 +14,10 @@ import org.geotools.data.ServiceInfo;
 import org.geotools.data.ows.GetCapabilitiesRequest;
 import org.geotools.data.ows.GetCapabilitiesResponse;
 import org.geotools.data.ows.Layer;
-import org.geotools.data.ows.WMSCapabilities;
-import org.geotools.data.wms.WebMapServer;
-import org.geotools.data.wms.request.DescribeLayerRequest;
 import org.geotools.data.wms.request.GetFeatureInfoRequest;
 import org.geotools.data.wms.request.GetLegendGraphicRequest;
-import org.geotools.data.wms.request.GetMapRequest;
-import org.geotools.data.wms.request.GetStylesRequest;
-import org.geotools.data.wms.request.PutStylesRequest;
-import org.geotools.data.wms.response.DescribeLayerResponse;
 import org.geotools.data.wms.response.GetFeatureInfoResponse;
 import org.geotools.data.wms.response.GetLegendGraphicResponse;
-import org.geotools.data.wms.response.GetMapResponse;
-import org.geotools.data.wms.response.GetStylesResponse;
-import org.geotools.data.wms.response.PutStylesResponse;
 import org.geotools.data.wmts.WMTSCapabilities;
 import org.geotools.data.wmts.WebMapTileServer;
 import org.geotools.data.wmts.request.GetTileRequest;
@@ -49,28 +39,23 @@ public class SecuredWebMapTileServer extends WebMapTileServer {
         super(delegate);
         this.delegate = delegate;
     }
-    
+
+    @Override
     public GetFeatureInfoRequest createGetFeatureInfoRequest(GetTileRequest getTileRequest) {
-        return new SecuredGetFeatureInfoRequest(delegate.createGetFeatureInfoRequest(getTileRequest), getTileRequest);
+        return null;
     }
-    
+
+    @Override
     public GetTileRequest createGetTileRequest() {
-        return new SecuredGetTileRequest(delegate.createGetTileRequest());
+        return delegate.createGetTileRequest();
     }
-    
+
     // -------------------------------------------------------------------------------------------
     //
     // Purely delegated methods
     //
     // -------------------------------------------------------------------------------------------
 
-    
-
-    public GetLegendGraphicResponse issueRequest(GetLegendGraphicRequest request)
-            throws IOException, ServiceException {
-
-        return null;//delegate.issueRequest(request);
-    }
 
     public GetCapabilitiesResponse issueRequest(GetCapabilitiesRequest request) throws IOException,
             ServiceException {
@@ -81,42 +66,52 @@ public class SecuredWebMapTileServer extends WebMapTileServer {
         }
     }
 
+    @Override
     public GetFeatureInfoResponse issueRequest(GetFeatureInfoRequest request) {
         return delegate.issueRequest(request);
     }
 
+    @Override
     public Set<Tile> issueRequest(GetTileRequest request) throws ServiceException {
         return delegate.issueRequest(request);
     }
 
-    public boolean equals(Object obj) {
-        return delegate.equals(obj);
-    }
-
+    @Override
     public WMTSCapabilities getCapabilities() {
         return delegate.getCapabilities();
     }
 
+    @Override
     public GeneralEnvelope getEnvelope(Layer layer, CoordinateReferenceSystem crs) {
         return delegate.getEnvelope(layer, crs);
     }
 
+    @Override
     public ServiceInfo getInfo() {
         return delegate.getInfo();
     }
 
+    @Override
     public ResourceInfo getInfo(Layer resource) {
         return delegate.getInfo(resource);
     }
 
-    public int hashCode() {
-        return delegate.hashCode();
-    }
-
+    @Override
     public void setLoggingLevel(Level newLevel) {
         delegate.setLoggingLevel(newLevel);
     }
 
+    @Override
+    public int hashCode() {
+        return delegate.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return delegate.equals(obj);
+    }
+
+    @Override
     public String toString() {
         return "SecuredWebMapTileServer " + delegate.toString();
     }
