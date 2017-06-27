@@ -96,7 +96,7 @@ public class WMTSStoreNewPageTest extends GeoServerWicketTestSupport {
         form.setValue("capabilitiesURL:border:border_body:paramValue", "http://foo");
 
         tester.clickLink("form:save", true);
-        tester.assertErrorMessages("WMTSCapabilitiesValidator.connectionFailure");
+        tester.assertErrorMessages("WMTS Connection test failed: foo");
         catalog.save(info);
 
         assertNotNull(info.getId());

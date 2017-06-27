@@ -18,7 +18,7 @@ import org.geotools.data.wms.request.GetFeatureInfoRequest;
 import org.geotools.data.wms.request.GetLegendGraphicRequest;
 import org.geotools.data.wms.response.GetFeatureInfoResponse;
 import org.geotools.data.wms.response.GetLegendGraphicResponse;
-import org.geotools.data.wmts.WMTSCapabilities;
+import org.geotools.data.wmts.model.WMTSCapabilities;
 import org.geotools.data.wmts.WebMapTileServer;
 import org.geotools.data.wmts.request.GetTileRequest;
 import org.geotools.geometry.GeneralEnvelope;

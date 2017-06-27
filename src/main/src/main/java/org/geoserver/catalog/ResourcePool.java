@@ -93,7 +93,7 @@ import org.geotools.data.store.ContentFeatureSource;
 import org.geotools.data.store.ContentState;
 import org.geotools.data.wms.WebMapServer;
 import org.geotools.data.wms.xml.WMSSchema;
-import org.geotools.data.wmts.WMTSCapabilities;
+import org.geotools.data.wmts.model.WMTSCapabilities;
 import org.geotools.data.wmts.WebMapTileServer;
 import org.geotools.factory.Hints;
 import org.geotools.feature.AttributeTypeBuilder;

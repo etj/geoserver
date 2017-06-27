@@ -24,7 +24,7 @@ import org.geoserver.catalog.WMSStoreInfo;
 import org.geoserver.catalog.WMTSStoreInfo;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geotools.data.ows.Layer;
-import org.geotools.data.wmts.WMTSCapabilities;
+import org.geotools.data.wmts.model.WMTSCapabilities;
 import org.geotools.data.wmts.WebMapTileServer;
 import org.geotools.feature.NameImpl;
 import org.opengis.coverage.grid.GridCoverageReader;
