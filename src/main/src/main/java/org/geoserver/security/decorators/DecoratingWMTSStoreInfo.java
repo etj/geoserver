@@ -174,4 +174,28 @@ public class DecoratingWMTSStoreInfo extends AbstractDecorator<WMTSStoreInfo> im
         return delegate.getWebMapTileServer(listener);
     }
 
+    @Override
+    public String getHeaderName()
+    {
+        return delegate.getHeaderName();
+    }
+
+    @Override
+    public void setHeaderName(String headerName)
+    {
+        delegate.setHeaderName(headerName);
+    }
+
+    @Override
+    public String getHeaderValue()
+    {
+        return delegate.getHeaderValue();
+    }
+
+    @Override
+    public void setHeaderValue(String headerValue)
+    {
+        delegate.setHeaderValue(headerValue);
+    }
+
 }

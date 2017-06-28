@@ -11,7 +11,6 @@ import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogVisitor;
 import org.geoserver.catalog.ResourcePool;
 import org.geoserver.catalog.WMTSStoreInfo;
-import org.geotools.data.wms.WebMapServer;
 import org.geotools.data.wmts.WebMapTileServer;
 import org.opengis.util.ProgressListener;
 
@@ -31,9 +30,13 @@ public class WMTSStoreInfoImpl extends StoreInfoImpl implements WMTSStoreInfo {
     private int readTimeout;
     private int connectTimeout;
 
+    //Map<String, String> headers;
+    private String headerName; // todo: replace with Map<String, String>
+    private String headerValue;// todo: replace with Map<String, String>
+
     protected WMTSStoreInfoImpl() {
     }
-    
+
     public WMTSStoreInfoImpl(Catalog catalog) {
         super(catalog);
     }
@@ -94,6 +97,26 @@ public class WMTSStoreInfoImpl extends StoreInfoImpl implements WMTSStoreInfo {
     @Override
     public void setConnectTimeout(int timeoutSeconds) {
         this.connectTimeout = timeoutSeconds;
+    }
+
+    public String getHeaderName()
+    {
+        return headerName;
+    }
+
+    public void setHeaderName(String headerName)
+    {
+        this.headerName = headerName;
+    }
+
+    public String getHeaderValue()
+    {
+        return headerValue;
+    }
+
+    public void setHeaderValue(String headerValue)
+    {
+        this.headerValue = headerValue;
     }
 
     public void accept(CatalogVisitor visitor) {

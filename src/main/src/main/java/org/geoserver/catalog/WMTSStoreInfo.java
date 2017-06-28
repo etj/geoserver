@@ -100,9 +100,9 @@ public interface WMTSStoreInfo extends StoreInfo {
      */
     public void setUseConnectionPooling(boolean useHttpConnectionPooling);
 
-//    String getHeaderName();
-//    void setHeaderName(String headerName);
-//    String getHeaderValue();
-//    void setHeaderValue(String headerValue);
+    String getHeaderName();
+    void setHeaderName(String headerName);
+    String getHeaderValue();
+    void setHeaderValue(String headerValue);
 
 }

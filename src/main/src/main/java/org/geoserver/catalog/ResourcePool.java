@@ -46,6 +46,7 @@ import javax.measure.unit.Unit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.xsd.XSDElementDeclaration;
 import org.eclipse.xsd.XSDParticle;
 import org.eclipse.xsd.XSDSchema;
@@ -1825,7 +1826,12 @@ public class ResourcePool {
                     if (wmts == null) {
                         String capabilitiesURL = expandedStore.getCapabilitiesURL();
                         URL serverURL = new URL(capabilitiesURL);
-                        wmts = (WebMapTileServer) new WebMapTileServer(serverURL);
+                        wmts = new WebMapTileServer(serverURL);
+                        
+                        if(StringUtils.isNotEmpty(info.getHeaderName()) && StringUtils.isNotEmpty(info.getHeaderValue())) {
+                            wmts.getHeaders().put(info.getHeaderName(), info.getHeaderValue());
+                        }
+
                         wmtsCache.put(id, wmts);
                     }
                 }
@@ -1835,7 +1841,7 @@ public class ResourcePool {
         } catch (IOException ioe) {
             throw ioe;
         } catch (Exception e) {
-            throw (IOException) new IOException().initCause(e);
+            throw new IOException(e);
         }
     }
 

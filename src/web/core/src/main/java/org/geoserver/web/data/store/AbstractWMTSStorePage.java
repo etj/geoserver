@@ -44,8 +44,10 @@ abstract class AbstractWMTSStorePage extends GeoServerSecuredPage {
     TextParamPanel capabilitiesURL;
 
     protected TextParamPanel usernamePanel;
-    
     protected PasswordParamPanel password;
+
+    protected TextParamPanel headerNamePanel;
+    protected TextParamPanel headerValuePanel;
     
     void initUI(final WMTSStoreInfo store) {
         IModel model = new Model(store);
@@ -89,7 +91,18 @@ abstract class AbstractWMTSStorePage extends GeoServerSecuredPage {
         PropertyModel passwordModel = new PropertyModel(model, "password");
         form.add(password = new PasswordParamPanel("passwordPanel", passwordModel, new ResourceModel(
                 "AbstractWMTSStorePage.password"), false));
-        
+
+        // http header
+        PropertyModel headerNameModel = new PropertyModel(model, "headerName");
+        headerNamePanel = new TextParamPanel("headerNamePanel", headerNameModel, new ResourceModel(
+                "AbstractWMTSStorePage.headerName"), false);
+        form.add(headerNamePanel);
+
+        PropertyModel headerValueModel = new PropertyModel(model, "headerValue");
+        headerValuePanel = new TextParamPanel("headerValuePanel", headerValueModel, new ResourceModel(
+                "AbstractWMTSStorePage.headerValue"), false);
+        form.add(headerValuePanel);
+
         // max concurrent connections
         final PropertyModel<Boolean> useHttpConnectionPoolModel = new PropertyModel<Boolean>(model,
                 "useConnectionPooling");
