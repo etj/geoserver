@@ -811,6 +811,59 @@ public class CatalogBuilder {
     }
 
     /**
+     * Initializes a wmts layer object setting any info that has not been set.
+     */
+    public void initWMTSLayer(WMTSLayerInfo layer) throws Exception {
+        layer.setCatalog(catalog);
+
+        initResourceInfo(layer);
+        OwsUtils.resolveCollections(layer);
+
+        // get a fully initialized version we can copy from
+        WMTSLayerInfo full = buildWMTSLayer(store, layer.getNativeName());
+
+        // setup the srs if missing
+        if (layer.getSRS() == null) {
+            layer.setSRS(full.getSRS());
+        }
+        if (layer.getNativeCRS() == null) {
+            layer.setNativeCRS(full.getNativeCRS());
+        }
+        if (layer.getProjectionPolicy() == null) {
+            layer.setProjectionPolicy(full.getProjectionPolicy());
+        }
+
+        // deal with bounding boxes as possible
+        if (layer.getLatLonBoundingBox() == null
+                && layer.getNativeBoundingBox() == null) {
+            // both missing, we copy them
+            layer.setLatLonBoundingBox(full.getLatLonBoundingBox());
+            layer.setNativeBoundingBox(full.getNativeBoundingBox());
+        } else if (layer.getLatLonBoundingBox() == null) {
+            // native available but geographic to be computed
+            setupBounds(layer);
+        } else if (layer.getNativeBoundingBox() == null && layer.getNativeCRS() != null) {
+            // we know the geographic and we can reproject back to native
+            ReferencedEnvelope boundsLatLon = layer.getLatLonBoundingBox();
+            layer.setNativeBoundingBox(boundsLatLon.transform(layer.getNativeCRS(), true));
+        }
+
+        //fill in missing metadata
+        if (layer.getTitle() == null) {
+            layer.setTitle(full.getTitle());
+        }
+        if (layer.getDescription() == null) {
+            layer.setDescription(full.getDescription());
+        }
+        if (layer.getAbstract() == null) {
+            layer.setAbstract(full.getAbstract());
+        }
+        if (layer.getKeywords().isEmpty()) {
+            layer.getKeywords().addAll(full.getKeywords());
+        }
+    }
+
+    /**
      * Initialize a coverage object and set any unset info.
      */
     public void initCoverage(CoverageInfo cinfo) throws Exception {
