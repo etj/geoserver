@@ -387,7 +387,7 @@ public class WMTSLayerController extends AbstractCatalogController {
                 if (obj instanceof WMTSStoreInfo) {
                     WMTSStoreInfo store = (WMTSStoreInfo) obj;
                     converter.encodeLink("/workspaces/" + converter.encode(store.getWorkspace().getName()) +
-                            "/wmsstores/" + converter.encode(store.getName()), writer);
+                            "/wmtsstores/" + converter.encode(store.getName()), writer);
 
                 }
             }

@@ -265,7 +265,7 @@ public class WMTSStoreController extends AbstractCatalogController {
                     dsProps.add(Collections.singletonMap("properties", names));
                 }
                 if (!dsProps.isEmpty())
-                    properties.putIfAbsent("wmtsLayers", dsProps);
+                    properties.putIfAbsent("layers", dsProps);
 
             }
 
