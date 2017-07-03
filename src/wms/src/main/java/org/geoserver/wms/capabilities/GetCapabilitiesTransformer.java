@@ -1080,7 +1080,10 @@ public class GetCapabilitiesTransformer extends TransformerBase {
                element("Abstract", "Layer-Group type layer: " + layerName);
            } else {
                element("Abstract", layerGroup.getAbstract());
-           }                
+           }
+           
+           // handle keywords
+           handleKeywordList(layerGroup.getKeywords());
 
            final ReferencedEnvelope layerGroupBounds = layerGroup.getBounds();
            final ReferencedEnvelope latLonBounds = layerGroupBounds.transform(
@@ -1153,6 +1156,7 @@ public class GetCapabilitiesTransformer extends TransformerBase {
            // the default ones for each layer
 
            handleScaleHint(layerGroup);
+
            end("Layer");
        }
        

@@ -1201,6 +1201,9 @@ public class Capabilities_1_3_0_Transformer extends TransformerBase {
             } else {
                 element("Abstract", layerGroup.getAbstract());
             }
+
+            // handle keywords
+            handleKeywordList(layerGroup.getKeywords());
             
             final ReferencedEnvelope layerGroupBounds = layerGroup.getBounds();
             final ReferencedEnvelope latLonBounds = layerGroupBounds.transform(
