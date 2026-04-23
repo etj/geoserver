@@ -99,8 +99,9 @@ public class PermissionCatalogFilterHelper {
     /**
      * Derives workspace visibility from the accessible-resources set.
      *
-     * <p>A workspace is visible if the user has access to at least one resource in it. A cross-
-     * workspace grant (ws = {@code *}) makes all workspaces visible.
+     * <p>A workspace is visible if the user has access to at least one resource in it. Any cross-
+     * workspace grant ({@code *:*} for global access, or {@code *:layer} for a specific layer in
+     * any workspace) makes all workspaces visible.
      */
     private Filter buildWorkspaceFilter(PermsResult permsResult) {
         SortedSet<String> resources = permsResult.getAccessibleResources();
