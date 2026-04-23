@@ -980,10 +980,10 @@ public class GeofenceAccessManager implements ResourceAccessManager, DispatcherC
         PermsResult permsResult = rulesService.getPermissionFilter(ruleFilter);
         if (permsResult == null) {
             LOGGER.log(
-                    Level.WARNING,
-                    "GeoFence returned null PermsResult for filter {0}, returning acceptAll",
+                    Level.SEVERE,
+                    "GeoFence returned null PermsResult for filter {0}, denying access",
                     ruleFilter);
-            return Filter.INCLUDE;
+            return Filter.EXCLUDE;
         }
         return new PermissionCatalogFilterHelper().buildCatalogFilter(permsResult, clazz);
     }
