@@ -14,9 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,6 +49,7 @@ import org.geoserver.geofence.services.dto.PermsResult;
 import org.geoserver.geofence.services.dto.RuleFilter;
 import org.geoserver.geofence.util.AccessInfoUtils;
 import org.geoserver.geofence.util.GeomHelper;
+import org.geoserver.geofence.util.PermissionCatalogFilterHelper;
 import org.geoserver.geofence.wpscommon.WPSHelper;
 import org.geoserver.ows.Dispatcher;
 import org.geoserver.ows.DispatcherCallback;
@@ -980,147 +979,32 @@ public class GeofenceAccessManager implements ResourceAccessManager, DispatcherC
         RuleFilter ruleFilter = buildPermissionRuleFilter(user);
         PermsResult permsResult = rulesService.getPermissionFilter(ruleFilter);
         if (permsResult == null) {
-            LOGGER.log(Level.WARNING, "GeoFence returned null PermsResult for filter {0}, returning acceptAll", ruleFilter);
+            LOGGER.log(
+                    Level.WARNING,
+                    "GeoFence returned null PermsResult for filter {0}, returning acceptAll",
+                    ruleFilter);
             return Filter.INCLUDE;
         }
-        return buildCatalogFilter(permsResult, clazz);
+        return new PermissionCatalogFilterHelper().buildCatalogFilter(permsResult, clazz);
     }
 
     /**
      * Builds the {@link RuleFilter} to be used with {@link RuleReaderService#getPermissionFilter}.
      *
-     * <p>The filter has service/request/subfield/workspace/layer set to ANY (not restricting
-     * discovery), while user/role/sourceAddress/date are set from the current authentication and
-     * request context.
+     * <p>All catalog-scoping fields (service/request/workspace/layer/subfield) are set to ANY so
+     * that the call acts as a discovery query. User, role, source address, and date are populated
+     * from the current authentication context.
      */
     private RuleFilter buildPermissionRuleFilter(Authentication user) {
-        // Start with ALL fields as ANY so service/request/workspace/layer/subfield are ALL ANY,
-        // which is required by getPermissionFilter's validation
         RuleFilter ruleFilter = new RuleFilter(RuleFilter.SpecialFilterType.ANY);
         ruleFilter.setInstance(configurationManager.getConfiguration().getInstanceName());
-
-        // Set user and role using existing logic; when user is NAMEVALUE, includeDefault
-        // defaults to true in TextFilter, satisfying getPermissionFilter's validation
         setRuleFilterUserAndRole(user, ruleFilter);
-
         String sourceAddress = retrieveCallerIpAddress();
         if (sourceAddress != null) {
             ruleFilter.setSourceAddress(sourceAddress);
         }
         ruleFilter.setDate(DateTimeFormatter.ISO_LOCAL_DATE.format(LocalDate.now()));
-
         return ruleFilter;
-    }
-
-    /**
-     * Builds a GeoServer catalog {@link Filter} from the given {@link PermsResult}.
-     *
-     * <p>The filter pre-filters catalog objects, returning only those the current user has at least
-     * read access to. Property names are chosen based on the target catalog type.
-     */
-    private Filter buildCatalogFilter(PermsResult permsResult, Class<? extends CatalogInfo> clazz) {
-        Set<String> resources = permsResult.getAccessibleResources();
-
-        if (resources.isEmpty()) {
-            return Filter.EXCLUDE;
-        }
-
-        // Global wildcard: user has access to everything
-        if (resources.contains("*:*")) {
-            return Filter.INCLUDE;
-        }
-
-        // StyleInfo is not controlled by workspace/layer rules in geofence
-        if (StyleInfo.class.isAssignableFrom(clazz)) {
-            return Filter.INCLUDE;
-        }
-
-        // Determine workspace and layer property names for the given catalog type
-        final String wsProperty;
-        final String layerProperty;
-        if (WorkspaceInfo.class.isAssignableFrom(clazz)) {
-            wsProperty = "name";
-            layerProperty = null;
-        } else if (LayerInfo.class.isAssignableFrom(clazz)) {
-            wsProperty = "resource.store.workspace.name";
-            layerProperty = "name";
-        } else if (LayerGroupInfo.class.isAssignableFrom(clazz)) {
-            wsProperty = "workspace.name";
-            layerProperty = "name";
-        } else if (ResourceInfo.class.isAssignableFrom(clazz)) {
-            wsProperty = "store.workspace.name";
-            layerProperty = "name";
-        } else {
-            // Unknown catalog type: be permissive
-            return Filter.INCLUDE;
-        }
-
-        // Group accessible resources by workspace
-        Map<String, List<String>> wsLayerMap = new LinkedHashMap<>();
-        for (String resource : resources) {
-            int colonIdx = resource.indexOf(':');
-            if (colonIdx == -1) {
-                LOGGER.log(Level.WARNING, "Skipping malformed accessible resource entry: {0}", resource);
-                continue;
-            }
-            String ws = resource.substring(0, colonIdx);
-            String layer = resource.substring(colonIdx + 1);
-            wsLayerMap.computeIfAbsent(ws, k -> new ArrayList<>()).add(layer);
-        }
-
-        List<Filter> wsFilters = new ArrayList<>();
-        for (Map.Entry<String, List<String>> entry : wsLayerMap.entrySet()) {
-            String ws = entry.getKey();
-            List<String> layers = entry.getValue();
-
-            if ("*".equals(ws)) {
-                // Cross-workspace grants: layer is accessible in any workspace
-                if (layerProperty != null) {
-                    for (String layer : layers) {
-                        if (!layer.startsWith("!")) {
-                            wsFilters.add(FF.equals(FF.property(layerProperty), FF.literal(layer)));
-                        }
-                    }
-                }
-                // For WorkspaceInfo, cross-workspace grants don't add workspace-level constraints
-                continue;
-            }
-
-            if (WorkspaceInfo.class.isAssignableFrom(clazz)) {
-                // For workspaces: just include the workspace name
-                wsFilters.add(FF.equals(FF.property(wsProperty), FF.literal(ws)));
-            } else {
-                // For layers/resources/layer-groups: filter by workspace and layer
-                Filter wsFilter = FF.equals(FF.property(wsProperty), FF.literal(ws));
-                if (layers.contains("*")) {
-                    // Workspace-wide access, possibly with layer exclusions
-                    List<Filter> holes = layers.stream()
-                            .filter(l -> l.startsWith("!"))
-                            .map(l -> FF.equals(FF.property(layerProperty), FF.literal(l.substring(1))))
-                            .collect(Collectors.toList());
-                    if (holes.isEmpty()) {
-                        wsFilters.add(wsFilter);
-                    } else {
-                        Filter holeFilter = holes.size() == 1 ? holes.get(0) : FF.or(holes);
-                        wsFilters.add(FF.and(wsFilter, FF.not(holeFilter)));
-                    }
-                } else {
-                    // Specific layers within the workspace
-                    List<Filter> layerFilters = layers.stream()
-                            .filter(l -> !l.startsWith("!"))
-                            .map(l -> FF.equals(FF.property(layerProperty), FF.literal(l)))
-                            .collect(Collectors.toList());
-                    if (!layerFilters.isEmpty()) {
-                        Filter layerFilter =
-                                layerFilters.size() == 1 ? layerFilters.get(0) : FF.or(layerFilters);
-                        wsFilters.add(FF.and(wsFilter, layerFilter));
-                    }
-                }
-            }
-        }
-
-        if (wsFilters.isEmpty()) return Filter.EXCLUDE;
-        return wsFilters.size() == 1 ? wsFilters.get(0) : FF.or(wsFilters);
     }
 
     @Override
