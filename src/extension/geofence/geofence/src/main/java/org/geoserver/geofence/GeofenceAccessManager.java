@@ -979,6 +979,10 @@ public class GeofenceAccessManager implements ResourceAccessManager, DispatcherC
 
         RuleFilter ruleFilter = buildPermissionRuleFilter(user);
         PermsResult permsResult = rulesService.getPermissionFilter(ruleFilter);
+        if (permsResult == null) {
+            LOGGER.log(Level.WARNING, "GeoFence returned null PermsResult for filter {0}, returning acceptAll", ruleFilter);
+            return Filter.INCLUDE;
+        }
         return buildCatalogFilter(permsResult, clazz);
     }
 
@@ -1055,7 +1059,10 @@ public class GeofenceAccessManager implements ResourceAccessManager, DispatcherC
         Map<String, List<String>> wsLayerMap = new LinkedHashMap<>();
         for (String resource : resources) {
             int colonIdx = resource.indexOf(':');
-            if (colonIdx == -1) continue;
+            if (colonIdx == -1) {
+                LOGGER.log(Level.WARNING, "Skipping malformed accessible resource entry: {0}", resource);
+                continue;
+            }
             String ws = resource.substring(0, colonIdx);
             String layer = resource.substring(colonIdx + 1);
             wsLayerMap.computeIfAbsent(ws, k -> new ArrayList<>()).add(layer);
