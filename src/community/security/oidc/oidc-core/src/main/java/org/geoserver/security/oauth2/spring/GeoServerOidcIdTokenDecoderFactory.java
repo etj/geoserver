@@ -7,8 +7,6 @@ package org.geoserver.security.oauth2.spring;
 import org.geoserver.security.oauth2.login.GeoServerOAuth2LoginFilterConfig;
 import org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenDecoderFactory;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoderFactory;
 
@@ -21,7 +19,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoderFactory;
  */
 public class GeoServerOidcIdTokenDecoderFactory implements JwtDecoderFactory<ClientRegistration> {
 
-    private volatile JwtDecoderFactory<ClientRegistration> delegate;
+    private volatile OidcIdTokenDecoderFactory delegate;
 
     @Override
     public JwtDecoder createDecoder(ClientRegistration pContext) {
@@ -35,30 +33,14 @@ public class GeoServerOidcIdTokenDecoderFactory implements JwtDecoderFactory<Cli
         if (pConfig == null) {
             throw new IllegalArgumentException("Configuration must not be null");
         }
-        resolveDelegate(pConfig);
-    }
-
-    private void resolveDelegate(GeoServerOAuth2LoginFilterConfig pConfig) {
-        GeoServerOidcIdTokenValidatorFactory jwtValidatorFactory = new GeoServerOidcIdTokenValidatorFactory(pConfig);
-
-        if (pConfig.isDisableSignatureValidation()) {
-            final GeoServerOidcIdTokenValidatorFactory validatorFactory = jwtValidatorFactory;
-            this.delegate = (ClientRegistration clientRegistration) -> {
-                // build validator chain for this client
-                final OAuth2TokenValidator<Jwt> validator = validatorFactory.apply(clientRegistration);
-
-                return new GeoServerNoSignatureVerificationJwtDecoder(validator);
-            };
-        } else {
-            OidcIdTokenDecoderFactory lFactory = new OidcIdTokenDecoderFactory();
-            lFactory.setJwsAlgorithmResolver(new GeoServerJwsAlgorithmResolver(pConfig));
-            lFactory.setJwtValidatorFactory(jwtValidatorFactory);
-            this.delegate = lFactory;
-        }
+        OidcIdTokenDecoderFactory lFactory = new OidcIdTokenDecoderFactory();
+        lFactory.setJwsAlgorithmResolver(new GeoServerJwsAlgorithmResolver(pConfig));
+        lFactory.setJwtValidatorFactory(new GeoServerOidcIdTokenValidatorFactory(pConfig));
+        delegate = lFactory;
     }
 
     /** @return the delegate */
-    public JwtDecoderFactory<ClientRegistration> getDelegate() {
+    public OidcIdTokenDecoderFactory getDelegate() {
         return delegate;
     }
 }

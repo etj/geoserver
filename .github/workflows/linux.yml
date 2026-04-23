@@ -3,10 +3,6 @@ name: Linux JDK GitHub CI
 on:
   pull_request:
     paths-ignore:
-      - 'doc/**'
-      - 'mkdocs.yml'
-      - 'requirements.txt'
-      - '.github/workflows/docs.yml'
       - '**/src/main/resources/GeoServerApplication_*.properties'
       - '!**/src/main/resources/GeoServerApplication_fr.properties'
 
@@ -22,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk: [ 17, 21, 25 ]
+        jdk: [ 17, 21 ]
         dist: [ 'temurin' ]
         os: [ 'ubuntu-22.04' ]
     runs-on: ${{ matrix.os }}
@@ -51,7 +47,7 @@ jobs:
     - name: Build with Maven
       run: |
         mvn --version
-        mvn -B -ntp -U -T1C -fae -Prelease,pending -f src/pom.xml clean install
+        mvn -B -ntp -U -T1C -fae -Prelease -f src/pom.xml clean install
     - name: Build community modules without tests
       run: |
         mvn -B -ntp -nsu -U -T1C -fae -DskipTests -PcommunityRelease -f src/community/pom.xml clean install
@@ -59,3 +55,4 @@ jobs:
       if: always()
       run: |
         find ~/.m2/repository -name "*SNAPSHOT*" -type d | xargs rm -rf {}
+

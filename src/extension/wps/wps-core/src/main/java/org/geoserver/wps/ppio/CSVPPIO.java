@@ -28,7 +28,7 @@ public class CSVPPIO extends CDataPPIO {
     WPSResourceManager resourceManager;
     private static final Logger LOGGER = Logging.getLogger("org.geoserver.wps.ppio.CSVPPIO");
 
-    public CSVPPIO(WPSResourceManager resourceManager) {
+    protected CSVPPIO(WPSResourceManager resourceManager) {
         super(SimpleFeatureCollection.class, SimpleFeatureCollection.class, "text/csv");
         this.resourceManager = resourceManager;
     }

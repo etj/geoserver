@@ -9,7 +9,6 @@
     <bean id="wpsCoreExtension" class="org.geoserver.platform.ModuleStatusImpl">
       <constructor-arg index="0" value="gs-wps-core"/>
       <constructor-arg index="1" value="GeoServer Web Processing Service Core"/>
-      <property name="category" value="EXTENSION"/>
     </bean>
 	<bean id="wpsFactoryExtension" class="org.geoserver.wps.WPSFactoryExtension"/>
 	
@@ -188,7 +187,7 @@
     <bean id="geoTiffPPIO" class="org.geoserver.wps.ppio.GeoTiffPPIO">
       <constructor-arg ref="wpsResourceManager"/>
     </bean>
-    <bean id="arcGridPPIO" class="org.geoserver.wps.ppio.ArcGridPPIOFactory" factory-method="create">
+    <bean id="arcGridPPIO" class="org.geoserver.wps.ppio.ArcGridPPIO">
       <constructor-arg ref="wpsResourceManager"/>
     </bean>
     <bean id="coveragePngPPIO" class="org.geoserver.wps.ppio.CoveragePPIO.PNGPPIO"/>

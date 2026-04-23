@@ -5,7 +5,7 @@
  */
 package org.geoserver.filters;
 
-import jakarta.servlet.Filter;
+import javax.servlet.Filter;
 
 /**
  * Marks all filters that {@link SpringDelegatingFilter} will pick up from the Spring application context and run

@@ -4,7 +4,7 @@
  */
 package org.geoserver.ogcapi.v1.features;
 
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import org.geoserver.ows.AbstractDispatcherCallback;
 import org.geoserver.ows.Request;
 import org.geoserver.ows.Response;

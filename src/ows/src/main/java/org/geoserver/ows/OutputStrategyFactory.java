@@ -5,7 +5,7 @@
  */
 package org.geoserver.ows;
 
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Factory used to create an {@link ServiceStrategy} for a request.

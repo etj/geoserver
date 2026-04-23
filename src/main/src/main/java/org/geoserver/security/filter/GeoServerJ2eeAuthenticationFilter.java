@@ -6,7 +6,7 @@
 
 package org.geoserver.security.filter;
 
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * J2EE Authentication Filter

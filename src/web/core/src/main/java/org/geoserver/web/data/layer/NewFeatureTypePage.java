@@ -19,6 +19,7 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.catalog.CatalogBuilder;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.FeatureTypeInfo;
@@ -48,9 +49,9 @@ public class NewFeatureTypePage extends GeoServerSecuredPage {
 
     public static final String DATASTORE = "storeName";
 
-    public static final String WORKSPACE = "workspace";
+    public static final String WORKSPACE = "wsName";
 
-    String name = "";
+    String name;
 
     Form<?> form;
 
@@ -252,26 +253,30 @@ public class NewFeatureTypePage extends GeoServerSecuredPage {
         if (attributesProvider.isFirst(attribute)) {
             upDown.add(new PlaceholderLink("up"));
         } else {
-            ImageAjaxLink<Void> upLink = new ImageAjaxLink<>("up", "gs-icon-arrow-up") {
-                @Override
-                protected void onClick(AjaxRequestTarget target) {
-                    attributesProvider.moveUp(attribute);
-                    target.add(form);
-                }
-            };
+            ImageAjaxLink<Void> upLink =
+                    new ImageAjaxLink<>(
+                            "up", new PackageResourceReference(getClass(), "../../img/icons/silk/arrow_up.png")) {
+                        @Override
+                        protected void onClick(AjaxRequestTarget target) {
+                            attributesProvider.moveUp(attribute);
+                            target.add(form);
+                        }
+                    };
             upDown.add(upLink);
         }
 
         if (attributesProvider.isLast(attribute)) {
             upDown.add(new PlaceholderLink("down"));
         } else {
-            ImageAjaxLink<Void> downLink = new ImageAjaxLink<>("down", "gs-icon-arrow-down") {
-                @Override
-                protected void onClick(AjaxRequestTarget target) {
-                    attributesProvider.moveDown(attribute);
-                    target.add(form);
-                }
-            };
+            ImageAjaxLink<Void> downLink =
+                    new ImageAjaxLink<>(
+                            "down", new PackageResourceReference(getClass(), "../../img/icons/silk/arrow_down.png")) {
+                        @Override
+                        protected void onClick(AjaxRequestTarget target) {
+                            attributesProvider.moveDown(attribute);
+                            target.add(form);
+                        }
+                    };
             upDown.add(downLink);
         }
 
@@ -291,7 +296,7 @@ public class NewFeatureTypePage extends GeoServerSecuredPage {
     static class PlaceholderLink extends ImageAjaxLink<Void> {
 
         public PlaceholderLink(String id) {
-            super(id, "gs-icon-blank");
+            super(id, new PackageResourceReference(NewFeatureTypePage.class, "../../img/icons/blank.png"));
             setEnabled(false);
         }
 

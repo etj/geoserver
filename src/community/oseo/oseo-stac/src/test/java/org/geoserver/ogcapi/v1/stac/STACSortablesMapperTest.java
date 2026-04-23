@@ -18,7 +18,6 @@ import org.geoserver.featurestemplating.readers.TemplateReaderConfiguration;
 import org.geoserver.opensearch.eo.OSEOInfo;
 import org.geoserver.opensearch.eo.OSEOInfoImpl;
 import org.geoserver.opensearch.eo.store.JDBCOpenSearchAccessTest;
-import org.geoserver.opensearch.eo.store.OSEOPostGISResource;
 import org.geoserver.opensearch.eo.store.OpenSearchAccess;
 import org.geoserver.platform.GeoServerExtensionsHelper;
 import org.geoserver.platform.resource.FileSystemResourceStore;
@@ -32,20 +31,16 @@ import org.geotools.data.DataUtilities;
 import org.geotools.factory.CommonFactoryFinder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 public class STACSortablesMapperTest {
     private static final String FAKE_ID = "foobar";
 
-    @ClassRule
-    public static final OSEOPostGISResource postgis = new OSEOPostGISResource(false);
-
     static OpenSearchAccess data;
 
     @BeforeClass
     public static void setupClass() throws IOException, SQLException {
-        data = JDBCOpenSearchAccessTest.setupAndReturnStore(postgis);
+        data = JDBCOpenSearchAccessTest.setupAndReturnStore();
     }
 
     @AfterClass

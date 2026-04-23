@@ -15,6 +15,7 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.LayerInfo;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.launch.JobExecutionNotRunningException;
@@ -26,7 +27,7 @@ import org.springframework.batch.core.launch.NoSuchJobExecutionException;
  */
 public class PurgeRestoreTest extends BackupRestoreTestSupport {
 
-    @Override
+    @Before
     public void beforeTest() throws InterruptedException {
         ensureCleanedQueues();
 

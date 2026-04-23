@@ -68,13 +68,13 @@ public class BindingLdapAuthoritiesPopulator implements LdapAuthoritiesPopulator
     private String groupSearchFilter = "(member={0})";
 
     private String rolePrefix = "ROLE_";
-    private volatile boolean convertToUpperCase = true;
+    private boolean convertToUpperCase = true;
 
     /** Activates hierarchical nested parent groups search */
-    private volatile boolean useNestedParentGroups = false;
+    private boolean useNestedParentGroups = false;
 
     /** The max recursion level for search Hierarchical groups */
-    private volatile int maxGroupSearchLevel = 10;
+    private int maxGroupSearchLevel = 10;
 
     /** Pattern used for nested group filtering */
     private String nestedGroupSearchFilter = "(member={0})";

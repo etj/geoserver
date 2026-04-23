@@ -267,8 +267,6 @@ components:
       properties:
         string:
           type: array
-          nullable: false
-          default: []
           items:
             type: string
     DoubleArrayResponse:
@@ -276,8 +274,7 @@ components:
       properties:
         double:
           type: array
-          nullable: false
-          default: []
           items:
             type: number
             format: double
+            

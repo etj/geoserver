@@ -9,7 +9,6 @@ import static org.geotools.filter.capability.FunctionNameImpl.parameter;
 import java.awt.Color;
 import java.awt.image.IndexColorModel;
 import java.security.InvalidParameterException;
-import java.util.Arrays;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -216,7 +215,10 @@ public class FilterFunction_svgColorMap extends FunctionExpressionImpl {
         final SLDColorMapBuilder builder = new SLDColorMapBuilder();
         final ColorMapEntry[] entries = cm.getColorMapEntries();
         builder.setLinearColorMapType(ColorMap.TYPE_RAMP).setNumberColorMapEntries(entries.length);
-        Arrays.stream(entries).forEach(builder::addColorMapEntry);
-        return builder.buildLinearColorMap();
+        for (int i = 0; i < entries.length; i++) {
+            builder.addColorMapEntry(entries[i]);
+        }
+        LinearColorMap lcm = builder.buildLinearColorMap();
+        return lcm;
     }
 }

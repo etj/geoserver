@@ -4,6 +4,14 @@
  */
 package org.geoserver.featurestemplating.builders;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -15,13 +23,6 @@ import org.geotools.api.filter.expression.Expression;
 import org.geotools.filter.function.JsonPointerFunction;
 import org.geotools.util.Converters;
 import org.geotools.util.logging.Logging;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.json.JsonReadFeature;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.node.JsonNodeFactory;
-import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Supports handling Feature properties backed by JSON columns. Currently supports native JSON and JSONB fields from
@@ -39,12 +40,11 @@ public class JSONFieldSupport {
      * Used to parse JSON strings into JSON trees. Single instance as creation is expensive, and the object is shareable
      * and thread safe
      */
-    private static ObjectMapper MAPPER =
-            JsonMapper.builder().enable(JsonReadFeature.ALLOW_JAVA_COMMENTS).build();
+    private static ObjectMapper MAPPER = new ObjectMapper(new JsonFactory().enable(JsonParser.Feature.ALLOW_COMMENTS));
 
     /** Used to parse JSON strings into JSON trees where the attributes are sorted by key alphanumerically. */
     public static ObjectMapper SORT_BY_KEY_MAPPER = JsonMapper.builder()
-            .enable(JsonReadFeature.ALLOW_JAVA_COMMENTS)
+            .enable(JsonParser.Feature.ALLOW_COMMENTS)
             .nodeFactory(new SortingNodeFactory())
             .build();
 
@@ -68,7 +68,7 @@ public class JSONFieldSupport {
                     return parseJSON(result);
                 }
             }
-        } catch (JacksonException ex) {
+        } catch (JsonProcessingException ex) {
             LOGGER.log(Level.FINE, "Failed to parse JSON from attribute that was supposed to be a JSON field");
         }
         // fall back on the original value otherwise
@@ -121,7 +121,7 @@ public class JSONFieldSupport {
      * Tries to parse the object into a JSONNode. Supported inputs are a String, or an {@link Attribute} wrapping a
      * string.
      */
-    public static Object parseJSON(Object value) throws JacksonException {
+    public static Object parseJSON(Object value) throws JsonProcessingException {
         String json = getJSON(value);
         if (json != null) return MAPPER.readTree(json);
 

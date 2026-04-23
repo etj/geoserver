@@ -67,7 +67,6 @@ public class AggregateFactory {
         return query;
     }
 
-    @SuppressWarnings("unchecked")
     private static Object wrapReturnValue(AggregateType aggregate, String property, Object visitorReturn) {
         if (AggregateType.MIN.equals(aggregate) || AggregateType.MAX.equals(aggregate)) {
             if (visitorReturn != null) {
@@ -76,7 +75,7 @@ public class AggregateFactory {
                 return "";
             }
         } else if (AggregateType.BOUNDS.equals(aggregate)) {
-            if (visitorReturn instanceof ReferencedEnvelope envelope) {
+            if (visitorReturn != null && visitorReturn instanceof ReferencedEnvelope envelope) {
                 if ("x".equals(property)) {
                     return new EnvelopeWrapper(envelope).getX();
                 } else if ("y".equals(property)) {
@@ -96,7 +95,7 @@ public class AggregateFactory {
                 return new EnvelopeWrapper(null);
             }
         } else if (AggregateType.DISTINCT.equals(aggregate)) {
-            if (visitorReturn instanceof Set set) {
+            if (visitorReturn != null && visitorReturn instanceof Set set) {
                 List<Integer> distinct = new ArrayList<>(set);
                 Collections.sort(distinct);
                 return distinct;

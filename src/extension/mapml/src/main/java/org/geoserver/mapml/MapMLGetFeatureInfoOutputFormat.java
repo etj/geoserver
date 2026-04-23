@@ -21,18 +21,17 @@ import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.SettingsInfo;
-import org.geoserver.data.TypeInfoCollectionWrapper;
 import org.geoserver.mapml.tcrs.TiledCRSConstants;
 import org.geoserver.mapml.xml.Base;
 import org.geoserver.mapml.xml.BodyContent;
 import org.geoserver.mapml.xml.Feature;
 import org.geoserver.mapml.xml.HeadContent;
-import org.geoserver.mapml.xml.MapMLElement;
 import org.geoserver.mapml.xml.Mapml;
 import org.geoserver.mapml.xml.Meta;
 import org.geoserver.ows.URLMangler;
 import org.geoserver.ows.util.ResponseUtils;
 import org.geoserver.platform.ServiceException;
+import org.geoserver.wfs.TypeInfoCollectionWrapper;
 import org.geoserver.wms.GetFeatureInfoRequest;
 import org.geoserver.wms.MapLayerInfo;
 import org.geoserver.wms.WMS;
@@ -127,7 +126,7 @@ public class MapMLGetFeatureInfoOutputFormat extends GetFeatureInfoOutputFormat 
             Iterator<FeatureCollection> fci = featureCollections.iterator();
             while (fci.hasNext()) {
                 fc = (SimpleFeatureCollection) fci.next();
-                List<MapMLElement> features = body.getTilesOrFeatures();
+                List<Object> features = body.getTilesOrFeatures();
                 try (SimpleFeatureIterator iterator = fc.features()) {
                     while (iterator.hasNext()) {
                         SimpleFeature feature;

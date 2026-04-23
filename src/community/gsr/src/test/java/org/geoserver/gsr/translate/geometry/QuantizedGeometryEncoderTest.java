@@ -15,25 +15,24 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import net.sf.json.JSONSerializer;
 import org.apache.commons.io.FileUtils;
+import org.geoserver.gsr.api.GeoServicesJacksonJsonConverter;
 import org.geoserver.gsr.model.geometry.Geometry;
 import org.geoserver.gsr.model.geometry.SpatialReferenceWKID;
+import org.geotools.api.referencing.FactoryException;
 import org.junit.Test;
-import org.kordamp.json.JSONSerializer;
 import org.locationtech.jts.geom.Envelope;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 public class QuantizedGeometryEncoderTest {
 
     @Test
-    public void testRepresentation() throws URISyntaxException, IOException {
+    public void testRepresentation() throws URISyntaxException, IOException, FactoryException {
         // test based on real data from an ArcGIS JS API app
         final int testSRID = 102100;
 
         File jsonFile = new File(getClass().getResource("sample_geometry.json").toURI());
-        org.kordamp.json.JSON json = JSONSerializer.toJSON(FileUtils.readFileToString(jsonFile, "UTF-8"));
+        net.sf.json.JSON json = JSONSerializer.toJSON(FileUtils.readFileToString(jsonFile, "UTF-8"));
 
         org.locationtech.jts.geom.Geometry inputGeometry = GeometryEncoder.jsonToJtsGeometry(json);
 
@@ -45,9 +44,7 @@ public class QuantizedGeometryEncoderTest {
 
         Geometry outputGeometry = geometryEncoder.toRepresentation(inputGeometry, new SpatialReferenceWKID(testSRID));
 
-        ObjectMapper mapper = JsonMapper.builder().build();
-        JsonNode outputJsonNode = mapper.readTree(mapper.writeValueAsString(outputGeometry));
-
+        String outputJson = new GeoServicesJacksonJsonConverter().getMapper().writeValueAsString(outputGeometry);
         /* This is what actually gets returned by ArcGIS; it has strange artifacts like [0,1],[0,-1]
         String expectedJson =
                 "{\"geometryType\":\"esriGeometryPolygon\"," +
@@ -98,8 +95,7 @@ public class QuantizedGeometryEncoderTest {
                 + "[0,1]"
                 + "]"
                 + "]}";
-        JsonNode expectedJsonNode = mapper.readTree(expectedJson);
 
-        assertEquals(expectedJsonNode, outputJsonNode);
+        assertEquals(expectedJson, outputJson);
     }
 }

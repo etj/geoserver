@@ -16,7 +16,6 @@ import com.thoughtworks.xstream.converters.collections.AbstractCollectionConvert
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.mapper.Mapper;
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -51,6 +50,7 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.StoreInfo;
@@ -391,13 +391,8 @@ public class GeoServerSecurityManager implements ApplicationContextAware, Applic
 
         // migrate from old security config
         try {
-            final Version securityVersion = getSecurityVersion();
+            Version securityVersion = getSecurityVersion();
 
-            if (securityVersion.compareTo(CURR_VERSION) < 0) {
-                LOGGER.log(
-                        Level.CONFIG,
-                        "Start security migration from version %s to %s".formatted(securityVersion, CURR_VERSION));
-            }
             boolean migratedFrom21 = false;
             if (securityVersion.compareTo(VERSION_2_2) < 0) {
                 migratedFrom21 = migrateFrom21();
@@ -418,10 +413,6 @@ public class GeoServerSecurityManager implements ApplicationContextAware, Applic
             if (securityVersion.compareTo(CURR_VERSION) < 0) {
                 writeCurrentVersion();
             }
-            LOGGER.log(
-                    Level.CONFIG,
-                    "End security migration check, current version is %s (previous was %s)"
-                            .formatted(CURR_VERSION, securityVersion));
         } catch (Exception e1) {
             throw new RuntimeException(e1);
         }
@@ -1048,7 +1039,9 @@ public class GeoServerSecurityManager implements ApplicationContextAware, Applic
         } catch (InvalidKeyException e) {
             strongEncryptionAvaialble = false;
             LOGGER.warning(
-                    "Strong cryptography is NOT available. Downloading and installing of the unlimited strength policy files is recommended");
+                    """
+                    Strong cryptography is NOT available
+                    Download and installation the of unlimted length policy files is recommended""");
         } catch (Exception ex) {
             LOGGER.log(Level.WARNING, "Strong cryptography is NOT available, unexpected error", ex);
             strongEncryptionAvaialble = false; // should not happen
@@ -1358,12 +1351,12 @@ public class GeoServerSecurityManager implements ApplicationContextAware, Applic
                 GeoServerUser.ADMIN_USERNAME, GeoServerUser.DEFAULT_ADMIN_PASSWD);
 
         try {
-            Authentication result = BruteForceListener.withThrottlingDisabled(() -> providerMgr.authenticate(token));
-            return result.isAuthenticated();
+            token = providerMgr.authenticate(token);
         } catch (Exception e) {
-            // authentication failed
-            return false;
+            // ok
         }
+
+        return token.isAuthenticated();
     }
 
     /** Lists all available filter configurations. */
@@ -1968,6 +1961,8 @@ public class GeoServerSecurityManager implements ApplicationContextAware, Applic
             return false; // already migrated
         }
 
+        LOGGER.info("Start security migration");
+
         // keystore password configuration
         MasterPasswordProviderConfig mpProviderConfig = loadMasterPassswordProviderConfig("default");
         if (mpProviderConfig == null) {
@@ -2332,6 +2327,7 @@ public class GeoServerSecurityManager implements ApplicationContextAware, Applic
             LOGGER.info("Renamed " + usersFile.path() + " to " + oldUserFile.path());
         }
 
+        LOGGER.info("End security migration");
         return true;
     }
 

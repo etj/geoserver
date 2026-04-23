@@ -7,8 +7,10 @@ package org.geoserver.wms.ncwms;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -199,7 +201,7 @@ public class NcWmsService implements DisposableBean {
 
         // Process the request only if we have a time range
         List<Object> times = request.getGetMapRequest().getTime();
-        if (times == null || times.isEmpty()) {
+        if (times == null || times.size() == 0) {
             throw new ServiceException("The TIME parameter was missing");
         }
 
@@ -220,10 +222,10 @@ public class NcWmsService implements DisposableBean {
 
         // we'll just pick the first band anyways, no need to read them all
         if (request.getPropertyNames() == null
-                || request.getPropertyNames().isEmpty()
+                || request.getPropertyNames().size() == 0
                 || request.getPropertyNames().get(0).isEmpty()) {
             String firstBand = coverage.getDimensions().get(0).getName();
-            request.setPropertyNames(List.of(Collections.singletonList(firstBand)));
+            request.setPropertyNames(Arrays.asList(Arrays.asList(firstBand)));
         }
 
         // control how much time we spend doing queries to gather times and values
@@ -266,18 +268,12 @@ public class NcWmsService implements DisposableBean {
             }
 
             // sort by time and accumulate values
-            FeatureCollection<SimpleFeatureType, SimpleFeature> fc = new ListFeatureCollection(
-                    resultType,
-                    features.entrySet().stream()
-                            .sorted(Map.Entry.comparingByKey()) // Date keys
-                            .map(Map.Entry::getValue)
-                            .collect(Collectors.toList()));
-            // result.getFeature() is (at runtime) a List of FeatureCollection,
-            // but older WFS model types expose it as a raw List.
-            // Do a narrow, localized cast when adding.
-            @SuppressWarnings("unchecked")
-            List<FeatureCollection<SimpleFeatureType, SimpleFeature>> out = (List) result.getFeature();
-            out.add(fc);
+            List<SimpleFeature> featureList = features.entrySet().stream()
+                    .sorted(Comparator.comparing(e -> e.getKey()))
+                    .map(e -> e.getValue())
+                    .collect(Collectors.toList());
+
+            result.getFeature().add(new ListFeatureCollection(resultType, featureList));
         } catch (ServiceException e) {
             throw e;
         } catch (Exception e) {
@@ -298,9 +294,7 @@ public class NcWmsService implements DisposableBean {
             FeatureInfoRequestParameters requestParams)
             throws Exception {
         // identify
-        @SuppressWarnings("unchecked")
-        List<FeatureCollection<SimpleFeatureType, SimpleFeature>> identifiedCollections =
-                (List) identifier.identify(requestParams, 1);
+        List<FeatureCollection> identifiedCollections = identifier.identify(requestParams, 1);
 
         // collect the data
         if (identifiedCollections != null) {
@@ -374,7 +368,7 @@ public class NcWmsService implements DisposableBean {
     private List<DateRange> handleSimpleInterval(CoverageInfo coverage, List<Object> times) throws IOException {
         DateFinder finder = DateFinder.QUERY;
         List<DateRange> results = finder.findDates(wms, coverage, times);
-        if (results.isEmpty()) results = DateFinder.NEAREST.findDates(wms, coverage, times);
+        if (results.size() == 0) results = DateFinder.NEAREST.findDates(wms, coverage, times);
         return results;
     }
 

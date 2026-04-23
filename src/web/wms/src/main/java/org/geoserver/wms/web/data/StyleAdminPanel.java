@@ -5,7 +5,6 @@
 package org.geoserver.wms.web.data;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -45,7 +44,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.resource.AbstractResource;
-import org.apache.wicket.util.string.Strings;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
@@ -80,20 +78,6 @@ import org.geotools.util.logging.Logging;
  */
 // TODO WICKET8 - Verify this page works OK
 public class StyleAdminPanel extends StyleEditTabPanel {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(StyleAdminPanel.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
-
     @Serial
     private static final long serialVersionUID = -2443344473474977026L;
 
@@ -144,14 +128,6 @@ public class StyleAdminPanel extends StyleEditTabPanel {
     public void initUI(CompoundPropertyModel<StyleInfo> styleModel) {
 
         StyleInfo style = getStylePage().getStyleInfo();
-        String workspaceParam =
-                getStylePage().getPageParameters().get("workspace").toOptionalString();
-        if (stylePage instanceof StyleNewPage && !Strings.isEmpty(workspaceParam)) {
-            WorkspaceInfo workspace = stylePage.getCatalog().getWorkspaceByName(workspaceParam);
-            if (workspace != null) {
-                style.setWorkspace(workspace);
-            }
-        }
 
         IModel<String> nameBinding = styleModel.bind("name");
 

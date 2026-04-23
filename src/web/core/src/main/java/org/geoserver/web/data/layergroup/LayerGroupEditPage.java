@@ -5,8 +5,6 @@
  */
 package org.geoserver.web.data.layergroup;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.io.Serial;
 import java.util.List;
 import java.util.logging.Level;
@@ -22,7 +20,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.util.string.Strings;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidationError;
 import org.apache.wicket.validation.IValidator;
@@ -66,21 +63,13 @@ public class LayerGroupEditPage extends PublishedConfigurationPage<LayerGroupInf
     public LayerGroupEditPage() {
         this(true);
         setupPublished(getCatalog().getFactory().createLayerGroup());
-        applyWorkspaceFromParams(getPageParameters());
         postInit();
     }
 
     public LayerGroupEditPage(PageParameters parameters) {
-        this(isNewRequest(parameters));
+        this(false);
 
         String groupName = parameters.get(GROUP).toString();
-        if (Strings.isEmpty(groupName)) {
-            // Workspace-scoped "new" navigation passes only workspace, no group.
-            setupPublished(getCatalog().getFactory().createLayerGroup());
-            applyWorkspaceFromParams(parameters);
-            postInit();
-            return;
-        }
         String wsName = parameters.get(WORKSPACE).toOptionalString();
 
         LayerGroupInfo lg = wsName != null
@@ -97,20 +86,6 @@ public class LayerGroupEditPage extends PublishedConfigurationPage<LayerGroupInf
         postInit();
     }
 
-    private static boolean isNewRequest(PageParameters parameters) {
-        return Strings.isEmpty(parameters.get(GROUP).toString());
-    }
-
-    private void applyWorkspaceFromParams(PageParameters parameters) {
-        String wsName = parameters.get(WORKSPACE).toOptionalString();
-        if (!Strings.isEmpty(wsName)) {
-            WorkspaceInfo ws = getCatalog().getWorkspaceByName(wsName);
-            if (ws != null) {
-                getPublishedInfo().setWorkspace(ws);
-            }
-        }
-    }
-
     private void postInit() {
         if (!isAuthenticatedAsAdmin() && !isNew) {
             // global layer groups only editable by full admin
@@ -124,19 +99,6 @@ public class LayerGroupEditPage extends PublishedConfigurationPage<LayerGroupInf
     }
 
     public class LayerGroupTab extends PublishedEditTabPanel<LayerGroupInfo> {
-
-        private static final boolean isCssEmpty = IsWicketCssFileEmpty(LayerGroupEditPage.LayerGroupTab.class);
-
-        @Override
-        public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-            super.renderHead(response);
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
-        }
 
         @Serial
         private static final long serialVersionUID = 2192005814142588155L;

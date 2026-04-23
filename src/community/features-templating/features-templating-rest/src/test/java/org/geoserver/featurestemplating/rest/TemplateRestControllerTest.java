@@ -16,6 +16,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Optional;
+import net.sf.json.JSON;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.geoserver.catalog.FeatureTypeInfo;
@@ -38,9 +41,6 @@ import org.geoserver.rest.catalog.CatalogRESTTestSupport;
 import org.geoserver.rest.util.MediaTypeExtensions;
 import org.geotools.util.URLs;
 import org.junit.Test;
-import org.kordamp.json.JSON;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -430,7 +430,7 @@ public class TemplateRestControllerTest extends CatalogRESTTestSupport {
                     TemplateLoader.get().getTemplate(fifteen, TemplateIdentifier.JSON.getOutputFormat());
             StaticBuilder builder = (StaticBuilder)
                     rootBuilder.getChildren().get(0).getChildren().get(0);
-            String value = builder.getStaticValue().asString();
+            String value = builder.getStaticValue().textValue();
             assertEquals("value", value);
 
             // replace the template with a new one.
@@ -444,7 +444,7 @@ public class TemplateRestControllerTest extends CatalogRESTTestSupport {
             assertNotNull(rootBuilder);
             builder = (StaticBuilder)
                     rootBuilder.getChildren().get(0).getChildren().get(0);
-            value = builder.getStaticValue().asString();
+            value = builder.getStaticValue().textValue();
             assertEquals("differentValue", value);
 
             // delete the template

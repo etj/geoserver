@@ -4,51 +4,51 @@
     xmlns:wicket="http://wicket.apache.org/">
 <body>
   <wicket:extend>
-  	<div class="gs-unordered-list-class">
-	  <div class="gs-list-item-class">
+  	<ul>
+	  <li>
 		  <fieldset>
 		  <legend>
 		  		<span><wicket:message key="authKeyParameters"></wicket:message></span>
 		  		<a href="#" wicket:id="authKeyParametersHelp" class="help-link"></a>
 		  </legend>
-			  <div class="gs-form">
-				  <div class="gs-form-group">
+			  <ul>	  
+				  <li>                    
 				     <label for="authKeyParamName"><wicket:message key="authKeyParamName"></wicket:message></label>
-				     <input id="authKeyParamName" wicket:id="authKeyParamName" type="text" class="w-md" />
-				  </div>
-				  <div class="gs-form-group">
+				     <input id="authKeyParamName" wicket:id="authKeyParamName" type="text" class="text"/>
+				  </li>
+				  <li>
                     <label ><wicket:message key="authKeyMapperName"></wicket:message></label>
-                    <select wicket:id="authKeyMapperName" class="w-md"></select>
-                  </div>
-				  <div class="choiceItem">
-					  <input id="allowMapperKeysAutoSync" wicket:id="allowMapperKeysAutoSync" type="checkbox"/>
+                    <select wicket:id="authKeyMapperName"></select>
+                  </li>
+				  <li>
 					  <label for="allowMapperKeysAutoSync"><wicket:message key="allowMapperKeysAutoSync"></wicket:message></label>
-				  </div>
-				  <div class="choiceItem">
-					  <input id="allowChallengeAnonymousSessions" wicket:id="allowChallengeAnonymousSessions" type="checkbox"/>
+					  <input id="allowMapperKeysAutoSync" wicket:id="allowMapperKeysAutoSync" type="checkbox" class="checkbox"/>
+				  </li>
+				  <li>
 					  <label for="allowChallengeAnonymousSessions"><wicket:message key="allowChallengeAnonymousSessions"></wicket:message></label>
-				  </div>
-				  <div class="gs-list-item-class">
+					  <input id="allowChallengeAnonymousSessions" wicket:id="allowChallengeAnonymousSessions" type="checkbox" class="checkbox"/>
+				  </li>
+				  <li>
                     <div wicket:id="authKeyMapperParamsContainer">
                         <div wicket:id="authKeyMapperParamsPanel">
                         </div>
                     </div>
-                </div>
-				  <div class="gs-form-group">
+                </li>   
+				  <li>
                     <label ><wicket:message key="userGroupService"></wicket:message></label>
-                    <select wicket:id="userGroupServiceName" class="w-md"></select>
-                  </div>
+                    <select wicket:id="userGroupServiceName"></select>
+                  </li>
 				  
-				  <div class="gs-list-item-class">
+				  <li>
 	      			<div class="button-group selfclear">
-	        			<a class="button" wicket:id="synchronize"><span><wicket:message key="synchronize"></wicket:message></span></a>
+	        		<a wicket:id="synchronize"><span><wicket:message key="synchronize"></wicket:message></span></a>
 	      			</div>
-	  			</div>
+	  			</li>  	
 	  					  
-			  </div>
+			  </ul>	  	  
 		  </fieldset>
-	  </div>
-	 </div>
+	  </li>
+	 </ul>    
   </wicket:extend>
 </body>
 </html>

@@ -104,7 +104,11 @@ public class FileRemotePublicationTaskTest extends AbstractTaskManagerTest {
         }
         try (InputStream in =
                 getClass().getResource("appschema/MappedFeature.properties").openStream()) {
-            extGeoservers.get("mygs").getRESTManager().getResourceManager().upload("data/MappedFeature.properties", in);
+            extGeoservers
+                    .get("mygs")
+                    .getRESTManager()
+                    .getResourceManager()
+                    .upload("uploaded-stores/MappedFeature.properties", in);
         }
 
         params.put(AppSchemaDataAccessFactory.URL.key, "file:data/MappedFeature.xml");

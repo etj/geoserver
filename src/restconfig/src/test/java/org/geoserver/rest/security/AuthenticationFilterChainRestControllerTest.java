@@ -10,6 +10,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,17 +29,12 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 /** System tests for AuthenticationFilterChainRestController using both XML and JSON. */
 public class AuthenticationFilterChainRestControllerTest extends GeoServerSystemTestSupport {
 
     private static final String BASE = RestBaseController.ROOT_PATH + "/security/filterchain";
     private static final String CLASS_HTML = "org.geoserver.security.HtmlLoginFilterChain";
-    private static final String ALLOWED_PROP = "geoserver.security.allowedAuthFilterChainClasses";
-    private static final String CLASS_DUMMY = "org.geoserver.rest.security.DummyRequestFilterChain";
-    private static final String ALLOWED_PREFIX = "org.geoserver.rest.security.*";
 
     private static final String JSON = "application/json";
     private static final String XML = "application/xml";
@@ -177,7 +174,7 @@ public class AuthenticationFilterChainRestControllerTest extends GeoServerSystem
         JsonNode arr = root.path("filterchain").path("filters");
         List<String> names = new ArrayList<>();
         if (arr.isArray()) {
-            for (JsonNode n : arr) names.add(n.path("@name").asString());
+            for (JsonNode n : arr) names.add(n.path("@name").asText());
         }
         return names;
     }
@@ -199,7 +196,7 @@ public class AuthenticationFilterChainRestControllerTest extends GeoServerSystem
         JsonNode arr = root.path("filterchain").path("filters");
         boolean found = false;
         if (arr.isArray()) {
-            for (JsonNode n : arr) if ("default".equals(n.path("@name").asString())) found = true;
+            for (JsonNode n : arr) if ("default".equals(n.path("@name").asText())) found = true;
         }
         assertTrue("default chain should be present", found);
     }
@@ -241,11 +238,11 @@ public class AuthenticationFilterChainRestControllerTest extends GeoServerSystem
             JsonNode w = om.readTree(r.getContentAsByteArray());
             JsonNode obj = w.path("filters");
 
-            assertEquals(name, obj.path("@name").asString());
+            assertEquals(name, obj.path("@name").asText());
             // class can appear as "@class" or "class" depending on serializer
             String clazz = obj.has("@class")
-                    ? obj.path("@class").asString()
-                    : obj.path("class").asString();
+                    ? obj.path("@class").asText()
+                    : obj.path("class").asText();
             assertEquals(CLASS_HTML, clazz);
 
             assertFalse(obj.path("@disabled").asBoolean());
@@ -284,7 +281,7 @@ public class AuthenticationFilterChainRestControllerTest extends GeoServerSystem
             MockHttpServletResponse r = getAsServletResponse(BASE + "/" + name + ".json");
             TestCase.assertEquals(200, r.getStatus());
             JsonNode obj = om.readTree(r.getContentAsByteArray()).path("filters");
-            assertEquals(name, obj.path("@name").asString());
+            assertEquals(name, obj.path("@name").asText());
         } finally {
             safeDelete(name);
         }
@@ -307,7 +304,7 @@ public class AuthenticationFilterChainRestControllerTest extends GeoServerSystem
                     om.readTree(r.getContentAsByteArray())
                             .path("filters")
                             .path("@name")
-                            .asString());
+                            .asText());
         } finally {
             safeDelete(name);
         }
@@ -333,70 +330,6 @@ public class AuthenticationFilterChainRestControllerTest extends GeoServerSystem
                 403,
                 postAsServletResponse(BASE, defaultChainXml(newName()), XML).getStatus());
         super.loginAsAdmin(); // restore
-    }
-
-    @Test
-    public void testCreate_JSON_rejectsBlockedChainClass() throws Exception {
-        String name = newName();
-        String body = defaultChainJson(name).replace(CLASS_HTML, "java.lang.Runtime");
-
-        MockHttpServletResponse resp = postAsServletResponse(BASE, body, JSON);
-        TestCase.assertEquals(400, resp.getStatus());
-        assertTrue(resp.getContentAsString().contains("Unsupported className"));
-    }
-
-    @Test
-    public void testCreate_JSON_acceptsConfiguredChainClass() throws Exception {
-        String name = newName();
-        String previous = System.getProperty(ALLOWED_PROP);
-        System.setProperty(ALLOWED_PROP, CLASS_DUMMY);
-        try {
-            String body = defaultChainJson(name).replace(CLASS_HTML, CLASS_DUMMY);
-            MockHttpServletResponse resp = postAsServletResponse(BASE, body, JSON);
-            TestCase.assertEquals(201, resp.getStatus());
-
-            MockHttpServletResponse view = getAsServletResponse(BASE + "/" + name + ".json");
-            TestCase.assertEquals(200, view.getStatus());
-            String clazz = om.readTree(view.getContentAsByteArray())
-                    .path("filters")
-                    .path("@class")
-                    .asString();
-            assertEquals(CLASS_DUMMY, clazz);
-        } finally {
-            if (previous == null) {
-                System.clearProperty(ALLOWED_PROP);
-            } else {
-                System.setProperty(ALLOWED_PROP, previous);
-            }
-            safeDelete(name);
-        }
-    }
-
-    @Test
-    public void testCreate_JSON_acceptsConfiguredChainPrefix() throws Exception {
-        String name = newName();
-        String previous = System.getProperty(ALLOWED_PROP);
-        System.setProperty(ALLOWED_PROP, ALLOWED_PREFIX);
-        try {
-            String body = defaultChainJson(name).replace(CLASS_HTML, CLASS_DUMMY);
-            MockHttpServletResponse resp = postAsServletResponse(BASE, body, JSON);
-            TestCase.assertEquals(201, resp.getStatus());
-
-            MockHttpServletResponse view = getAsServletResponse(BASE + "/" + name + ".json");
-            TestCase.assertEquals(200, view.getStatus());
-            String clazz = om.readTree(view.getContentAsByteArray())
-                    .path("filters")
-                    .path("@class")
-                    .asString();
-            assertEquals(CLASS_DUMMY, clazz);
-        } finally {
-            if (previous == null) {
-                System.clearProperty(ALLOWED_PROP);
-            } else {
-                System.setProperty(ALLOWED_PROP, previous);
-            }
-            safeDelete(name);
-        }
     }
 
     // ----------------- update -----------------
@@ -444,7 +377,7 @@ public class AuthenticationFilterChainRestControllerTest extends GeoServerSystem
             MockHttpServletResponse r = getAsServletResponse(BASE + "/" + name + ".json");
             JsonNode obj = om.readTree(r.getContentAsByteArray()).path("filters");
             assertTrue(obj.path("@disabled").asBoolean());
-            assertEquals("/web/**,/", obj.path("@path").asString());
+            assertEquals("/web/**,/", obj.path("@path").asText());
         } finally {
             safeDelete(name);
         }

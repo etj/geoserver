@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.logging.LogRecord;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
+import net.sf.json.util.JSONBuilder;
 import org.geoserver.catalog.AttributeTypeInfo;
 import org.geoserver.catalog.CoverageStoreInfo;
 import org.geoserver.catalog.DataStoreInfo;
@@ -64,10 +68,6 @@ import org.geoserver.rest.converters.BaseMessageConverter;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONObject;
-import org.kordamp.json.JSONSerializer;
-import org.kordamp.json.util.JSONBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -508,11 +508,11 @@ public class ImportJSONWriter {
 
     public void data(FlushableJSONBuilder json, ImportData data, Object parent, int expand) throws IOException {
         if (data instanceof FileData) {
-            if (data instanceof Directory directory) {
+            if (data instanceof Directory) {
                 if (data instanceof Mosaic mosaic) {
                     mosaic(json, mosaic, parent, expand);
                 } else {
-                    directory(json, directory, parent, expand);
+                    directory(json, (Directory) data, parent, expand);
                 }
             } else {
                 file(json, (FileData) data, parent, expand, false);

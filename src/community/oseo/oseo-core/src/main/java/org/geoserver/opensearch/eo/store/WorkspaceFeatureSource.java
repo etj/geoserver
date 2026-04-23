@@ -77,7 +77,6 @@ public class WorkspaceFeatureSource extends DecoratingSimpleFeatureSource {
      * @return
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     private Set<String> getCollectionNamesForWorkspace() throws IOException {
         RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
         if (attributes == null) {
@@ -96,7 +95,6 @@ public class WorkspaceFeatureSource extends DecoratingSimpleFeatureSource {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     private Set<String> queryCollectionNamesForWorkspace() throws IOException {
         SimpleFeatureCollection idFeatureCollection = getWorkspaceCollection();
         UniqueVisitor unique = new UniqueVisitor("eoIdentifier");

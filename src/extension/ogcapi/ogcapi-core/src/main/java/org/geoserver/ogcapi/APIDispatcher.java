@@ -8,9 +8,6 @@ package org.geoserver.ogcapi;
 import static org.springframework.core.annotation.AnnotatedElementUtils.hasAnnotation;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletRequestWrapper;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -27,6 +24,8 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.geoserver.config.GeoServer;
 import org.geoserver.ows.ClientStreamAbortedException;
 import org.geoserver.ows.Dispatcher;
@@ -45,9 +44,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.AbstractJacksonHttpMessageConverter;
 import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
 import org.springframework.validation.Validator;
 import org.springframework.web.accept.ContentNegotiationManager;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -68,7 +67,6 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestResponseBody
 import org.springframework.web.servlet.support.RequestContextUtils;
 import org.springframework.web.util.UrlPathHelper;
 import org.springframework.web.util.WebUtils;
-import org.springframework.web.util.pattern.PathPatternParser;
 import org.xml.sax.SAXException;
 
 /**
@@ -132,10 +130,10 @@ public class APIDispatcher extends AbstractController {
         handlerAdapter.setApplicationContext(context);
         handlerAdapter.afterPropertiesSet();
         // remove the default Jackson converters, we will add them back later
-        handlerAdapter.getMessageConverters().removeIf(AbstractJacksonHttpMessageConverter.class::isInstance);
+        handlerAdapter.getMessageConverters().removeIf(AbstractJackson2HttpMessageConverter.class::isInstance);
         // force GeoServer version of jackson as the first choice
-        handlerAdapter.getMessageConverters().add(0, new JacksonYamlHttpMessageConverter());
-        handlerAdapter.getMessageConverters().add(0, new JacksonJsonHttpMessageConverter());
+        handlerAdapter.getMessageConverters().add(0, new MappingJackson2YAMLMessageConverter());
+        handlerAdapter.getMessageConverters().add(0, new MappingJackson2HttpMessageConverter());
         // add all registered converters before the Spring ones too
         List<HttpMessageConverter> extensionConverters = GeoServerExtensions.extensions(HttpMessageConverter.class);
         addToListBackwards(extensionConverters, handlerAdapter.getMessageConverters());
@@ -628,61 +626,13 @@ public class APIDispatcher extends AbstractController {
             return hasAnnotation(beanType, APIService.class);
         }
 
-        @SuppressWarnings("removal")
         @Override
         public UrlPathHelper getUrlPathHelper() {
             return pathHelper;
         }
 
-        /**
-         * Override to disable pattern parser usage. We do this to match the behavior of Spring 5.x. With pattern parser
-         * enabled, Spring will strip path elements and will match only against a portion of the path, e.g., <code>
-         * /wms/**
-         * </code> will not really match <code>wms/reflect</code> because it's trying to match <code>reflect</code>
-         * only, rather than <code>wms/reflect</code>.
-         *
-         * @return <code>null</code> to disable pattern parser usage
-         */
         @Override
-        public PathPatternParser getPatternParser() {
-            return null;
-        }
-
-        @Override
-        protected HandlerMethod lookupHandlerMethod(String lookupPath, HttpServletRequest request) throws Exception {
-            HandlerMethod handler = super.lookupHandlerMethod(lookupPath, request);
-
-            // If no handler found and trailing slash matching is enabled, try without trailing slash
-            if (handler == null
-                    && shouldUseTrailingSlashMatch()
-                    && lookupPath.endsWith("/")
-                    && lookupPath.length() > 1) {
-                String pathWithoutSlash = lookupPath.substring(0, lookupPath.length() - 1);
-                // Create a wrapped request with modified path
-                HttpServletRequest wrappedRequest = new HttpServletRequestWrapper(request) {
-                    @Override
-                    public String getRequestURI() {
-                        return request.getContextPath() + pathWithoutSlash;
-                    }
-
-                    @Override
-                    public String getServletPath() {
-                        return pathWithoutSlash;
-                    }
-
-                    @Override
-                    public Object getAttribute(String name) {
-                        if (UrlPathHelper.PATH_ATTRIBUTE.equals(name)) return pathWithoutSlash;
-                        return super.getAttribute(name);
-                    }
-                };
-                handler = super.lookupHandlerMethod(pathWithoutSlash, wrappedRequest);
-            }
-
-            return handler;
-        }
-
-        private boolean shouldUseTrailingSlashMatch() {
+        public boolean useTrailingSlashMatch() {
             if (geoServer != null && geoServer.getGlobal() != null) {
                 return geoServer.getGlobal().isTrailingSlashMatch();
             } else {

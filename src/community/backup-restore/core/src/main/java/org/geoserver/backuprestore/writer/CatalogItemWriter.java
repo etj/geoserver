@@ -5,6 +5,7 @@
 package org.geoserver.backuprestore.writer;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geoserver.backuprestore.Backup;
@@ -22,11 +23,9 @@ import org.geoserver.catalog.WMSStoreInfo;
 import org.geoserver.catalog.WMTSStoreInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geotools.util.logging.Logging;
-import org.jspecify.annotations.NonNull;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.core.io.WritableResource;
+import org.springframework.core.io.Resource;
 
 /**
  * Concrete Spring Batch {@link ItemWriter}.
@@ -52,8 +51,8 @@ public class CatalogItemWriter<T> extends CatalogWriter<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void write(@NonNull Chunk<? extends T> chunk) {
-        for (T item : chunk) {
+    public void write(List<? extends T> items) {
+        for (T item : items) {
             try {
                 if (item instanceof WorkspaceInfo info9) {
                     write(info9);
@@ -182,7 +181,7 @@ public class CatalogItemWriter<T> extends CatalogWriter<T> {
 
     /** Setter for resource. Represents a file that can be written. */
     @Override
-    public void setResource(WritableResource resource) {
+    public void setResource(Resource resource) {
         // Nothing to do
     }
 }

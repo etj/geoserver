@@ -81,10 +81,10 @@ public class GdalCoverageResponseDelegate
     Map<String, String> environment = null;
 
     /** Map holding the descriptors of the supported GDAL formats (keyed by format name). */
-    static Map<String, Format> formats = new HashMap<>();
+    static Map<String, Format> formats = new HashMap<String, Format>();
 
     /** Map holding the descriptors of the supported GDAL formats (keyed by mime type). */
-    static Map<String, Format> formatsByMimeType = new HashMap<>();
+    static Map<String, Format> formatsByMimeType = new HashMap<String, Format>();
 
     /** Lock guarding concurrent access to the maps holding the format descriptors. */
     private ReadWriteLock formatsLock;
@@ -100,7 +100,7 @@ public class GdalCoverageResponseDelegate
         this.formatsLock = new ReentrantReadWriteLock();
         this.geoServer = gs;
         this.gdalWrapperFactory = wrapperFactory;
-        this.environment = new HashMap<>();
+        this.environment = new HashMap<String, String>();
     }
 
     /** Returns the gdal_translate executable full path. */
@@ -167,7 +167,7 @@ public class GdalCoverageResponseDelegate
     public List<Format> getFormats() {
         formatsLock.readLock().lock();
         try {
-            return new ArrayList<>(formats.values());
+            return new ArrayList<Format>(formats.values());
         } finally {
             formatsLock.readLock().unlock();
         }
@@ -283,7 +283,6 @@ public class GdalCoverageResponseDelegate
         return format;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void encode(
             GridCoverage2D coverage, String outputFormat, Map<String, String> econdingParameters, OutputStream output)
@@ -369,7 +368,9 @@ public class GdalCoverageResponseDelegate
             }
 
             // write down
-            if (writer != null) writer.write(coverage, writerParams.values().toArray(new GeneralParameterValue[1]));
+            if (writer != null)
+                writer.write(coverage, (GeneralParameterValue[])
+                        writerParams.values().toArray(new GeneralParameterValue[1]));
         } finally {
             try {
                 if (writer != null) writer.dispose();
@@ -387,7 +388,7 @@ public class GdalCoverageResponseDelegate
         List<String> outputFormats = null;
         formatsLock.readLock().lock();
         try {
-            outputFormats = new ArrayList<>(formats.keySet());
+            outputFormats = new ArrayList<String>(formats.keySet());
         } finally {
             formatsLock.readLock().unlock();
         }

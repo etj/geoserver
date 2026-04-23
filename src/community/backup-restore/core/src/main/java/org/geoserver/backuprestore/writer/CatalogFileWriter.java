@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geoserver.backuprestore.Backup;
@@ -19,9 +20,7 @@ import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.ValidationResult;
 import org.geoserver.config.util.XStreamPersister;
 import org.geotools.util.logging.Logging;
-import org.jspecify.annotations.NonNull;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.item.ItemStreamException;
@@ -31,7 +30,6 @@ import org.springframework.batch.item.support.AbstractItemStreamItemWriter;
 import org.springframework.batch.item.util.FileUtils;
 import org.springframework.batch.support.transaction.TransactionAwareBufferedWriter;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.WritableResource;
 import org.springframework.util.Assert;
 
 /**
@@ -84,27 +82,27 @@ public class CatalogFileWriter<T> extends CatalogWriter<T> {
     }
 
     @Override
-    public void write(@NonNull Chunk<? extends T> chunk) throws Exception {
+    public void write(List<? extends T> items) throws Exception {
 
         if (!getOutputState().isInitialized()) {
             throw new WriterNotOpenException("Writer must be open before it can be written to");
         }
 
         if (logger.isLoggable(Level.FINE)) {
-            logger.fine("Writing to flat file with " + chunk.size() + " items.");
+            logger.fine("Writing to flat file with " + items.size() + " items.");
         }
-        logger.fine(() -> "Writing to flat file with " + chunk.size() + " items.");
+        logger.fine(() -> "Writing to flat file with " + items.size() + " items.");
 
         OutputState state = getOutputState();
 
         StringBuilder lines = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>\n");
         int lineCount = 0;
 
-        if (!chunk.isEmpty()) {
+        if (items.size() > 0) {
             lines.append("<items>\n");
         }
 
-        for (T item : chunk) {
+        for (T item : items) {
             lines.append(doWrite(item));
             lineCount++;
 
@@ -117,7 +115,7 @@ public class CatalogFileWriter<T> extends CatalogWriter<T> {
             }
         }
 
-        if (!chunk.isEmpty()) {
+        if (items.size() > 0) {
             lines.append("</items>\n");
         }
 
@@ -132,10 +130,9 @@ public class CatalogFileWriter<T> extends CatalogWriter<T> {
     }
 
     //
-    @SuppressWarnings("unchecked")
     protected String doWrite(T item) {
         // unwrap dynamic proxies
-        item = (T) XStreamPersister.unwrapProxies(item);
+        item = (T) xstream.unwrapProxies(item);
         return getXp().toXML(item) + "\n";
     }
 
@@ -148,12 +145,12 @@ public class CatalogFileWriter<T> extends CatalogWriter<T> {
 
     /** Setter for resource. Represents a file that can be written. */
     @Override
-    public void setResource(WritableResource resource) {
+    public void setResource(Resource resource) {
         this.resource = resource;
     }
 
     /**
-     * Set the flag indicating whether state should be saved in the provided {@link ExecutionContext} during the
+     * Set the flag indicating whether or not state should be saved in the provided {@link ExecutionContext} during the
      * {@link ItemStream} call to update. Setting this to false means that it will always start at the beginning on a
      * restart.
      */
@@ -195,7 +192,6 @@ public class CatalogFileWriter<T> extends CatalogWriter<T> {
      *
      * @see ItemStream#open(ExecutionContext)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void open(ExecutionContext executionContext) {
         super.open(executionContext);
@@ -227,7 +223,6 @@ public class CatalogFileWriter<T> extends CatalogWriter<T> {
     }
 
     /** @see ItemStream#update(ExecutionContext) */
-    @SuppressWarnings("unchecked")
     @Override
     public void update(ExecutionContext executionContext) {
         super.update(executionContext);
@@ -423,7 +418,7 @@ public class CatalogFileWriter<T> extends CatalogWriter<T> {
                 }
             }
 
-            Assert.state(outputBufferedWriter != null, "must be true");
+            Assert.state(outputBufferedWriter != null);
             // in case of restarting reset position to last committed point
             if (restarted) {
                 checkFileSize();

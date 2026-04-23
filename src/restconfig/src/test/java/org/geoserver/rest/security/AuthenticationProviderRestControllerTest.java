@@ -12,14 +12,12 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,14 +27,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.rest.security.xml.AuthProviderCollection;
 import org.geoserver.rest.security.xml.AuthProviderOrder;
 import org.geoserver.rest.wrapper.RestWrapper;
 import org.geoserver.security.GeoServerSecurityManager;
-import org.geoserver.security.config.BaseSecurityNamedServiceConfig;
 import org.geoserver.security.config.SecurityAuthProviderConfig;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfig;
@@ -53,7 +49,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.util.UriComponentsBuilder;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * Integration-style tests for {@link AuthenticationProviderRestController}.
@@ -71,7 +66,6 @@ import tools.jackson.databind.ObjectMapper;
 public class AuthenticationProviderRestControllerTest extends GeoServerTestSupport {
 
     private static final String TEST_PROVIDER_PREFIX = "TEST-";
-    private static final String ALLOWED_PROVIDER_PROPERTY = "geoserver.security.allowedAuthenticationProviderClasses";
 
     private AuthenticationProviderRestController controller;
     private AuthenticationProviderHelper authenticationProviderHelper;
@@ -119,7 +113,6 @@ public class AuthenticationProviderRestControllerTest extends GeoServerTestSuppo
 
         secMgr.reload();
         created.clear();
-        clearConfigCache();
         SecurityContextHolder.clearContext();
     }
 
@@ -147,8 +140,6 @@ public class AuthenticationProviderRestControllerTest extends GeoServerTestSuppo
             }
         } finally {
             created.clear();
-            clearConfigCache();
-            System.clearProperty(ALLOWED_PROVIDER_PROPERTY);
             SecurityContextHolder.clearContext();
         }
     }
@@ -199,19 +190,6 @@ public class AuthenticationProviderRestControllerTest extends GeoServerTestSuppo
         inner.put("className", className);
         if (ugService != null) inner.put("userGroupServiceName", ugService);
         return Collections.singletonMap("authprovider", inner);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void clearConfigCache() {
-        try {
-            Field field = AuthenticationProviderRestController.class.getDeclaredField("CONFIG_CACHE");
-            field.setAccessible(true);
-            ConcurrentMap<String, Class<? extends SecurityAuthProviderConfig>> cache =
-                    (ConcurrentMap<String, Class<? extends SecurityAuthProviderConfig>>) field.get(null);
-            cache.clear();
-        } catch (ReflectiveOperationException e) {
-            fail("Cannot clear config cache: " + e.getMessage());
-        }
     }
 
     // ---------------------------------------------------------------------
@@ -299,7 +277,7 @@ public class AuthenticationProviderRestControllerTest extends GeoServerTestSuppo
                     null,
                     UriComponentsBuilder.newInstance());
 
-            assertEquals(201, resp.getStatusCode().value());
+            assertEquals(201, resp.getStatusCodeValue());
             HttpHeaders headers = resp.getHeaders();
             assertNotNull(headers.getLocation());
             assertThat(headers.getLocation().getPath(), is("/security/authproviders/" + name));
@@ -325,7 +303,7 @@ public class AuthenticationProviderRestControllerTest extends GeoServerTestSuppo
 
             ResponseEntity<RestWrapper<SecurityAuthProviderConfig>> resp =
                     controller.create(xmlRequest(provider), 0, UriComponentsBuilder.newInstance());
-            assertEquals(201, resp.getStatusCode().value());
+            assertEquals(201, resp.getStatusCodeValue());
             created.add(name);
 
             List<String> names = getSecurityManager().loadSecurityConfig().getAuthProviderNames();
@@ -379,81 +357,6 @@ public class AuthenticationProviderRestControllerTest extends GeoServerTestSuppo
         inner.put("name", generateName("bad"));
         controller.create(
                 jsonRequest(Collections.singletonMap("authprovider", inner)), null, UriComponentsBuilder.newInstance());
-    }
-
-    /** create(JSON): blocked explicit configClassName -> 400 BadRequest. */
-    @Test(expected = AuthenticationProviderRestController.BadRequest.class)
-    public void testCreate_JSON_blockedConfigClassName() throws Exception {
-        setUser();
-        Map<String, Object> inner = new LinkedHashMap<>();
-        inner.put("name", generateName("badcfg"));
-        inner.put("className", "org.geoserver.security.auth.UsernamePasswordAuthenticationProvider");
-        inner.put("configClassName", "java.lang.Runtime");
-        controller.create(
-                jsonRequest(Collections.singletonMap("authprovider", inner)), null, UriComponentsBuilder.newInstance());
-    }
-
-    /** create(JSON): blocked legacy wrapper FQN -> 400 BadRequest. */
-    @Test(expected = AuthenticationProviderRestController.BadRequest.class)
-    public void testCreate_JSON_blockedLegacyWrapperClassName() throws Exception {
-        setUser();
-        Map<String, Object> wrapped = new LinkedHashMap<>();
-        wrapped.put("name", generateName("badwrap"));
-        wrapped.put("userGroupServiceName", "default");
-
-        Map<String, Object> root = new LinkedHashMap<>();
-        root.put("authprovider", Collections.singletonMap("java.lang.Runtime", wrapped));
-        controller.create(jsonRequest(root), null, UriComponentsBuilder.newInstance());
-    }
-
-    /** create(JSON): allowed provider class with blocked derived config candidates -> 400 BadRequest. */
-    @Test(expected = AuthenticationProviderRestController.BadRequest.class)
-    public void testCreate_JSON_allowedProviderWithBlockedDerivedConfigCandidates() throws Exception {
-        setUser();
-        System.setProperty(ALLOWED_PROVIDER_PROPERTY, AuthenticationProviderRestControllerTest.class.getName());
-
-        Map<String, Object> inner = new LinkedHashMap<>();
-        inner.put("name", generateName("derived"));
-        inner.put("className", AuthenticationProviderRestControllerTest.class.getName());
-
-        controller.create(
-                jsonRequest(Collections.singletonMap("authprovider", inner)), null, UriComponentsBuilder.newInstance());
-    }
-
-    /** create(XML): blocked provider className is rejected by allow-list validation. */
-    @Test(expected = AuthenticationProviderRestController.BadRequest.class)
-    public void testCreate_XML_blockedProviderClassName() throws Exception {
-        setUser();
-        String name = generateName("xml-blocked");
-        UsernamePasswordAuthenticationProviderConfig provider =
-                authenticationProviderHelper.createUsernamePasswordAuthenticationProviderConfig(name, false);
-        provider.setClassName("java.lang.Runtime");
-
-        controller.create(xmlRequest(provider), null, UriComponentsBuilder.newInstance());
-    }
-
-    /** resolveConfigClass cache entries are revalidated when allow-list configuration changes. */
-    @Test
-    public void testResolveConfigClass_revalidatesCachedEntryAfterAllowListChange() throws Exception {
-        setUser();
-        clearConfigCache();
-
-        Method resolve = AuthenticationProviderRestController.class.getDeclaredMethod(
-                "resolveConfigClass", String.class, AllowedAuthenticationProviderClasses.class, String.class);
-        resolve.setAccessible(true);
-
-        String testConfigClassName = TestDynamicAuthProviderConfig.class.getName();
-        System.setProperty(ALLOWED_PROVIDER_PROPERTY, testConfigClassName);
-
-        Object first = resolve.invoke(
-                controller, testConfigClassName, AllowedAuthenticationProviderClasses.load(), "className");
-        assertEquals(TestDynamicAuthProviderConfig.class, first);
-
-        System.setProperty(
-                ALLOWED_PROVIDER_PROPERTY, "org.geoserver.security.auth.UsernamePasswordAuthenticationProvider");
-        Object second = resolve.invoke(
-                controller, testConfigClassName, AllowedAuthenticationProviderClasses.load(), "className");
-        assertNull(second);
     }
 
     /** create(JSON): position out of range -> 400 BadRequest. */
@@ -591,13 +494,6 @@ public class AuthenticationProviderRestControllerTest extends GeoServerTestSuppo
         }
     }
 
-    /** delete(name): missing provider in enabled order throws NothingToDelete (not CannotSaveConfig). */
-    @Test(expected = AuthenticationProviderRestController.NothingToDelete.class)
-    public void testDelete_missingProviderThrowsNothingToDelete() {
-        setUser();
-        controller.delete(generateName("missing"));
-    }
-
     // ---------------------------------------------------------------------
     // reorder
     // ---------------------------------------------------------------------
@@ -616,7 +512,7 @@ public class AuthenticationProviderRestControllerTest extends GeoServerTestSuppo
         AuthProviderOrder ord = new AuthProviderOrder();
         ord.setOrder(Arrays.asList(a, b));
         ResponseEntity<Void> resp = controller.reorder(xmlRequest(ord));
-        assertEquals(200, resp.getStatusCode().value());
+        assertEquals(200, resp.getStatusCodeValue());
 
         assertThat(getSecurityManager().loadSecurityConfig().getAuthProviderNames(), is(Arrays.asList(a, b)));
     }
@@ -649,26 +545,8 @@ public class AuthenticationProviderRestControllerTest extends GeoServerTestSuppo
         ResponseEntity<Void> g = controller.orderGetNotAllowed();
         ResponseEntity<Void> p = controller.orderPostNotAllowed();
         ResponseEntity<Void> d = controller.orderDeleteNotAllowed();
-        assertEquals(405, g.getStatusCode().value());
-        assertEquals(405, p.getStatusCode().value());
-        assertEquals(405, d.getStatusCode().value());
-    }
-
-    /** Test config class used to validate cache re-checks when allow-list values change. */
-    public static class TestDynamicAuthProviderConfig extends BaseSecurityNamedServiceConfig
-            implements SecurityAuthProviderConfig {
-
-        private static final long serialVersionUID = 1L;
-        private String userGroupServiceName;
-
-        @Override
-        public String getUserGroupServiceName() {
-            return userGroupServiceName;
-        }
-
-        @Override
-        public void setUserGroupServiceName(String userGroupServiceName) {
-            this.userGroupServiceName = userGroupServiceName;
-        }
+        assertEquals(405, g.getStatusCodeValue());
+        assertEquals(405, p.getStatusCodeValue());
+        assertEquals(405, d.getStatusCodeValue());
     }
 }

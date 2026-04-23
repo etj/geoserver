@@ -4,11 +4,10 @@
  */
 package org.geoserver.rest;
 
-import java.util.Map;
-import org.springframework.http.MediaType;
+import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 
 /** Extension point to register extra media types in Spring MVC */
 public interface MediaTypeCallback {
 
-    void configure(Map<String, MediaType> mediaTypes);
+    void configure(ContentNegotiationConfigurer configurer);
 }

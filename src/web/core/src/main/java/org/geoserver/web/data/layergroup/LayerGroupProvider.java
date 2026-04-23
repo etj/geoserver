@@ -27,7 +27,7 @@ import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geotools.api.filter.Filter;
 import org.geotools.api.filter.sort.SortBy;
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link GeoServerDataProvider} providing a table model for listing {@link LayerGroupInfo layer groups} available in
@@ -70,8 +70,7 @@ public class LayerGroupProvider extends GeoServerDataProvider<LayerGroupInfo> {
 
     @Override
     public int fullSize() {
-        Filter filter = getContextFilter();
-        return count(filter != null ? filter : Predicates.acceptAll());
+        return count(Predicates.acceptAll());
     }
 
     private int count(Filter filter) {

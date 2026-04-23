@@ -1,4 +1,4 @@
-<html xmlns:wicket="http://wicket.apache.org/"
+<html>
 
 <head>
 <title>GeoServer Global</title>
@@ -13,28 +13,28 @@ Common state used by the GeoServer Servlets is maintained by this package.
 </p>
 
 Features:
-<div class="gs-unordered-list-class">
-<div class="gs-list-item-class">
+<ul>
+<li>
 Contains the actual server state - that is WMS reflects the state of the
 Web Map Server
-</div>
-<div class="gs-list-item-class">
+</li>
+<li>
 These classes should be saved in the Web Container
 (rather than the current singletons)
-</div>
-<div class="gs-list-item-class">
+</li>
+<li>
 Application set up is provided using Data Transfer Objects from the global.dto
 package. Both the initial loading the initial XML configuration files and the
 dynamic configuraiton systems are handled in this manner.
-</div>
-<div class="gs-list-item-class">
+</li>
+<li>
 Data contains "real" GeoTools2 DataStores with JDBC connections (and implements the
 GeoTools2 Catalog Interface)
-</div>
-</div>
+</li>
+</ul>
 <center>
 <img src="doc-files/GeoServerStateDiagram.gif">
-<br/>
+<br>
 <b>GeoServer State Diagram</b>
 </center>
 <p>

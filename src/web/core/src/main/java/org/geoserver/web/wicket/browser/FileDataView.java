@@ -5,8 +5,6 @@
  */
 package org.geoserver.web.wicket.browser;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.io.File;
 import java.io.Serial;
 import java.text.DateFormat;
@@ -39,20 +37,6 @@ import org.apache.wicket.util.convert.IConverter;
 // TODO WICKET8 - Verify this page works OK
 @SuppressWarnings("serial")
 public abstract class FileDataView extends Panel {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(FileDataView.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
-
     private static final IConverter<File> FILE_NAME_CONVERTER = new StringConverter() {
 
         @Override
@@ -117,13 +101,9 @@ public abstract class FileDataView extends Panel {
         //        provider.setDirectory(currentPosition);
         //        provider.setSort(new SortParam(NAME, true));
 
-        fileContent = new WebMarkupContainer("fileContent");
-        fileContent.setOutputMarkupId(true);
-        add(fileContent);
-
         final WebMarkupContainer table = new WebMarkupContainer("fileTable");
         table.setOutputMarkupId(true);
-        fileContent.add(table);
+        add(table);
 
         DataView<File> fileTable = new DataView<>("files", fileProvider) {
 
@@ -168,7 +148,9 @@ public abstract class FileDataView extends Panel {
             }
         };
 
+        fileContent = new WebMarkupContainer("fileContent");
         if (tableHeight != null) {
+            fileContent.setOutputMarkupId(true);
             fileContent.add(AttributeModifier.replace("class", "overflowAuto"));
             fileContent.add(new Behavior() {
                 @Serial
@@ -178,7 +160,7 @@ public abstract class FileDataView extends Panel {
                 public void renderHead(Component component, IHeaderResponse response) {
                     String script = "document.getElementById('"
                             + fileContent.getMarkupId()
-                            + "').style.minHeight = '"
+                            + "').style.height = '"
                             + StringEscapeUtils.escapeEcmaScript(tableHeight)
                             + "';";
                     response.render(OnLoadHeaderItem.forScript(script));
@@ -186,7 +168,9 @@ public abstract class FileDataView extends Panel {
             });
         }
 
-        table.add(fileTable);
+        fileContent.add(fileTable);
+
+        table.add(fileContent);
         table.add(new OrderByBorder<>("nameHeader", FileProvider.NAME, fileProvider));
         table.add(new OrderByBorder<>("lastModifiedHeader", FileProvider.LAST_MODIFIED, fileProvider));
         table.add(new OrderByBorder<>("sizeHeader", FileProvider.SIZE, fileProvider));

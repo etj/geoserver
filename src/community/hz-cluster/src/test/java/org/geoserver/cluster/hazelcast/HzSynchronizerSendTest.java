@@ -63,7 +63,11 @@ public abstract class HzSynchronizerSendTest extends HzSynchronizerTest {
         }
         replay(info);
         {
-            getSynchronizer(); // init it
+            HzSynchronizer sync = getSynchronizer();
+
+            // Mock the result of doing this:
+            // info.setEnabled(false);
+            // getCatalog().save(info);
 
             CatalogModifyEventImpl preEvent = new CatalogModifyEventImpl();
 
@@ -109,7 +113,11 @@ public abstract class HzSynchronizerSendTest extends HzSynchronizerTest {
         }
         replay(info, wsInfo);
         {
-            getSynchronizer(); // init it
+            HzSynchronizer sync = getSynchronizer();
+
+            // Mock the result of doing this:
+            // getCatalog().remove(info);
+
             CatalogRemoveEventImpl event = new CatalogRemoveEventImpl();
 
             event.setSource(info);
@@ -179,7 +187,12 @@ public abstract class HzSynchronizerSendTest extends HzSynchronizerTest {
         }
         replay(info);
         {
-            getSynchronizer(); // init it
+            HzSynchronizer sync = getSynchronizer();
+
+            // Mock the result of doing this:
+
+            // getCatalog().add(info);
+
             CatalogAddEventImpl preEvent = new CatalogAddEventImpl();
 
             preEvent.setSource(info);

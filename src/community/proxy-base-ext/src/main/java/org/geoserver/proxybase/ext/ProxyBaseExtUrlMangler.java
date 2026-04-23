@@ -169,6 +169,7 @@ public class ProxyBaseExtUrlMangler implements URLMangler {
                 path.setLength(0);
                 path.append(message);
             }
+            return;
         }
     }
 

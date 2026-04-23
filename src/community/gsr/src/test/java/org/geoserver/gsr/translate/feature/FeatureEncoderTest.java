@@ -7,6 +7,7 @@ package org.geoserver.gsr.translate.feature;
 
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Date;
 import org.geoserver.gsr.api.GeoServicesJacksonJsonConverter;
@@ -24,7 +25,6 @@ import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
-import tools.jackson.databind.ObjectMapper;
 
 public class FeatureEncoderTest extends GeoServerSystemTestSupport {
 

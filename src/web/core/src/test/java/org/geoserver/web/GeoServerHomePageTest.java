@@ -33,7 +33,6 @@ import org.geoserver.config.SettingsInfo;
 import org.geoserver.web.wicket.Select2DropDownChoice;
 import org.geotools.util.GrowableInternationalString;
 import org.hamcrest.CoreMatchers;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,13 +40,8 @@ public class GeoServerHomePageTest extends GeoServerWicketTestSupport {
 
     @Before
     public void setupMode() {
-        System.setProperty(GeoServerHomePage.LEGACY_HOMEPAGE_SELECTOR, "true");
+        // avoid flip-flops due to timeouts in the testing environment
         HomePageSelection.MODE = HomePageSelection.SelectionMode.DROPDOWN;
-    }
-
-    @After
-    public void clearLegacySelector() {
-        System.setProperty(GeoServerHomePage.LEGACY_HOMEPAGE_SELECTOR, "false");
     }
 
     @Override
@@ -112,14 +106,8 @@ public class GeoServerHomePageTest extends GeoServerWicketTestSupport {
         List<GeoServerHomePageContentProvider> providers =
                 geoServerApplication.getBeansOfType(GeoServerHomePageContentProvider.class);
         assertFalse(providers.isEmpty());
-
-        tester.assertComponent("previewContent", org.apache.wicket.markup.html.list.ListView.class);
-        Component previewContent = tester.getComponentFromLastRenderedPage("previewContent");
-        @SuppressWarnings("unchecked")
-        List<GeoServerHomePageContentProvider> actual =
-                (List<GeoServerHomePageContentProvider>) previewContent.getDefaultModelObject();
-
-        assertTrue(providers.containsAll(actual));
+        tester.assertComponent("contributedContent", org.apache.wicket.markup.html.list.ListView.class);
+        tester.assertModelValue("contributedContent", providers);
     }
 
     @Test
@@ -161,24 +149,24 @@ public class GeoServerHomePageTest extends GeoServerWicketTestSupport {
         Page page1 = tester.getLastRenderedPage();
 
         // check workspaces use a drop-down with suitable content
-        Select2DropDownChoice<WorkspaceInfo> workspaceSelector = (Select2DropDownChoice<WorkspaceInfo>)
-                tester.getComponentFromLastRenderedPage("chooser:form:workspace:select");
+        Select2DropDownChoice<WorkspaceInfo> workspaceSelector =
+                (Select2DropDownChoice<WorkspaceInfo>) tester.getComponentFromLastRenderedPage("form:workspace:select");
         List<WorkspaceInfo> workspaces = getCatalog().getWorkspaces();
         List<? extends WorkspaceInfo> workspaceChoices = workspaceSelector.getChoices();
         assertEquals(workspaces.size(), workspaceChoices.size());
 
         // and same goes for the layers case
-        Select2DropDownChoice<PublishedInfo> publishedSelector = (Select2DropDownChoice<PublishedInfo>)
-                tester.getComponentFromLastRenderedPage("chooser:form:layer:select");
+        Select2DropDownChoice<PublishedInfo> publishedSelector =
+                (Select2DropDownChoice<PublishedInfo>) tester.getComponentFromLastRenderedPage("form:layer:select");
         List<PublishedInfo> publisheds = new ArrayList<>(getCatalog().getLayers());
         publisheds.addAll(getCatalog().getLayerGroups());
         List<? extends PublishedInfo> publishedChoices = publishedSelector.getChoices();
         assertEquals(publisheds.size(), publishedChoices.size());
 
         // select a workspace
-        FormTester form = tester.newFormTester("chooser:form");
+        FormTester form = tester.newFormTester("form");
         form.setValue("workspace:select", CITE_PREFIX);
-        tester.executeAjaxEvent("chooser:form:workspace:select", "change");
+        tester.executeAjaxEvent("form:workspace:select", "change");
 
         // it switched to a new page with a single workspace
         tester.assertRenderedPage(GeoServerHomePage.class);
@@ -187,9 +175,9 @@ public class GeoServerHomePageTest extends GeoServerWicketTestSupport {
         assertEquals(page2.getWorkspaceInfo(), getCatalog().getWorkspaceByName(CITE_PREFIX));
 
         // switch layer as well
-        form = tester.newFormTester("chooser:form");
+        form = tester.newFormTester("form");
         form.setValue("layer:select", BASIC_POLYGONS.getLocalPart());
-        tester.executeAjaxEvent("chooser:form:layer:select", "change");
+        tester.executeAjaxEvent("form:layer:select", "change");
 
         // it switched to a new page with a single layer
         tester.assertRenderedPage(GeoServerHomePage.class);
@@ -208,9 +196,9 @@ public class GeoServerHomePageTest extends GeoServerWicketTestSupport {
         Page page1 = tester.getLastRenderedPage();
 
         // select a layer directly
-        FormTester form = tester.newFormTester("chooser:form");
+        FormTester form = tester.newFormTester("form");
         form.setValue("layer:select", getLayerId(BASIC_POLYGONS));
-        tester.executeAjaxEvent("chooser:form:layer:select", "change");
+        tester.executeAjaxEvent("form:layer:select", "change");
 
         // it switched to a new page with a single layer
         tester.assertRenderedPage(GeoServerHomePage.class);
@@ -220,9 +208,9 @@ public class GeoServerHomePageTest extends GeoServerWicketTestSupport {
         assertEquals(page2.getPublishedInfo(), getCatalog().getLayerByName(getLayerId(BASIC_POLYGONS)));
 
         // now un-select the layer
-        form = tester.newFormTester("chooser:form");
+        form = tester.newFormTester("form");
         form.setValue("layer:select", null);
-        tester.executeAjaxEvent("chooser:form:layer:select", "change");
+        tester.executeAjaxEvent("form:layer:select", "change");
 
         // it switched to a new page with a single layer
         tester.assertRenderedPage(GeoServerHomePage.class);
@@ -242,13 +230,13 @@ public class GeoServerHomePageTest extends GeoServerWicketTestSupport {
         GeoServerHomePage page1 = (GeoServerHomePage) tester.getLastRenderedPage();
 
         // check workspaces and layers use a simple text field
-        tester.assertComponent("chooser:form:workspace:text", TextField.class);
-        tester.assertComponent("chooser:form:layer:text", TextField.class);
+        tester.assertComponent("form:workspace:text", TextField.class);
+        tester.assertComponent("form:layer:text", TextField.class);
 
         // select a workspace
-        FormTester form = tester.newFormTester("chooser:form");
+        FormTester form = tester.newFormTester("form");
         form.setValue("workspace:text", CITE_PREFIX);
-        tester.executeAjaxEvent("chooser:form:workspace:text", "change");
+        tester.executeAjaxEvent("form:workspace:text", "change");
 
         // it switched to a new page with a single workspace
         tester.assertRenderedPage(GeoServerHomePage.class);
@@ -257,9 +245,9 @@ public class GeoServerHomePageTest extends GeoServerWicketTestSupport {
         assertEquals(page2.getWorkspaceInfo(), getCatalog().getWorkspaceByName(CITE_PREFIX));
 
         // switch layer as well
-        form = tester.newFormTester("chooser:form");
+        form = tester.newFormTester("form");
         form.setValue("layer:text", BASIC_POLYGONS.getLocalPart());
-        tester.executeAjaxEvent("chooser:form:layer:text", "change");
+        tester.executeAjaxEvent("form:layer:text", "change");
 
         // it switched to a new page with a single layer
         tester.assertRenderedPage(GeoServerHomePage.class);
@@ -279,20 +267,20 @@ public class GeoServerHomePageTest extends GeoServerWicketTestSupport {
         // force it to go text by means of the items
         HomePageSelection.HOME_PAGE_MAX_ITEMS = 1;
         tester.startPage(GeoServerHomePage.class);
-        tester.assertComponent("chooser:form:workspace:text", TextField.class);
-        tester.assertComponent("chooser:form:layer:text", TextField.class);
+        tester.assertComponent("form:workspace:text", TextField.class);
+        tester.assertComponent("form:layer:text", TextField.class);
 
         // now give it just enough to fill the workspaces but not the layers
         HomePageSelection.HOME_PAGE_MAX_ITEMS = getCatalog().getWorkspaces().size();
         tester.startPage(GeoServerHomePage.class);
-        tester.assertComponent("chooser:form:workspace:select", Select2DropDownChoice.class);
-        tester.assertComponent("chooser:form:layer:text", TextField.class);
+        tester.assertComponent("form:workspace:select", Select2DropDownChoice.class);
+        tester.assertComponent("form:layer:text", TextField.class);
 
         // and now so much it can do dropdowns for both
         HomePageSelection.HOME_PAGE_MAX_ITEMS = Integer.MAX_VALUE;
         tester.startPage(GeoServerHomePage.class);
-        tester.assertComponent("chooser:form:workspace:select", Select2DropDownChoice.class);
-        tester.assertComponent("chooser:form:layer:select", Select2DropDownChoice.class);
+        tester.assertComponent("form:workspace:select", Select2DropDownChoice.class);
+        tester.assertComponent("form:layer:select", Select2DropDownChoice.class);
     }
 
     @Test
@@ -313,11 +301,6 @@ public class GeoServerHomePageTest extends GeoServerWicketTestSupport {
     }
 
     public static class MockHomePageContentProvider implements GeoServerHomePageContentProvider {
-        @Override
-        public boolean checkContext(boolean isAdmin, WorkspaceInfo workspaceInfo, PublishedInfo layerInfo) {
-            return !isAdmin;
-        }
-
         @Override
         public Component getPageBodyComponent(final String id) {
             return new Label(id, "MockHomePageContentProvider");

@@ -23,6 +23,7 @@ public class GDALStatusTest {
         if (!status.isAvailable()) {
             return; // skip test
         }
+        assertTrue(status.getVersion().isPresent());
         assertTrue(status.getMessage().get().contains("Build Info"));
     }
 }

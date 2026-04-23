@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.sf.json.JSONObject;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.gsr.model.feature.*;
 import org.geoserver.gsr.model.geometry.*;
@@ -29,7 +30,6 @@ import org.geotools.api.feature.type.PropertyDescriptor;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.FeatureTypes;
-import org.kordamp.json.JSONObject;
 
 public class FeatureEncoder {
 

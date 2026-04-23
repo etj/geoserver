@@ -11,11 +11,13 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import net.sf.json.JSONObject;
 import org.geoserver.backuprestore.BackupRestoreTestSupport;
 import org.geoserver.backuprestore.utils.BackupUtils;
 import org.geoserver.catalog.Catalog;
@@ -28,7 +30,6 @@ import org.geoserver.security.SecureCatalogImpl;
 import org.geoserver.security.impl.DataAccessRuleDAO;
 import org.geoserver.security.impl.DefaultResourceAccessManager;
 import org.junit.Test;
-import org.kordamp.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
@@ -78,7 +79,8 @@ public class RESTBackupTest extends BackupRestoreTestSupport {
         // setup security, AggregateGeoFeature allowed to everybody, PrimitiveGeoFeature to military
         // only
         Properties props = new Properties();
-        props.load(new StringReader(String.join("\n", "PrimitiveGeoFeature.r=MILITARY", "AggregateGeoFeature.r=*")));
+        props.load(new StringReader(Stream.of("PrimitiveGeoFeature.r=MILITARY", "AggregateGeoFeature.r=*")
+                .collect(Collectors.joining("\n"))));
         DefaultResourceAccessManager manager = new DefaultResourceAccessManager(
                 new MemoryDataAccessRuleDAO(createDataDirectoryMock(), catalog, props), catalog);
 
@@ -160,12 +162,10 @@ public class RESTBackupTest extends BackupRestoreTestSupport {
 
         assertEquals("COMPLETED", execution.getString("status"));
 
-        Scanner scanner;
-        try (ZipFile backupZip = new ZipFile(new File(archiveFilePath))) {
-            ZipEntry entry = backupZip.getEntry("store.dat.1");
+        ZipFile backupZip = new ZipFile(new File(archiveFilePath));
+        ZipEntry entry = backupZip.getEntry("store.dat.1");
 
-            scanner = new Scanner(backupZip.getInputStream(entry), StandardCharsets.UTF_8);
-        }
+        Scanner scanner = new Scanner(backupZip.getInputStream(entry), "UTF-8");
         boolean hasExpectedValue = false;
         while (scanner.hasNextLine() && !hasExpectedValue) {
             String line = scanner.next();
@@ -250,7 +250,7 @@ public class RESTBackupTest extends BackupRestoreTestSupport {
         return execution;
     }
 
-    static class MemoryDataAccessRuleDAO extends DataAccessRuleDAO {
+    class MemoryDataAccessRuleDAO extends DataAccessRuleDAO {
 
         public MemoryDataAccessRuleDAO(GeoServerDataDirectory dd, Catalog rawCatalog, Properties props)
                 throws ConfigurationException, IOException {
@@ -261,7 +261,7 @@ public class RESTBackupTest extends BackupRestoreTestSupport {
         @Override
         protected void checkPropertyFile(boolean force) {
             // skip checking
-            lastModified.set(Long.MAX_VALUE);
+            lastModified = Long.MAX_VALUE;
         }
     }
 }

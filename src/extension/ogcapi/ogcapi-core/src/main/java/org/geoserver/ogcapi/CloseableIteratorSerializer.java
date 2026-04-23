@@ -4,6 +4,13 @@
  */
 package org.geoserver.ogcapi;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.BeanProperty;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
+import com.fasterxml.jackson.databind.ser.impl.IteratorSerializer;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.util.Iterator;
@@ -11,14 +18,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.util.logging.Logging;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.JsonGenerator;
-import tools.jackson.databind.BeanProperty;
-import tools.jackson.databind.JavaType;
-import tools.jackson.databind.SerializationContext;
-import tools.jackson.databind.ValueSerializer;
-import tools.jackson.databind.jsontype.TypeSerializer;
-import tools.jackson.databind.ser.jdk.IteratorSerializer;
 
 /**
  * Custom iterator serializer that extends Jackson's standard {@link IteratorSerializer} to add automatic resource
@@ -47,6 +46,7 @@ import tools.jackson.databind.ser.jdk.IteratorSerializer;
  * @see AutoCloseable
  * @see org.geoserver.catalog.util.CloseableIterator
  */
+@SuppressWarnings("serial")
 class CloseableIteratorSerializer extends IteratorSerializer {
 
     static final Logger LOGGER = Logging.getLogger(CloseableIteratorSerializer.class);
@@ -82,19 +82,14 @@ class CloseableIteratorSerializer extends IteratorSerializer {
      * @param vts type serializer for handling polymorphic types, or {@code null} if not needed
      * @param valueSerializer pre-resolved value serializer, or {@code null} for dynamic resolution
      * @param unwrapSingle whether to unwrap single-element arrays, or {@code null} to use default
-     * @param suppressableValue value that indicates suppression mechanism to use for content values (elements of
-     *     container), if any; null
-     * @param suppressNulls flag that indicates whether nulls should be suppressed.
      */
     public CloseableIteratorSerializer(
-            IteratorSerializer src,
-            TypeSerializer vts,
-            ValueSerializer<?> valueSerializer,
-            Boolean unwrapSingle,
+            CloseableIteratorSerializer src,
             BeanProperty property,
-            Object suppressableValue,
-            boolean suppressNulls) {
-        super(src, vts, valueSerializer, unwrapSingle, property, suppressableValue, suppressNulls);
+            TypeSerializer vts,
+            JsonSerializer<?> valueSerializer,
+            Boolean unwrapSingle) {
+        super(src, property, vts, valueSerializer, unwrapSingle);
     }
 
     /**
@@ -108,22 +103,12 @@ class CloseableIteratorSerializer extends IteratorSerializer {
      * @param vts type serializer for handling polymorphic types, or {@code null} if not needed
      * @param elementSerializer the resolved serializer for elements, or {@code null} for dynamic
      * @param unwrapSingle whether to unwrap single-element arrays, or {@code null} to use default
-     * @param suppressableValue value that indicates suppression mechanism to use for content values (elements of
-     *     container), if any; null
-     * @param suppressNulls flag that indicates whether nulls should be suppressed.
      * @return a new instance of this serializer with the resolved configuration
      */
     @Override
-    public CloseableIteratorSerializer withResolved(
-            BeanProperty property,
-            TypeSerializer vts,
-            ValueSerializer<?> elementSerializer,
-            Boolean unwrapSingle,
-            Object suppressableValue,
-            boolean suppressNulls) {
-
-        return new CloseableIteratorSerializer(
-                this, vts, elementSerializer, unwrapSingle, property, suppressableValue, suppressNulls);
+    public IteratorSerializer withResolved(
+            BeanProperty property, TypeSerializer vts, JsonSerializer<?> elementSerializer, Boolean unwrapSingle) {
+        return new CloseableIteratorSerializer(this, property, vts, elementSerializer, unwrapSingle);
     }
 
     /**
@@ -142,9 +127,8 @@ class CloseableIteratorSerializer extends IteratorSerializer {
      * @throws IOException if an error occurs during serialization
      */
     @Override
-    @SuppressWarnings("PMD.UseTryWithResources") // it's only conditionally closeable
-    public void serializeContents(Iterator<?> value, JsonGenerator g, SerializationContext provider)
-            throws JacksonException {
+    @SuppressWarnings("PMD.UseTryWithResources")
+    public void serializeContents(Iterator<?> value, JsonGenerator g, SerializerProvider provider) throws IOException {
         try {
             super.serializeContents(value, g, provider);
         } finally {

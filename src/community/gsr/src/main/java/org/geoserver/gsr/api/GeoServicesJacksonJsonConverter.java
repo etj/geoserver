@@ -11,19 +11,22 @@
 package org.geoserver.gsr.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.OutputStream;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 /** JSON converter using jackson. We mostly use spring's built in Jackson support. This persists for legacy reasons. */
 @Component
 public class GeoServicesJacksonJsonConverter {
 
-    ObjectMapper mapper = JsonMapper.builder()
-            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
-            .build();
+    ObjectMapper mapper = new ObjectMapper();
+
+    public GeoServicesJacksonJsonConverter() {
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.getFactory().disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
+    }
 
     public ObjectMapper getMapper() {
         return mapper;

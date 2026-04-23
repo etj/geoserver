@@ -4,6 +4,7 @@
  */
 package org.geoserver.ogcapi.v1.stac;
 
+import static org.geoserver.opensearch.eo.store.GeoServerOpenSearchTestSupport.setupBasicOpenSearch;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -24,8 +25,8 @@ import org.geoserver.data.test.SystemTestData;
 import org.geoserver.ogcapi.OGCApiTestSupport;
 import org.geoserver.opensearch.eo.OSEOInfo;
 import org.geoserver.opensearch.eo.OpenSearchAccessProvider;
+import org.geoserver.opensearch.eo.store.GeoServerOpenSearchTestSupport;
 import org.geoserver.opensearch.eo.store.JDBCOpenSearchAccessTest;
-import org.geoserver.opensearch.eo.store.OSEOPostGISResource;
 import org.geoserver.opensearch.eo.store.OpenSearchAccess;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.resource.Resource;
@@ -50,7 +51,6 @@ public class STACTestSupport extends OGCApiTestSupport {
 
     static TimeZone currentTimeZone;
     static Locale currentLocale;
-    protected static OSEOPostGISResource postgis;
 
     @BeforeClass
     public static void setupGMT() {
@@ -81,7 +81,7 @@ public class STACTestSupport extends OGCApiTestSupport {
         service.getGlobalQueryables().addAll(Arrays.asList("id", "geometry", "collection", "eo:cloud_cover"));
         gs.save(service);
 
-        postgis.setupBasicOpenSearch(getCatalog(), gs);
+        setupBasicOpenSearch(testData, getCatalog(), gs, false);
 
         // add the custom product class
         service.getProductClasses().add(JDBCOpenSearchAccessTest.GS_PRODUCT);
@@ -89,14 +89,8 @@ public class STACTestSupport extends OGCApiTestSupport {
     }
 
     @BeforeClass
-    public static void checkOnLine() throws Throwable {
-        postgis = new OSEOPostGISResource(false);
-        postgis.before();
-    }
-
-    @AfterClass
-    public static void cleanDB() throws IOException {
-        postgis.after();
+    public static void checkOnLine() {
+        GeoServerOpenSearchTestSupport.checkOnLine();
     }
 
     @Before
@@ -181,8 +175,8 @@ public class STACTestSupport extends OGCApiTestSupport {
         assertThat(instruments, Matchers.containsInAnyOrder("OLI", "TIRS"));
         assertEquals("landsat8", l8_02.read("properties.constellation"));
         // creation and modification
-        assertEquals("2017-02-26T10:24:58.000Z", l8_02.read("properties.created"));
-        assertEquals("2017-02-28T10:24:58.000Z", l8_02.read("properties.updated"));
+        assertEquals("2017-02-26T10:24:58.000+00:00", l8_02.read("properties.created"));
+        assertEquals("2017-02-28T10:24:58.000+00:00", l8_02.read("properties.updated"));
 
         // check bits unique to the LS8 template
         assertEquals(Integer.valueOf(30), l8_02.read("properties.gsd"));
@@ -228,7 +222,7 @@ public class STACTestSupport extends OGCApiTestSupport {
         assertEquals(-117.969376, s2Sample.read("bbox[2]", Double.class), EPS);
         assertEquals(34.337738, s2Sample.read("bbox[3]", Double.class), EPS);
         // ... time range (single value)
-        assertEquals("2017-03-08T18:54:21.026Z", s2Sample.read("properties.datetime"));
+        assertEquals("2017-03-08T18:54:21.026+00:00", s2Sample.read("properties.datetime"));
         // ... instrument related
         assertEquals("sentinel-2a", s2Sample.read("properties.platform"));
         assertEquals("sentinel2", s2Sample.read("properties.constellation"));

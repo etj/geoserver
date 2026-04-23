@@ -7,6 +7,7 @@ package org.geoserver.security.jwtheaders.roles;
 
 import com.nimbusds.jose.JWSObject;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -76,16 +77,16 @@ public class JwtHeadersRolesExtractor {
      * @param obj - json string or json list-of-string (JSONArray)
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static List<String> asStringList(Object obj) {
         if (obj instanceof String string) {
-            return List.of(string);
+            return Arrays.asList(string);
         }
         if (obj instanceof JSONArray array) {
-            return array.stream().map(Object::toString).collect(Collectors.toList());
+            return array.stream().map(x -> x.toString()).collect(Collectors.toList());
         }
         if (obj instanceof List list1) {
-            return ((List<Object>) list1).stream().map(Object::toString).collect(Collectors.toList());
+            List<Object> list = list1;
+            return list.stream().map(x -> x.toString()).collect(Collectors.toList());
         }
         return null;
     }

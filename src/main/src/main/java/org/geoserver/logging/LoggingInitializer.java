@@ -5,8 +5,8 @@
  */
 package org.geoserver.logging;
 
-import jakarta.servlet.ServletContext;
 import java.util.List;
+import javax.servlet.ServletContext;
 import org.geoserver.config.ConfigurationListenerAdapter;
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.GeoServerInitializer;
@@ -46,12 +46,12 @@ public class LoggingInitializer implements GeoServerInitializer, ApplicationCont
         if (previousLogging != null && !previousLogging.equals(newLogging)) {
             // No need to re-init logging when nothing changed
             try {
-                // Log location only from GEOSERVER_LOG_LOCATION property (GeoServer 3.0+)
-                String logLocation = LoggingUtils.getLogFileLocation(null, servletContext);
+                String logLocation = LoggingUtils.getLogFileLocation(newLogging.getLocation(), servletContext);
 
                 LoggingUtils.initLogging(
                         resourceLoader, newLogging.getLevel(), !newLogging.isStdOutLogging(), false, logLocation);
 
+                newLogging.setLocation(logLocation);
                 listener.setCurrentLogging(newLogging);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -98,10 +98,15 @@ public class LoggingInitializer implements GeoServerInitializer, ApplicationCont
             boolean reload = false;
 
             String loggingProfile = logging.getLevel();
+            String loggingLocation = logging.getLocation();
             Boolean stdOutLogging = logging.isStdOutLogging();
 
             if (propertyNames.contains("level")) {
                 loggingProfile = (String) newValues.get(propertyNames.indexOf("level"));
+                reload = true;
+            }
+            if (propertyNames.contains("location")) {
+                loggingLocation = (String) newValues.get(propertyNames.indexOf("location"));
                 reload = true;
             }
             if (propertyNames.contains("stdOutLogging")) {
@@ -109,8 +114,8 @@ public class LoggingInitializer implements GeoServerInitializer, ApplicationCont
                 reload = true;
             }
 
-            // Log location only from GEOSERVER_LOG_LOCATION property (GeoServer 3.0+)
-            String loggingLocation = LoggingUtils.getLogFileLocation(null, servletContext);
+            // maintain the system variable overlay
+            loggingLocation = LoggingUtils.getLogFileLocation(loggingLocation, servletContext);
 
             if (reload) {
                 try {

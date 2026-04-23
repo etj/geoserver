@@ -37,20 +37,13 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.RuleChain;
 import org.junit.rules.TestName;
 
 /** Integration test suite for {@link DataStoresClient} */
 @Ignore // geoserver test docker image doesn't have the mapbox styles extension
 public class StylesClientMapBoxIT {
 
-    private static GeoServerContainer geoserverContainer = new GeoServerContainer();
-
-    private static IntegrationTestSupport support = new IntegrationTestSupport(geoserverContainer);
-
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(geoserverContainer).around(support);
-
+    public static @ClassRule IntegrationTestSupport support = new IntegrationTestSupport();
     private SecureRandom rnd = new SecureRandom();
 
     public @Rule TestName testName = new TestName();

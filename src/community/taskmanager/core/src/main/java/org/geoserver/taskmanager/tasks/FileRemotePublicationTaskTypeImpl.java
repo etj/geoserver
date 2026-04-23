@@ -11,7 +11,6 @@ import it.geosolutions.geoserver.rest.decoder.RESTDataStore;
 import it.geosolutions.geoserver.rest.encoder.GSGenericStoreEncoder;
 import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder;
 import it.geosolutions.geoserver.rest.encoder.coverage.GSCoverageEncoder;
-import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -21,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.PostConstruct;
 import org.apache.commons.io.FilenameUtils;
 import org.geoserver.catalog.CoverageStoreInfo;
 import org.geoserver.catalog.DataStoreInfo;
@@ -135,17 +135,6 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
             }
         }
         if (upload && locationKey == null) { // simple upload
-            String format;
-            if (storeType == StoreType.COVERAGESTORES) {
-                format = store.getType().toLowerCase();
-            } else {
-                format = FilenameUtils.getExtension(
-                                processedResources.get(0).file().getName())
-                        .toLowerCase();
-                if ("xml".equals(format)) {
-                    format = "appschema";
-                }
-            }
             return restManager
                     .getPublisher()
                     .createStore(
@@ -153,7 +142,7 @@ public class FileRemotePublicationTaskTypeImpl extends AbstractRemotePublication
                             storeType,
                             name,
                             UploadMethod.FILE,
-                            format,
+                            store.getType().toLowerCase(),
                             Files.probeContentType(
                                     processedResources.get(0).file().toPath()),
                             processedResources.get(0).file().toURI(),

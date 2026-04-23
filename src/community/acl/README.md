@@ -1,4 +1,4 @@
-# GeoServer ACL (Access Control List) plugin
+# GeoServer Access Control List authorization 
 
 [GeoServer ACL](https://github.com/geoserver/geoserver-acl) is an advanced authorization system for GeoServer.
 
@@ -59,37 +59,11 @@ the appropriate values:
 
 #### Disabling the plugin
 
-The `geoserver.acl.client.enabled` config property defaults to `true` so it's not required for the plugin to run.
+The `geoserver.acl.enabled` config property defaults to `true` so it's not required for the plugin to run.
 In order to completely disabling the plugin, set it to `false`:
 
 ```
--Dgeoserver.acl.client.enabled=false
-```
-
-#### Startup API probe
-
-At startup the plugin verifies it can reach the ACL API server before letting GeoServer come up. The probe can be
-tuned or disabled through two additional properties:
-
-- `geoserver.acl.client.startupCheck` — whether to perform the server API check during startup. Defaults to `true`.
-  Set to `false` to let GeoServer start even when the ACL server is unreachable at boot time; the client will
-  keep retrying on demand. Useful for offline smoke tests or environments where the ACL server starts after
-  GeoServer.
-
-- `geoserver.acl.client.initTimeout` — timeout, in seconds, to wait for the API server to become available during
-  the startup probe. Defaults to a short grace period; raise it when the ACL server has a slower cold start than
-  GeoServer, lower it to fail fast in CI.
-
-```
--Dgeoserver.acl.client.startupCheck=false
--Dgeoserver.acl.client.initTimeout=60
-```
-
-Or via environment variables:
-
-```
-export GEOSERVER_ACL_CLIENT_STARTUPCHECK=false
-export GEOSERVER_ACL_CLIENT_INITTIMEOUT=60
+-Dgeoserver.acl.enabled=false
 ```
 
 ### Environment variables
@@ -103,7 +77,7 @@ names to upper case and replacing dots by underscores:
 For example:
 
 ```
-export GEOSERVER_ACL_CLIENT_ENABLED=false
+export GEOSERVER_ACL_ENABLED=false
 export GEOSERVER_ACL_CLIENT_BASEPATH=https://example.com/acl/api
 export GEOSERVER_ACL_CLIENT_USERNAME=geoserver
 export GEOSERVER_ACL_CLIENT_PASSWORD=ch4ng3m3
@@ -168,31 +142,4 @@ INFO   [org.geoserver.acl.authorization.cache] - evicted 56 cached ACL authoriza
 > Note the cache time to live is not a problem when the plugin runs in [GeoServer Cloud](https://github.com/geoserver/geoserver-cloud),
 because the ACL Service integrates with the *GeoServer Cloud* event bus, and notifies all the running pods when a data access
 or admin acccess rule is changed, and the GeoServer microservices react immediately clearing out the authorization cache.
-
-
-## Differences with GeoFence 3.6.0
-
-### Default authorization execution
-
-GeoFence runs the authorization in-place, the ACL plugin uses the ACL OpenAPI REST interface to fetch
-the authorization `AccessInfo` from the remote server.
-
-### Cache
-
-GeoFence uses a local cache for rules, admin rules, and `AccessInfo` grants, which gets
-stale whenever a rule is configured, and needs manual intervention to invalidate the cache,
-either through the WEB UI or the REST API.
-
-The ACL plugin relies on the server, and it's up to the server to use a cache or not.
-That said, Authorization service client adaptor may use a short-lived cache where
-entries expire for example in one second, to avoid overwhelming the server under
-high concurrency.
-
-### Role names
-
-Role names don't need to exist in any of the GeoServer configured Role Services
-
-### Role filtering
-
-Role names are used by default to request access grants, contrary to GeoFence
 

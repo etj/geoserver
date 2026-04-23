@@ -22,7 +22,7 @@ public class ServiceAccessRuleDAOTest extends AbstractAccesRuleDAOConcurrencyTes
         @Override
         protected void checkPropertyFile(boolean force) {
             // skip checking
-            lastModified.set(Long.MAX_VALUE);
+            lastModified = Long.MAX_VALUE;
         }
     }
 

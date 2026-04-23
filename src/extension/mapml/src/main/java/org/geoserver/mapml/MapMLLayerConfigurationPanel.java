@@ -5,7 +5,6 @@
 package org.geoserver.mapml;
 
 import static org.geoserver.mapml.MapMLConstants.MAPML_USE_TILES;
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -57,27 +56,10 @@ import org.geowebcache.layer.TileLayer;
  * @author prushforth
  */
 public class MapMLLayerConfigurationPanel extends PublishedConfigurationPanel<LayerInfo> {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(MapMLLayerConfigurationPanel.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-        response.render(org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference(
-                new org.apache.wicket.request.resource.PackageResourceReference(
-                        getClass(), "feature-caption-selector.js")));
-    }
-
     static final Logger LOGGER = Logging.getLogger(MapMLLayerConfigurationPanel.class);
 
     @Serial
-    private static final long serialVersionUID = 7247779727466152895L;
+    private static final long serialVersionUID = 1L;
 
     public static final String PNG_MIME_TYPE = "image/png";
     ListMultipleChoice<String> featureCaptionAttributes;

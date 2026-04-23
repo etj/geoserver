@@ -19,7 +19,7 @@ public class FeaturesSampleDataProvider implements SampleDataProvider {
 
     private final FeatureService service;
 
-    public FeaturesSampleDataProvider(FeatureService service) {
+    FeaturesSampleDataProvider(FeatureService service) {
         this.service = service;
     }
 

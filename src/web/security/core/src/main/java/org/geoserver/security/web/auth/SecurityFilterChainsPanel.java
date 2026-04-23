@@ -6,7 +6,6 @@
 package org.geoserver.security.web.auth;
 
 import static org.geoserver.security.web.auth.SecurityFilterChainProvider.NAME;
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -22,6 +21,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.HtmlLoginFilterChain;
 import org.geoserver.security.RequestFilterChain;
@@ -34,7 +34,7 @@ import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
-import org.geoserver.web.wicket.GsIcon;
+import org.geoserver.web.wicket.Icon;
 import org.geoserver.web.wicket.ImageAjaxLink;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.SimpleAjaxLink;
@@ -45,19 +45,6 @@ import org.geoserver.web.wicket.SimpleAjaxLink;
  * @author christian
  */
 public class SecurityFilterChainsPanel extends Panel {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(SecurityFilterChainsPanel.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
 
     SecurityFilterChainTablePanel tablePanel;
     FeedbackPanel feedbackPanel;
@@ -196,7 +183,7 @@ public class SecurityFilterChainsPanel extends Panel {
             }
 
             if (Boolean.TRUE.equals(property.getModel(itemModel).getObject()))
-                return new GsIcon(id, CatalogIconFactory.ENABLED_ICON);
+                return new Icon(id, CatalogIconFactory.ENABLED_ICON);
 
             if (Boolean.FALSE.equals(property.getModel(itemModel).getObject())) return new Label(id, "");
 
@@ -208,22 +195,24 @@ public class SecurityFilterChainsPanel extends Panel {
         final RequestFilterChain chain = (RequestFilterChain) itemModel.getObject();
 
         if (chain.canBeRemoved() == false) {
-            ImageAjaxLink blankLink = new ImageAjaxLink(id, "gs-icon-blank") {
-                @Override
-                protected void onClick(AjaxRequestTarget target) {}
-            };
+            ImageAjaxLink blankLink =
+                    new ImageAjaxLink(id, new PackageResourceReference(getClass(), "../img/icons/blank.png")) {
+                        @Override
+                        protected void onClick(AjaxRequestTarget target) {}
+                    };
             blankLink.getImage().add(new AttributeModifier("alt", new Model<>("")));
             add(blankLink);
             return blankLink;
         }
 
-        ImageAjaxLink link = new ImageAjaxLink(id, "gs-icon-delete") {
-            @Override
-            protected void onClick(AjaxRequestTarget target) {
-                secMgrConfig.getFilterChain().getRequestChains().remove(chain);
-                target.add(tablePanel);
-            }
-        };
+        ImageAjaxLink link =
+                new ImageAjaxLink(id, new PackageResourceReference(getClass(), "../img/icons/silk/delete.png")) {
+                    @Override
+                    protected void onClick(AjaxRequestTarget target) {
+                        secMgrConfig.getFilterChain().getRequestChains().remove(chain);
+                        target.add(tablePanel);
+                    }
+                };
         link.getImage().add(new AttributeModifier("alt", new ParamResourceModel("LayerGroupEditPage.th.remove", link)));
         return link;
     }
@@ -233,19 +222,6 @@ public class SecurityFilterChainsPanel extends Panel {
     }
 
     class PositionPanel extends Panel {
-
-        private static final boolean isCssEmpty = IsWicketCssFileEmpty(SecurityFilterChainsPanel.PositionPanel.class);
-
-        @Override
-        public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-            super.renderHead(response);
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
-        }
 
         List<RequestFilterChain> getChains() {
             return secMgrConfig.getFilterChain().getRequestChains();
@@ -260,54 +236,58 @@ public class SecurityFilterChainsPanel extends Panel {
             this.theChain = chain;
             this.setOutputMarkupId(true);
 
-            upLink = new ImageAjaxLink("up", "gs-icon-arrow-up") {
-                @Override
-                protected void onClick(AjaxRequestTarget target) {
-                    int index = getChains().indexOf(PositionPanel.this.theChain);
-                    getChains().remove(index);
-                    getChains().add(Math.max(0, index - 1), PositionPanel.this.theChain);
-                    target.add(tablePanel);
-                    target.add(this);
-                    target.add(downLink);
-                    target.add(upLink);
-                }
+            upLink =
+                    new ImageAjaxLink(
+                            "up", new PackageResourceReference(getClass(), "../img/icons/silk/arrow_up.png")) {
+                        @Override
+                        protected void onClick(AjaxRequestTarget target) {
+                            int index = getChains().indexOf(PositionPanel.this.theChain);
+                            getChains().remove(index);
+                            getChains().add(Math.max(0, index - 1), PositionPanel.this.theChain);
+                            target.add(tablePanel);
+                            target.add(this);
+                            target.add(downLink);
+                            target.add(upLink);
+                        }
 
-                @Override
-                protected void onComponentTag(ComponentTag tag) {
-                    if (getChains().indexOf(theChain) == 0) {
-                        tag.put("class", "visibility-hidden");
-                    } else {
-                        tag.put("class", "visibility-visible");
-                    }
-                }
-            };
+                        @Override
+                        protected void onComponentTag(ComponentTag tag) {
+                            if (getChains().indexOf(theChain) == 0) {
+                                tag.put("class", "visibility-hidden");
+                            } else {
+                                tag.put("class", "visibility-visible");
+                            }
+                        }
+                    };
             upLink.getImage()
                     .add(new AttributeModifier(
                             "alt", new ParamResourceModel("SecurityFilterChainsPanel.th.up", upLink)));
             upLink.setOutputMarkupId(true);
             add(upLink);
 
-            downLink = new ImageAjaxLink("down", "gs-icon-arrow-down") {
-                @Override
-                protected void onClick(AjaxRequestTarget target) {
-                    int index = getChains().indexOf(PositionPanel.this.theChain);
-                    getChains().remove(index);
-                    getChains().add(Math.min(getChains().size(), index + 1), PositionPanel.this.theChain);
-                    target.add(tablePanel);
-                    target.add(this);
-                    target.add(downLink);
-                    target.add(upLink);
-                }
+            downLink =
+                    new ImageAjaxLink(
+                            "down", new PackageResourceReference(getClass(), "../img/icons/silk/arrow_down.png")) {
+                        @Override
+                        protected void onClick(AjaxRequestTarget target) {
+                            int index = getChains().indexOf(PositionPanel.this.theChain);
+                            getChains().remove(index);
+                            getChains().add(Math.min(getChains().size(), index + 1), PositionPanel.this.theChain);
+                            target.add(tablePanel);
+                            target.add(this);
+                            target.add(downLink);
+                            target.add(upLink);
+                        }
 
-                @Override
-                protected void onComponentTag(ComponentTag tag) {
-                    if (getChains().indexOf(theChain) == getChains().size() - 1) {
-                        tag.put("class", "visibility-hidden");
-                    } else {
-                        tag.put("class", "visibility-visible");
-                    }
-                }
-            };
+                        @Override
+                        protected void onComponentTag(ComponentTag tag) {
+                            if (getChains().indexOf(theChain) == getChains().size() - 1) {
+                                tag.put("class", "visibility-hidden");
+                            } else {
+                                tag.put("class", "visibility-visible");
+                            }
+                        }
+                    };
             downLink.getImage()
                     .add(new AttributeModifier(
                             "alt", new ParamResourceModel("SecurityFilterChainsPanel.th.down", downLink)));

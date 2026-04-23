@@ -123,11 +123,10 @@ public class GeoServerRoleConverterImpl implements GeoServerRoleConverter {
         StringBuffer buff = new StringBuffer();
         boolean firstTime = true;
         for (GrantedAuthority role : roles) {
-            if (role instanceof GeoServerRole gsRole) {
-                if (firstTime) firstTime = false;
-                else buff.append(getRoleDelimiterString());
-                writeRole(buff, gsRole);
-            }
+            if (firstTime == true) firstTime = false;
+            else buff.append(getRoleDelimiterString());
+
+            writeRole(buff, (GeoServerRole) role);
         }
         return buff.toString();
     }

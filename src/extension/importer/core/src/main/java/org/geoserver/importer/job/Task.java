@@ -6,15 +6,14 @@
 package org.geoserver.importer.job;
 
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Task<V> extends FutureTask<V> {
 
     Long id;
     ProgressMonitor monitor;
     Throwable error;
-    AtomicBoolean recieved = new AtomicBoolean(false);
-    AtomicBoolean started = new AtomicBoolean(false);
+    boolean recieved = false;
+    boolean started = false;
     String toString;
 
     public Task(Job<V> job) {
@@ -45,19 +44,19 @@ public class Task<V> extends FutureTask<V> {
     }
 
     public void recieve() {
-        recieved.set(true);
+        recieved = true;
     }
 
     public boolean isRecieved() {
-        return recieved.get();
+        return recieved;
     }
 
     public void started() {
-        started.set(true);
+        started = true;
     }
 
     public boolean isStarted() {
-        return started.get();
+        return started;
     }
 
     @Override

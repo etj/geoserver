@@ -43,6 +43,8 @@ public class JDBCOpenSearchAccessFactory implements DataAccessFactory {
     /** parameter for namespace of the datastore */
     public static final Param NAMESPACE = new Param("namespace", String.class, "Namespace prefix", false);
 
+    private static GeoServer geoServer;
+
     @Override
     public Map<Key, ?> getImplementationHints() {
         // TODO Auto-generated method stub
@@ -83,7 +85,8 @@ public class JDBCOpenSearchAccessFactory implements DataAccessFactory {
             return false;
         }
         Param[] arrayParameters = getParametersInfo();
-        for (Param param : arrayParameters) {
+        for (int i = 0; i < arrayParameters.length; i++) {
+            Param param = arrayParameters[i];
             Object value;
             if (!params.containsKey(param.key)) {
                 if (param.required) {

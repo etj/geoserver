@@ -14,7 +14,7 @@
   </jai>
   <charset>UTF-8</charset>
   <numDecimals>8</numDecimals>
-  <onlineResource>https://geoserver.org</onlineResource>
+  <onlineResource>http://geoserver.org</onlineResource>
   <verbose>false</verbose>
   <verboseExceptions>false</verboseExceptions>
   <updateSequence>0</updateSequence>

@@ -5,7 +5,7 @@
  */
 package org.geoserver.rest;
 
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import org.geotools.api.filter.FilterFactory;
 import org.geotools.api.filter.expression.Function;
 import org.geotools.factory.CommonFactoryFinder;

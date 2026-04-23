@@ -1,11 +1,11 @@
 <wfs>
   <id>wfs</id>
   <enabled>true</enabled>
-  <name>Vector</name>
-  <title>Vector data</title>
+  <name>WFS</name>
+  <title>GeoServer Web Feature Service</title>
   <internationalTitle/>
-  <maintainer>https://geoserver.org/comm</maintainer>
-  <abstrct>Vector data published as geospatial features.</abstrct>
+  <maintainer>http://geoserver.org/comm</maintainer>
+  <abstrct>This is the reference implementation of WFS 1.0.0 and WFS 1.1.0, supports all WFS operations including Transaction.</abstrct>
   <internationalAbstract/>
   <accessConstraints>NONE</accessConstraints>
   <fees>NONE</fees>
@@ -21,13 +21,12 @@
     </org.geotools.util.Version>
   </versions>
   <keywords>
-    <string>VECTOR</string>
     <string>WFS</string>
     <string>GEOSERVER</string>
   </keywords>
   <metadataLink/>
   <citeCompliant>false</citeCompliant>
-  <onlineResource>https://geoserver.org</onlineResource>
+  <onlineResource>http://geoserver.org</onlineResource>
   <schemaBaseURL>http://schemas.opengis.net</schemaBaseURL>
   <verbose>false</verbose>
   <metadata>

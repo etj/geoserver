@@ -5,7 +5,6 @@
  */
 package org.geoserver.platform;
 
-import jakarta.servlet.ServletContext;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -15,6 +14,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.ServletContext;
 import org.geoserver.platform.resource.FileSystemResourceStore;
 import org.geoserver.platform.resource.Paths;
 import org.geoserver.platform.resource.Resource;

@@ -40,11 +40,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class STACQueryableIndexTest extends STACTestSupport {
+    private static final String FAKE_ID = "foobar";
+    private static final String TYPE_NUMBER = "number";
+    private static final String TYPE_STRING = "string";
+    private static final String TYPE_INTEGER = "integer";
     static OpenSearchAccess data;
 
     @BeforeClass
     public static void setupClass() throws IOException, SQLException {
-        data = JDBCOpenSearchAccessTest.setupAndReturnStore(postgis);
+        data = JDBCOpenSearchAccessTest.setupAndReturnStore();
     }
 
     @AfterClass

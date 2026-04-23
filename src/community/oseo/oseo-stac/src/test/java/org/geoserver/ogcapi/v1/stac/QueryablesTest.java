@@ -14,6 +14,7 @@ import org.geoserver.config.GeoServer;
 import org.geoserver.data.test.SystemTestData;
 import org.geoserver.ogcapi.APIException;
 import org.geoserver.opensearch.eo.OSEOInfo;
+import org.jsoup.nodes.Document;
 import org.junit.Test;
 
 public class QueryablesTest extends STACTestSupport {
@@ -115,13 +116,13 @@ public class QueryablesTest extends STACTestSupport {
 
     @Test
     public void testSearchQueryablesHTML() throws Exception {
-        getAsJSoup("ogc/stac/v1/queryables?f=html");
+        Document html = getAsJSoup("ogc/stac/v1/queryables?f=html");
         // TODO: add checks, for now it just verifies the template is producing HTML
     }
 
     @Test
     public void testCollectionQueryablesHTML() throws Exception {
-        getAsJSoup("ogc/stac/v1/collections/SENTINEL2/queryables?f=html");
+        Document html = getAsJSoup("ogc/stac/v1/collections/SENTINEL2/queryables?f=html");
         // TODO: add checks, for now it just verifies the template is producing HTML
     }
 

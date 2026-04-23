@@ -22,19 +22,19 @@ public class JDBCConfigPropertiesFactoryBean extends JDBCLoaderPropertiesFactory
 
     /** DDL scripts copied to <data dir>/jdbcconfig_scripts/ on first startup */
     private static final String[] SCRIPTS = {
-        "dropdb.hsqldb.sql",
+        "dropdb.h2.sql",
         "dropdb.mssql.sql",
         "dropdb.mysql.sql",
         "dropdb.oracle.sql",
         "dropdb.postgres.sql",
-        "initdb.hsqldb.sql",
+        "initdb.h2.sql",
         "initdb.mssql.sql",
         "initdb.mysql.sql",
         "initdb.oracle.sql",
         "initdb.postgres.sql"
     };
 
-    private static final String[] SAMPLE_CONFIGS = {"jdbcconfig.properties.hsqldb", "jdbcconfig.properties.postgres"};
+    private static final String[] SAMPLE_CONFIGS = {"jdbcconfig.properties.h2", "jdbcconfig.properties.postgres"};
 
     public JDBCConfigPropertiesFactoryBean(ResourceStore resourceStore) {
         super(resourceStore, PREFIX);

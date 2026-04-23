@@ -12,7 +12,7 @@ import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.model.IModel;
 import org.geoserver.ogcapi.ConformanceInfo;
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Three-state {@link AjaxCheckBox} preserving the {@code null} initial model value.

@@ -14,16 +14,10 @@ import org.geoserver.opensearch.eo.security.EOCollectionAccessLimitInfo;
 import org.geoserver.opensearch.eo.security.EOCollectionAccessLimitInfoImpl;
 import org.geoserver.opensearch.eo.security.EOProductAccessLimitInfo;
 import org.geoserver.opensearch.eo.security.EOProductAccessLimitInfoImpl;
-import org.geoserver.opensearch.eo.store.OSEOPostGISResource;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 public class OSEOSecurityPageTest extends OSEOWebTestSupport {
-
-    @ClassRule
-    public static final OSEOPostGISResource postgis = new OSEOPostGISResource(false);
 
     private static final String COLLECTION_PREFIX = "form:collectionLimitsContainer:collectionLimits:listContainer";
     private static final String PRODUCT_PREFIX = "form:productLimitsContainer:productLimits:listContainer";
@@ -39,11 +33,6 @@ public class OSEOSecurityPageTest extends OSEOWebTestSupport {
     private static final String LANDSAT8 = "LANDSAT8";
     public static final String SENTINEL2 = "SENTINEL2";
     private GeoServer gs;
-
-    @Override
-    protected OSEOPostGISResource getOSEOPostGIS() {
-        return postgis;
-    }
 
     @Before
     public void beforeTest() throws Exception {
@@ -236,23 +225,23 @@ public class OSEOSecurityPageTest extends OSEOWebTestSupport {
         assertEquals(0, productLimits.size());
     }
 
-    private static @NotNull String collectionFilterPath(int itemIndex) {
+    private static String collectionFilterPath(int itemIndex) {
         return "%s:items:%d:itemProperties:1:component".formatted(COLLECTION_PREFIX, itemIndex);
     }
 
-    private static @NotNull String collectionRolesPath(int itemIndex) {
+    private static String collectionRolesPath(int itemIndex) {
         return "%s:items:%d:itemProperties:2:component".formatted(COLLECTION_PREFIX, itemIndex);
     }
 
-    private static @NotNull String productCollectionPath(int itemIndex) {
+    private static String productCollectionPath(int itemIndex) {
         return "%s:items:%d:itemProperties:1:component".formatted(PRODUCT_PREFIX, itemIndex);
     }
 
-    private static @NotNull String productFilterPath(int itemIndex) {
+    private static String productFilterPath(int itemIndex) {
         return "%s:items:%d:itemProperties:2:component".formatted(PRODUCT_PREFIX, itemIndex);
     }
 
-    private static @NotNull String productRolesPath(int itemIndex) {
+    private static String productRolesPath(int itemIndex) {
         return "%s:items:%d:itemProperties:3:component".formatted(PRODUCT_PREFIX, itemIndex);
     }
 }

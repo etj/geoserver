@@ -15,6 +15,7 @@ import static org.geoserver.ogcapi.ConformanceClass.CQL2_TEXT;
 import static org.geoserver.ogcapi.ConformanceClass.ECQL_TEXT;
 import static org.geoserver.ogcapi.ConformanceClass.FEATURES_FILTER;
 import static org.geoserver.ogcapi.ConformanceClass.FILTER;
+import static org.geoserver.ogcapi.MappingJackson2YAMLMessageConverter.APPLICATION_YAML_VALUE;
 import static org.geoserver.opensearch.eo.store.OpenSearchAccess.EO_IDENTIFIER;
 import static org.geoserver.opensearch.eo.store.OpenSearchQueries.getProductProperties;
 import static org.geoserver.ows.URLMangler.URLType.RESOURCE;
@@ -22,7 +23,6 @@ import static org.geoserver.ows.util.ResponseUtils.buildURL;
 import static org.geoserver.ows.util.ResponseUtils.urlEncode;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -33,6 +33,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
+import org.geoserver.catalog.Catalog;
 import org.geoserver.config.GeoServer;
 import org.geoserver.featurestemplating.builders.impl.RootBuilder;
 import org.geoserver.featurestemplating.builders.visitors.PropertySelectionVisitor;
@@ -45,12 +47,12 @@ import org.geoserver.ogcapi.APIService;
 import org.geoserver.ogcapi.ConformanceDocument;
 import org.geoserver.ogcapi.DefaultContentType;
 import org.geoserver.ogcapi.HTMLResponseBody;
+import org.geoserver.ogcapi.JSONSchemaMessageConverter;
 import org.geoserver.ogcapi.OGCAPIMediaTypes;
+import org.geoserver.ogcapi.OpenAPIMessageConverter;
 import org.geoserver.ogcapi.PaginationLinksBuilder;
 import org.geoserver.ogcapi.Queryables;
 import org.geoserver.ogcapi.Sortables;
-import org.geoserver.ogcapi.SwaggerJSONAPIMessageConverter;
-import org.geoserver.ogcapi.SwaggerJSONSchemaMessageConverter;
 import org.geoserver.opensearch.eo.OSEOInfo;
 import org.geoserver.opensearch.eo.OpenSearchAccessProvider;
 import org.geoserver.opensearch.eo.store.OpenSearchAccess;
@@ -157,6 +159,10 @@ public class STACService {
         return getService();
     }
 
+    private Catalog getCatalog() {
+        return geoServer.getCatalog();
+    }
+
     @GetMapping(name = "getLandingPage")
     @ResponseBody
     @HTMLResponseBody(templateName = "landingPage.ftl", fileName = "landingPage.html")
@@ -200,7 +206,11 @@ public class STACService {
     @GetMapping(
             path = {"openapi", "openapi.json", "openapi.yaml"},
             name = "getApi",
-            produces = {SwaggerJSONAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE, MediaType.APPLICATION_YAML_VALUE})
+            produces = {
+                OpenAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE,
+                APPLICATION_YAML_VALUE,
+                MediaType.TEXT_XML_VALUE
+            })
     @ResponseBody
     @HTMLResponseBody(templateName = "api.ftl", fileName = "api.html")
     public OpenAPI api() throws IOException {
@@ -509,6 +519,20 @@ public class STACService {
         return response;
     }
 
+    private void addCollectionsFilter(
+            FilterMerger filters, List<String> collectionIds, boolean excludeDisabledCollection) throws IOException {
+        List<String> disabledIds =
+                excludeDisabledCollection ? getDisabledCollections(collectionIds) : Collections.emptyList();
+
+        if (collectionIds != null && !collectionIds.isEmpty()) {
+            collectionIds.removeAll(disabledIds);
+            filters.add(getProductInCollectionFilter(collectionIds));
+        } else if (!disabledIds.isEmpty()) {
+            // exclude disabled collections
+            filters.add(FF.not(getProductInCollectionFilter(disabledIds)));
+        }
+    }
+
     public PropertyIsEqualTo getEnabledFilter() {
         return FF.equals(FF.property(OpenSearchAccess.ENABLED), FF.literal(true));
     }
@@ -530,6 +554,27 @@ public class STACService {
         return (Filter) templateMapped.accept(stacIndexOptimizerVisitor, null);
     }
 
+    private List<String> getDisabledCollections(List<String> collectionIds) throws IOException {
+        Query q = new Query();
+        Filter filter = FF.equals(FF.property(OpenSearchAccess.ENABLED), FF.literal(false));
+        if (collectionIds != null && !collectionIds.isEmpty()) {
+            List<Filter> filters = new ArrayList<>();
+            filters.add(filter);
+
+            filters.addAll(collectionIds.stream()
+                    .map(cid -> FF.equals(FF.property(EO_IDENTIFIER), FF.literal(cid)))
+                    .collect(Collectors.toList()));
+            filter = FF.and(filters);
+        }
+        q.setFilter(filter);
+        q.setProperties(Arrays.asList(FF.property(EO_IDENTIFIER)));
+        FeatureCollection<FeatureType, Feature> collections =
+                accessProvider.getOpenSearchAccess().getCollectionSource().getFeatures(q);
+        return DataUtilities.list(collections).stream()
+                .map(f -> (String) f.getProperty(EO_IDENTIFIER).getValue())
+                .collect(Collectors.toList());
+    }
+
     static Filter getProductInCollectionFilter(List<String> collectionIds) {
         FilterMerger filters = new FilterMerger();
         collectionIds.stream()
@@ -545,7 +590,7 @@ public class STACService {
     @GetMapping(
             path = "collections/{collectionId}/queryables",
             name = "getCollectionQueryables",
-            produces = SwaggerJSONSchemaMessageConverter.SCHEMA_TYPE_VALUE)
+            produces = JSONSchemaMessageConverter.SCHEMA_TYPE_VALUE)
     @ResponseBody
     @HTMLResponseBody(templateName = "queryables-collection.ftl", fileName = "queryables.html")
     public Queryables collectionQueryables(@PathVariable(name = "collectionId") String collectionId)
@@ -572,7 +617,7 @@ public class STACService {
     @GetMapping(
             path = "collections/{collectionId}/sortables",
             name = "getCollectionSortables",
-            produces = SwaggerJSONSchemaMessageConverter.SCHEMA_TYPE_VALUE)
+            produces = JSONSchemaMessageConverter.SCHEMA_TYPE_VALUE)
     @ResponseBody
     @HTMLResponseBody(templateName = "sortables-collection.ftl", fileName = "sortables.html")
     public Sortables collectionSortables(@PathVariable(name = "collectionId") String collectionId) throws IOException {
@@ -596,7 +641,7 @@ public class STACService {
     @GetMapping(
             path = "queryables",
             name = "getSearchQueryables",
-            produces = SwaggerJSONSchemaMessageConverter.SCHEMA_TYPE_VALUE)
+            produces = JSONSchemaMessageConverter.SCHEMA_TYPE_VALUE)
     @ResponseBody
     @HTMLResponseBody(templateName = "queryables-global.ftl", fileName = "queryables.html")
     public Queryables searchQueryables() throws IOException {
@@ -619,7 +664,7 @@ public class STACService {
     @GetMapping(
             path = "sortables",
             name = "getSearchSortables",
-            produces = SwaggerJSONSchemaMessageConverter.SCHEMA_TYPE_VALUE)
+            produces = JSONSchemaMessageConverter.SCHEMA_TYPE_VALUE)
     @ResponseBody
     @HTMLResponseBody(templateName = "sortables-global.ftl", fileName = "sortables.html")
     public Sortables searchSortables() throws IOException {

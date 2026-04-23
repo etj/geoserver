@@ -58,7 +58,7 @@ public class TrksegType {
      */
     public List<WptType> getTrkpt() {
         if (trkpt == null) {
-            trkpt = new ArrayList<>();
+            trkpt = new ArrayList<WptType>();
         }
 
         return this.trkpt;

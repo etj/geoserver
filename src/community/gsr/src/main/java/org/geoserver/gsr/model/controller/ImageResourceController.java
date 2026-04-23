@@ -9,9 +9,6 @@
  */
 package org.geoserver.gsr.model.controller;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -19,6 +16,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.config.GeoServer;
 import org.springframework.web.servlet.ModelAndView;

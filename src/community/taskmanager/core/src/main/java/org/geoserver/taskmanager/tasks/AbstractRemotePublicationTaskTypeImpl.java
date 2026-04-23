@@ -12,7 +12,6 @@ import it.geosolutions.geoserver.rest.encoder.GSLayerEncoder;
 import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder;
 import it.geosolutions.geoserver.rest.encoder.coverage.GSCoverageEncoder;
 import it.geosolutions.geoserver.rest.encoder.feature.GSFeatureTypeEncoder;
-import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -24,6 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CoverageInfo;
 import org.geoserver.catalog.CoverageStoreInfo;
@@ -211,15 +211,6 @@ public abstract class AbstractRemotePublicationTaskTypeImpl implements TaskType 
                         .configureResource(ws, storeType, actualStoreName, actualStoreName, re)) {
                     throw new TaskException("Failed to configure resource " + ws + ":" + re.getName());
                 }
-            } else if (createStore && storeType == StoreType.DATASTORES
-                    ? restManager.getReader().existsFeatureType(ws, actualStoreName, resource.getName())
-                    : restManager.getReader().existsCoverage(ws, actualStoreName, resource.getName())) {
-                if (!restManager
-                        .getPublisher()
-                        .configureResource(ws, storeType, actualStoreName, resource.getName(), re)) {
-                    throw new TaskException("Failed to configure resource " + ws + ":" + re.getName());
-                }
-
             } else {
                 if (!restManager.getPublisher().createResource(ws, storeType, actualStoreName, re)) {
                     throw new TaskException("Failed to create resource " + ws + ":" + re.getName());

@@ -4,7 +4,6 @@
  */
 package org.geoserver.rest.catalog;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.awt.RenderingHints;
 import java.io.IOException;
 import java.io.Serializable;
@@ -14,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogBuilder;
 import org.geoserver.catalog.CatalogRepository;
@@ -441,13 +441,7 @@ public class CoverageStoreFileController extends AbstractStoreUploadController {
             // Prepare the directory for file upload or external upload of a zip file
             directory = RESTUtils.createUploadRoot(catalog, workspaceName, storeName, postRequest);
         }
-        CatalogRepository repository = catalog.getResourcePool().getRepository();
-
-        // Some images (i.e. image mosaic with geopackage index reference) require the repository.
-        Hints hints = new Hints(new RenderingHints(Hints.REPOSITORY, repository));
-        CoverageStoreFileValidator validator = new CoverageStoreFileValidator(getCoverageFormat(format), hints);
-
-        return handleFileUpload(storeName, workspaceName, filename, method, format, directory, request, validator);
+        return handleFileUpload(storeName, workspaceName, filename, method, format, directory, request);
     }
 
     /** Return the remote URL provided in the request. */

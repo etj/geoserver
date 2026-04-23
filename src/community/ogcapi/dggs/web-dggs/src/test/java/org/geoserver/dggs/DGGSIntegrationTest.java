@@ -7,6 +7,8 @@ package org.geoserver.dggs;
 
 import static org.junit.Assert.assertEquals;
 
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogBuilder;
 import org.geoserver.catalog.DataStoreInfo;
@@ -18,8 +20,6 @@ import org.geotools.dggs.gstore.DGGSGeometryStoreFactory;
 import org.geotools.dggs.gstore.DGGSResolutionCalculator;
 import org.geotools.feature.NameImpl;
 import org.junit.Test;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONObject;
 
 public class DGGSIntegrationTest extends GeoServerSystemTestSupport {
 

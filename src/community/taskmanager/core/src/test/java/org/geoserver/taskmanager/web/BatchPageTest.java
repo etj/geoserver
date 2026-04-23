@@ -164,15 +164,14 @@ public class BatchPageTest extends AbstractWicketTaskManagerTest {
         tester.assertRenderedPage(BatchPage.class);
 
         tester.clickLink("batchForm:addNew");
-        tester.assertComponent(
-                "dialog:dialog:modal:overlay:dialog:content:content:form:userPanel", DropDownPanel.class);
+        tester.assertComponent("dialog:dialog:content:form:userPanel", DropDownPanel.class);
         assertEquals(
                 3,
                 (((DropDownChoice<?>) tester.getComponentFromLastRenderedPage(
-                                "dialog:dialog:modal:overlay:dialog:content:content:form:userPanel:dropdown"))
+                                "dialog:dialog:content:form:userPanel:dropdown"))
                         .getChoices()
                         .size()));
-        FormTester formTester = tester.newFormTester("dialog:dialog:modal:overlay:dialog:content:content:form");
+        FormTester formTester = tester.newFormTester("dialog:dialog:content:form");
         formTester.select("userPanel:dropdown", 0);
         formTester.submit("submit");
 
@@ -184,13 +183,12 @@ public class BatchPageTest extends AbstractWicketTaskManagerTest {
         assertEquals("task1", provider.getItems().get(0).getTask().getName());
 
         tester.clickLink("batchForm:addNew");
-        tester.assertComponent(
-                "dialog:dialog:modal:overlay:dialog:content:content:form:userPanel", DropDownPanel.class);
-        formTester = tester.newFormTester("dialog:dialog:modal:overlay:dialog:content:content:form");
+        tester.assertComponent("dialog:dialog:content:form:userPanel", DropDownPanel.class);
+        formTester = tester.newFormTester("dialog:dialog:content:form");
         assertEquals(
                 2,
                 (((DropDownChoice<?>) tester.getComponentFromLastRenderedPage(
-                                "dialog:dialog:modal:overlay:dialog:content:content:form:userPanel:dropdown"))
+                                "dialog:dialog:content:form:userPanel:dropdown"))
                         .getChoices()
                         .size()));
         formTester.select("userPanel:dropdown", 1);
@@ -199,13 +197,12 @@ public class BatchPageTest extends AbstractWicketTaskManagerTest {
         assertEquals("task3", provider.getItems().get(1).getTask().getName());
 
         tester.clickLink("batchForm:addNew");
-        tester.assertComponent(
-                "dialog:dialog:modal:overlay:dialog:content:content:form:userPanel", DropDownPanel.class);
-        formTester = tester.newFormTester("dialog:dialog:modal:overlay:dialog:content:content:form");
+        tester.assertComponent("dialog:dialog:content:form:userPanel", DropDownPanel.class);
+        formTester = tester.newFormTester("dialog:dialog:content:form");
         assertEquals(
                 1,
                 (((DropDownChoice<?>) tester.getComponentFromLastRenderedPage(
-                                "dialog:dialog:modal:overlay:dialog:content:content:form:userPanel:dropdown"))
+                                "dialog:dialog:content:form:userPanel:dropdown"))
                         .getChoices()
                         .size()));
         formTester.select("userPanel:dropdown", 0);
@@ -240,7 +237,7 @@ public class BatchPageTest extends AbstractWicketTaskManagerTest {
         tester.getRequest().getPostParameters().addParameterValue(selector.getInputName(), "true");
         tester.executeAjaxEvent(selector, "click");
         tester.clickLink("batchForm:removeSelected");
-        tester.executeAjaxEvent("dialog:dialog:modal:overlay:dialog:content:content:form:submit", "click");
+        tester.executeAjaxEvent("dialog:dialog:content:form:submit", "click");
 
         assertEquals(1, provider.size());
         assertEquals("task2", provider.getItems().get(0).getTask().getName());

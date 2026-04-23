@@ -9,7 +9,7 @@ import org.geoserver.config.ServiceFactoryExtension;
 
 public class WPSFactoryExtension extends ServiceFactoryExtension<WPSInfo> {
 
-    public WPSFactoryExtension() {
+    protected WPSFactoryExtension() {
         super(WPSInfo.class);
     }
 

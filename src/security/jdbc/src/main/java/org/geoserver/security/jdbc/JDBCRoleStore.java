@@ -102,6 +102,7 @@ public class JDBCRoleStore extends JDBCRoleService implements GeoServerRoleStore
             ps.execute();
 
             addRoleProperties(role, con);
+
         } catch (SQLException ex) {
             throw new IOException(ex);
         } finally {

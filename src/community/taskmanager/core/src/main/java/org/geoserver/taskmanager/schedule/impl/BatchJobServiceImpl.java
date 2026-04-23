@@ -4,7 +4,6 @@
  */
 package org.geoserver.taskmanager.schedule.impl;
 
-import jakarta.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -12,6 +11,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import org.geoserver.taskmanager.data.Batch;
 import org.geoserver.taskmanager.data.BatchElement;
 import org.geoserver.taskmanager.data.BatchRun;

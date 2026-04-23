@@ -4,21 +4,20 @@
  */
 package org.geoserver.gwc.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletRequestWrapper;
-import jakarta.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.ows.LocalWorkspace;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.condition.PathPatternsRequestCondition;
+import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.util.UrlPathHelper;
-import org.springframework.web.util.pattern.PathPattern;
 
 /**
  * Specific URL mapping handler for GWC WMTS REST API. The main goal of this handler id to handle virtual services, it
@@ -28,20 +27,6 @@ import org.springframework.web.util.pattern.PathPattern;
  */
 public class GwcUrlHandlerMapping extends RequestMappingHandlerMapping implements HandlerInterceptor {
 
-    /**
-     * Default handler mapping order for GWC URL mappings.
-     *
-     * <p>GWC handler mappings need higher precedence (lower numeric order) than
-     * {@link org.geoserver.ows.OWSHandlerMapping#DEFAULT_ORDER OWSHandlerMapping} to ensure workspace-prefixed GWC URLs
-     * (e.g., {@code /topp/gwc/rest/wmts/...}) are matched by the GWC handler before the OWS handler tries to interpret
-     * the workspace prefix. This preserves the precedence relationship established in GEOS-10648, where GWC handlers
-     * were given {@code order=10} (higher precedence) while OWS handlers used the default {@code Integer.MAX_VALUE}
-     * (lowest precedence).
-     *
-     * @see org.geoserver.ows.OWSHandlerMapping#DEFAULT_ORDER
-     */
-    public static final int DEFAULT_ORDER = -100;
-
     protected String GWC_URL_PATTERN = "";
 
     private final Catalog catalog;
@@ -49,17 +34,16 @@ public class GwcUrlHandlerMapping extends RequestMappingHandlerMapping implement
     public GwcUrlHandlerMapping(Catalog catalog, String gwcUrlPattern) {
         this.catalog = catalog;
         GWC_URL_PATTERN = gwcUrlPattern;
-        setOrder(DEFAULT_ORDER);
     }
 
     @Override
     protected void registerHandlerMethod(Object handler, Method method, RequestMappingInfo mapping) {
         // this handler is only interested on GWC WMTS REST API URLs
-        PathPatternsRequestCondition patternsRequestCondition = mapping.getPathPatternsCondition();
+        PatternsRequestCondition patternsRequestCondition = mapping.getPatternsCondition();
         if (patternsRequestCondition != null && patternsRequestCondition.getPatterns() != null) {
-            for (PathPattern pattern : patternsRequestCondition.getPatterns()) {
-                if (pattern.toString().contains(GWC_URL_PATTERN)) {
-                    // this is a handler for GWC WMTS & REST API
+            for (String pattern : patternsRequestCondition.getPatterns()) {
+                if (pattern.contains(GWC_URL_PATTERN)) {
+                    // this is a handler for GWC WMTS REST API
                     super.registerHandlerMethod(handler, method, mapping);
                     break;
                 }
@@ -70,14 +54,12 @@ public class GwcUrlHandlerMapping extends RequestMappingHandlerMapping implement
     @Override
     protected HandlerMethod lookupHandlerMethod(String lookupPath, HttpServletRequest request) throws Exception {
         int gwcRestBaseIndex = lookupPath.indexOf(GWC_URL_PATTERN);
-        if (gwcRestBaseIndex == -1 /*|| gwcRestBaseIndex == 0*/) {
+        if (gwcRestBaseIndex == -1 || gwcRestBaseIndex == 0) {
             // not a GWC REST URL or not in the context of a virtual service
             return null;
         }
-        if (request.getServletPath().equalsIgnoreCase("gwc") && gwcRestBaseIndex == 0) {
-            return null;
-        }
-        String workspaceName = request.getServletPath().substring(1);
+        int startIndex = lookupPath.charAt(0) == '/' ? 1 : 0;
+        String workspaceName = lookupPath.substring(startIndex, gwcRestBaseIndex);
         WorkspaceInfo workspace = catalog.getWorkspaceByName(workspaceName);
         if (workspace == null) {
             // not a valid workspace,we are done
@@ -85,7 +67,7 @@ public class GwcUrlHandlerMapping extends RequestMappingHandlerMapping implement
         }
         // we are in the context of a virtual service
         HandlerMethod handler = super.lookupHandlerMethod(
-                lookupPath.substring(gwcRestBaseIndex), new Wrapper(request, catalog, workspaceName, lookupPath));
+                lookupPath.substring(gwcRestBaseIndex), new Wrapper(request, catalog, workspaceName));
         if (handler == null) {
             // no handler found
             return null;
@@ -104,11 +86,13 @@ public class GwcUrlHandlerMapping extends RequestMappingHandlerMapping implement
 
         private final String requestUri;
 
-        Wrapper(HttpServletRequest request, Catalog catalog, String workspaceName, String path) {
+        Wrapper(HttpServletRequest request, Catalog catalog, String workspaceName) {
             super(request);
 
             // Adjust PATH_ATTRIBUTE used by spring to remove workspace
-            request.setAttribute(UrlPathHelper.PATH_ATTRIBUTE, path);
+            request.setAttribute(
+                    UrlPathHelper.PATH_ATTRIBUTE,
+                    ((String) request.getAttribute(UrlPathHelper.PATH_ATTRIBUTE)).replace(workspaceName + "/", ""));
 
             // remove the virtual service workspace from the URL
             requestUri = request.getRequestURI().replace(workspaceName + "/", "");

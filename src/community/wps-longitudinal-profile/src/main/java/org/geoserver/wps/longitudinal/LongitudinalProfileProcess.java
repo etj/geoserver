@@ -340,7 +340,8 @@ public class LongitudinalProfileProcess implements GeoServerProcess, DisposableB
             if (!(coverageCRS instanceof GeographicCRS)) {
                 // data is not Geographic -> Compute distance in degrees
                 computedDistance = computeDiagonalDistance(gridCoverage2D, EPSG_4326);
-            } else if (gridToCRS instanceof AffineTransform2D affine) {
+            } else if (gridToCRS instanceof AffineTransform2D) {
+                AffineTransform2D affine = (AffineTransform2D) gridToCRS;
                 double dx = affine.getScaleX();
                 double dy = affine.getScaleY();
                 // data is already Geographic -> already in degrees

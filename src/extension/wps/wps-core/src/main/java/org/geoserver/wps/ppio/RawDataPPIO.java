@@ -23,7 +23,7 @@ public class RawDataPPIO extends ComplexPPIO {
 
     WPSResourceManager resourceManager;
 
-    public RawDataPPIO(WPSResourceManager resourceManager) {
+    protected RawDataPPIO(WPSResourceManager resourceManager) {
         super(RawData.class, RawData.class, AbstractRawData.BINARY_MIME);
         this.resourceManager = resourceManager;
     }

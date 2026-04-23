@@ -2,21 +2,20 @@
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
     xmlns:wicket="http://wicket.apache.org/">
+<body>
 <wicket:head>
 
 </wicket:head>
-<body>
 <wicket:extend>
-  <fieldset>
-    <div class="gs-form-group">
-      <label><wicket:message key="usernameParameter"></wicket:message></label>
-      <input wicket:id="usernameParameterName" class="field" type="text"/>
-    </div>
-    <div class="gs-form-group">
-      <label><wicket:message key="passwordParameter"></wicket:message></label>
-      <input wicket:id="passwordParameterName" class="field" type="text"/>
-    </div>
-  </fieldset>
+
+  <div class="py-1">
+    <label><wicket:message key="usernameParameter"></wicket:message></label>
+    <input wicket:id="usernameParameterName" class="field text"/>
+  </div>
+  <div class="py-1">
+    <label><wicket:message key="passwordParameter"></wicket:message></label>
+    <input wicket:id="passwordParameterName" class="field text"/>
+  </div>
 
 </wicket:extend>
 </body>

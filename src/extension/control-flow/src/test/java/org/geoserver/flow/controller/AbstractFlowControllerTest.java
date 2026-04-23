@@ -9,8 +9,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.fail;
 
-import jakarta.servlet.http.Cookie;
 import java.lang.Thread.State;
+import javax.servlet.http.Cookie;
 import org.geoserver.flow.controller.FlowControllerTestingThread.ThreadState;
 import org.geoserver.ows.Request;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -35,20 +35,6 @@ public abstract class AbstractFlowControllerTest {
         await().atMost(maxWait, MILLISECONDS)
                 .pollDelay(10, MILLISECONDS)
                 .until(() -> t.getState() == State.WAITING || t.getState() == State.TIMED_WAITING);
-    }
-
-    /**
-     * Like {@link #waitBlocked}, but also accepts the thread having already timed out.
-     *
-     * <p>Use this for threads with short flow-controller timeouts, where the timeout may expire before polling can
-     * detect the WAITING state.
-     */
-    void waitBlockedOrTimedOut(FlowControllerTestingThread fct, long maxWait) {
-        await().atMost(maxWait, MILLISECONDS)
-                .pollDelay(10, MILLISECONDS)
-                .until(() -> fct.getState() == State.WAITING
-                        || fct.getState() == State.TIMED_WAITING
-                        || fct.state == ThreadState.TIMED_OUT);
     }
 
     /**

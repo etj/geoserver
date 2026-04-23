@@ -8,20 +8,14 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import org.geoserver.opensearch.eo.store.OSEOPostGISResource;
-import org.junit.ClassRule;
+import org.geoserver.opensearch.eo.response.AtomSearchResponse;
+import org.geoserver.ows.util.ResponseUtils;
 import org.junit.Test;
 import org.w3c.dom.Document;
 
 public class MetadataTest extends OSEOTestSupport {
 
-    @ClassRule
-    public static final OSEOPostGISResource postgis = new OSEOPostGISResource(false);
-
-    @Override
-    protected OSEOPostGISResource getOSEOPostGIS() {
-        return postgis;
-    }
+    private static final String ENCODED_ATOM_MIME = ResponseUtils.urlEncode(AtomSearchResponse.MIME);
 
     @Test
     public void testGetSentinel2Metadata() throws Exception {

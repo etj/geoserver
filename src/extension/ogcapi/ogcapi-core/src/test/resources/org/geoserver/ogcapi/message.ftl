@@ -1,4 +1,4 @@
-<html xmlns:wicket="http://wicket.apache.org/">
+<html>
 <head>
     <script src="${resourceLink('webresources/ogcapi/hello.js')}"></script>
 </head>

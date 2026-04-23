@@ -4,7 +4,6 @@
  */
 package org.geoserver.taskmanager.external.impl;
 
-import jakarta.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import org.apache.wicket.util.string.Strings;
 import org.geoserver.taskmanager.external.FileService;
 import org.geotools.util.logging.Logging;

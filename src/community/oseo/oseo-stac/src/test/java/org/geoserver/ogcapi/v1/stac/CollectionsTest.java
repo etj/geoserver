@@ -172,7 +172,7 @@ public class CollectionsTest extends STACTestSupport {
         testSentinel2JSON(s2);
     }
 
-    private void testSentinel2JSON(DocumentContext s2) {
+    public void testSentinel2JSON(DocumentContext s2) {
         assertEquals("The Sentinel-2 mission", s2.read("title"));
         assertThat(
                 s2.read("description"),
@@ -188,8 +188,8 @@ public class CollectionsTest extends STACTestSupport {
         assertEquals(89, s2bbox.read("$[0][3]"), 0d);
         // Sentinel 2 temporal range
         DocumentContext s2time = readContext(s2, "extent.temporal.interval");
-        assertEquals("2015-07-01T10:20:21.000Z", s2time.read("$[0][0]"));
-        assertEquals("2016-02-26T10:20:21.000Z", s2time.read("$[0][1]"));
+        assertEquals("2015-07-01T10:20:21.000+00:00", s2time.read("$[0][0]"));
+        assertEquals("2016-02-26T10:20:21.000+00:00", s2time.read("$[0][1]"));
         // the providers for sentinel2
         assertEquals(2, (int) s2.read("providers.length()", Integer.class));
         assertEquals(

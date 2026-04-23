@@ -15,7 +15,6 @@ import java.io.Writer;
 import java.util.Map;
 import javax.measure.Unit;
 import org.apache.commons.io.output.DeferredFileOutputStream;
-import org.geoserver.json.GeoJSONBuilder;
 import org.geoserver.wms.WMSMapContent;
 import org.geoserver.wms.map.RawMap;
 import org.geoserver.wms.vector.DeferredFileOutputStreamWebMap;
@@ -36,7 +35,7 @@ public class GeoJsonWMSBuilder implements VectorTileBuilder {
 
     private DeferredFileOutputStream out;
 
-    private GeoJSONBuilder jsonWriter;
+    private org.geoserver.wfs.json.GeoJSONBuilder jsonWriter;
 
     public GeoJsonWMSBuilder(Rectangle mapSize, ReferencedEnvelope mapArea) {
 
@@ -47,7 +46,7 @@ public class GeoJsonWMSBuilder implements VectorTileBuilder {
                 .setSuffix(".geojson")
                 .get();
         writer = new OutputStreamWriter(out, UTF_8);
-        jsonWriter = new GeoJSONBuilder(writer);
+        jsonWriter = new org.geoserver.wfs.json.GeoJSONBuilder(writer);
         jsonWriter.object(); // start root object
         jsonWriter.key("type").value("FeatureCollection");
         jsonWriter.key("totalFeatures").value("unknown");

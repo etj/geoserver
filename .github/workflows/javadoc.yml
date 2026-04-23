@@ -1,12 +1,8 @@
-name: Javadocs GitHub CI
+name: Docs javadocs GitHub CI
 
 on:
   pull_request:
     paths-ignore:
-      - 'doc/**'
-      - 'mkdocs.yml'
-      - 'requirements.txt'
-      - '.github/workflows/docs.yml'
       - '**/src/main/resources/GeoServerApplication_*.properties'
       - '!**/src/main/resources/GeoServerApplication_fr.properties'
 
@@ -55,3 +51,4 @@ jobs:
       if: always()
       run: |
         find ~/.m2/repository -name "*SNAPSHOT*" -type d | xargs rm -rf {}
+

@@ -171,6 +171,7 @@ public class XStreamPersisterTest {
         LoggingInfo logging = factory.createLogging();
 
         logging.setLevel("CRAZY_LOGGING");
+        logging.setLocation("some/place/geoserver.log");
         logging.setStdOutLogging(true);
 
         ByteArrayOutputStream out = out();

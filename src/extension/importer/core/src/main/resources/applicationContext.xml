@@ -28,7 +28,6 @@
 	<property name="component" value="Importer" />
 	<property name="available" value="true" />
 	<property name="enabled" value="true" />
-    <property name="category" value="EXTENSION"/>
   </bean>
 
   <!-- Import context automatic clean-up -->

@@ -4,18 +4,19 @@
  */
 package org.geoserver.featurestemplating.readers;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import org.geoserver.platform.resource.Resource;
-import tools.jackson.core.json.JsonReadFeature;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.JsonNodeType;
-import tools.jackson.databind.node.ObjectNode;
 
 /** Parses a JSON structure, processing eventual includes and expanding them */
 public class RecursiveJSONParser extends RecursiveTemplateResourceParser {
@@ -31,15 +32,13 @@ public class RecursiveJSONParser extends RecursiveTemplateResourceParser {
 
     public RecursiveJSONParser(Resource resource) {
         super(resource);
-        this.mapper =
-                JsonMapper.builder().enable(JsonReadFeature.ALLOW_JAVA_COMMENTS).build();
+        this.mapper = new ObjectMapper(new JsonFactory().enable(JsonParser.Feature.ALLOW_COMMENTS));
         this.rootCollectionName = "features";
     }
 
     public RecursiveJSONParser(Resource resource, String rootCollectionName) {
         super(resource);
-        this.mapper =
-                JsonMapper.builder().enable(JsonReadFeature.ALLOW_JAVA_COMMENTS).build();
+        this.mapper = new ObjectMapper(new JsonFactory().enable(JsonParser.Feature.ALLOW_COMMENTS));
         this.rootCollectionName = rootCollectionName;
     }
 
@@ -98,7 +97,9 @@ public class RecursiveJSONParser extends RecursiveTemplateResourceParser {
     }
 
     private void findAndReplaceInObj(ObjectNode currNode, List<JsonNode> replaced, List<JsonNode> replacements) {
-        for (String name : currNode.propertyNames()) {
+        Iterator<String> names = currNode.fieldNames();
+        while (names.hasNext()) {
+            String name = names.next();
             JsonNode node = currNode.get(name);
             int index = replaced.indexOf(node);
             if (index != -1) {
@@ -131,7 +132,7 @@ public class RecursiveJSONParser extends RecursiveTemplateResourceParser {
         if (!(mergeValue.getNodeType() == JsonNodeType.STRING))
             throw new IllegalArgumentException(
                     MERGE_KEY + " property must have a string value, pointing to a base template");
-        Resource mergeResource = getResource(this.resource, mergeValue.asString());
+        Resource mergeResource = getResource(this.resource, mergeValue.textValue());
         if (mergeResource.getType() != Resource.Type.RESOURCE)
             throw new IllegalArgumentException(MERGE_KEY + " resource " + mergeResource.path() + " could not be found");
 
@@ -157,7 +158,9 @@ public class RecursiveJSONParser extends RecursiveTemplateResourceParser {
         // this is done to allow insertion of flat values in-place, without changing
         // the expected order
         ObjectNode result = mapper.getNodeFactory().objectNode();
-        for (String name : input.propertyNames()) {
+        Iterator<String> names = input.fieldNames();
+        while (names.hasNext()) {
+            String name = names.next();
             JsonNode node = input.get(name);
             // each if here handles a case and "exits" to the next loop iteration
             if (name.equals(INCLUDE_KEY)) {
@@ -165,23 +168,25 @@ public class RecursiveJSONParser extends RecursiveTemplateResourceParser {
                         + "only $includeFlat can be used here");
             }
             if (name.equals(INCLUDE_FLAT_KEY)) {
-                if (!node.isString()) {
+                if (!node.isTextual()) {
                     throw new IllegalArgumentException(
                             "The value of a " + INCLUDE_FLAT_KEY + " key must be the path of the file being included");
                 }
                 if (!isDynamicIncludeFlat(node)) {
                     // ok we need to include a json file
-                    Resource resource = getResource(this.resource, node.asString());
+                    Resource resource = getResource(this.resource, node.asText());
                     JsonNode processed = new RecursiveJSONParser(this, resource).parse();
-                    for (String field : processed.propertyNames()) {
+                    Iterator<String> fields = processed.fieldNames();
+                    while (fields.hasNext()) {
+                        String field = fields.next();
                         result.set(field, processed.get(field));
                     }
                     continue;
                 }
             }
             // inclusion in value?
-            if (node.isString()) {
-                String txt = node.asString();
+            if (node.isTextual()) {
+                String txt = node.asText();
                 JsonNode processed = processInlineDirective(txt, INCLUDE_KEY);
                 if (processed != null) {
                     result.set(name, processed);
@@ -213,8 +218,8 @@ public class RecursiveJSONParser extends RecursiveTemplateResourceParser {
         ArrayNode result = mapper.getNodeFactory().arrayNode();
         for (int i = 0; i < array.size(); i++) {
             JsonNode node = array.get(i);
-            if (node.isString()) {
-                String txt = node.asString();
+            if (node.isTextual()) {
+                String txt = node.asText();
                 // simple inclusion
                 JsonNode processed = processInlineDirective(txt, INCLUDE_KEY);
                 if (processed != null) {
@@ -260,7 +265,7 @@ public class RecursiveJSONParser extends RecursiveTemplateResourceParser {
         // process later.
         if (isDynamicIncludeFlat(value)) return value;
         // it is a static inclusion, process it now.
-        else return processInlineDirective(value.asString(), directive);
+        else return processInlineDirective(value.textValue(), directive);
     }
 
     /**
@@ -288,7 +293,7 @@ public class RecursiveJSONParser extends RecursiveTemplateResourceParser {
     }
 
     private boolean isDynamicIncludeFlat(JsonNode node) {
-        String text = node.asString();
+        String text = node.asText();
         return text.contains(INCLUDE_FLAT_KEY.concat("{$")) || text.startsWith("${");
     }
 }

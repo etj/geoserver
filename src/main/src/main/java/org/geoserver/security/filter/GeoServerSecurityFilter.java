@@ -5,10 +5,10 @@
  */
 package org.geoserver.security.filter;
 
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.Filter;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerSecurityProvider;
 import org.geoserver.security.config.SecurityManagerConfig;
@@ -34,7 +34,7 @@ public abstract class GeoServerSecurityFilter extends AbstractGeoServerSecurityS
         implements Filter, BeanNameAware {
 
     /**
-     * GeoServer authentication filter should set an {@link AuthenticationEntryPoint} using this servlet attribute name.
+     * Geoserver authentication filter should set an {@link AuthenticationEntryPoint} using this servlet attribute name.
      *
      * <p>The {@link GeoServerExceptionTranslationFilter} may use the entry point in case of an
      * {@link AuthenticationException}

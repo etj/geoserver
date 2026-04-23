@@ -16,11 +16,11 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.geotools.util.logging.Logging;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONException;
-import org.kordamp.json.JSONObject;
 
 /**
  * Verify role using Azure graph.
@@ -133,8 +133,7 @@ public class MSGraphRolesResolver {
         return result;
     }
 
-    // Made package-protected for testing
-    List<String> parseAppRolesJson(String jsonString) {
+    private List<String> parseAppRolesJson(String jsonString) {
         List<String> result = new ArrayList<>();
         JSONObject json = JSONObject.fromObject(jsonString);
         JSONArray values = json.getJSONArray("value");

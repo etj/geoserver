@@ -20,6 +20,10 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import net.sf.json.JSON;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.geoserver.rest.RestBaseController;
 import org.geoserver.test.GeoServerSystemTestSupport;
@@ -27,10 +31,6 @@ import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.kordamp.json.JSON;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONObject;
-import org.kordamp.json.JSONSerializer;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -253,7 +253,7 @@ public class AuthenticationProviderRestControllerMarshallingTest extends GeoServ
             if (obj.size() == 1) {
                 String key = (String) obj.keySet().iterator().next();
                 Object val = obj.get(key);
-                if (val instanceof JSONArray array) return array;
+                if (val instanceof JSONArray) return (JSONArray) val;
                 JSONArray out = new JSONArray();
                 out.add(val);
                 return out;
@@ -516,25 +516,6 @@ public class AuthenticationProviderRestControllerMarshallingTest extends GeoServ
         MockHttpServletResponse up =
                 adminPUT(BASE + "/security/authproviders/" + name, json(root.toString()), "application/json", 400);
         assertThat(up.getContentAsString(), containsString("Unsupported className"));
-    }
-
-    /** Explicit blocked {@code configClassName} is rejected with 400. */
-    @Test
-    public void create_rejects_blocked_configClassName_400() throws Exception {
-        String name = "MARSHAL-" + System.nanoTime() + "-cfg";
-
-        JSONObject inner = new JSONObject();
-        inner.put("name", name);
-        inner.put("className", CLASSNAME_UP);
-        inner.put("configClassName", "java.lang.Runtime");
-        inner.put("userGroupServiceName", "default");
-        JSONObject root = new JSONObject();
-        root.put("authprovider", inner);
-
-        MockHttpServletResponse resp =
-                adminPOST(BASE + "/security/authproviders", json(root.toString()), "application/json");
-        assertEquals(400, resp.getStatus());
-        assertThat(resp.getContentAsString(), containsString("Unsupported configClassName"));
     }
 
     /** Path/payload name mismatch is rejected with 400. */

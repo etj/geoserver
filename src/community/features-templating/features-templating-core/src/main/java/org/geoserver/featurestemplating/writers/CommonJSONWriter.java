@@ -7,13 +7,17 @@ package org.geoserver.featurestemplating.writers;
 import static org.geoserver.featurestemplating.builders.EncodingHints.SKIP_OBJECT_ENCODING;
 import static org.geoserver.featurestemplating.builders.EncodingHints.isSingleFeatureRequest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.geoserver.featurestemplating.builders.EncodingHints;
 import org.geoserver.featurestemplating.builders.impl.DynamicValueBuilder;
 import org.geoserver.featurestemplating.builders.impl.StaticBuilder;
@@ -23,20 +27,16 @@ import org.geotools.api.feature.Attribute;
 import org.geotools.api.feature.ComplexAttribute;
 import org.geotools.util.Converters;
 import org.locationtech.jts.geom.Geometry;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.util.StdDateFormat;
 
 /** Decorator for a JsonGenerator that add some functionality mainly to write JsonNode */
 public abstract class CommonJSONWriter extends TemplateOutputWriter {
 
-    protected tools.jackson.core.JsonGenerator generator;
+    protected com.fasterxml.jackson.core.JsonGenerator generator;
     private boolean flatOutput;
 
     protected TemplateIdentifier identifier;
 
-    public CommonJSONWriter(tools.jackson.core.JsonGenerator generator, TemplateIdentifier templateIdentifier) {
+    public CommonJSONWriter(com.fasterxml.jackson.core.JsonGenerator generator, TemplateIdentifier templateIdentifier) {
         this.generator = generator;
         this.identifier = templateIdentifier;
     }
@@ -47,7 +47,7 @@ public abstract class CommonJSONWriter extends TemplateOutputWriter {
             if (key == null) {
                 writeValue(staticContent);
             } else {
-                generator.writeStringProperty(key, (String) staticContent);
+                generator.writeStringField(key, (String) staticContent);
             }
         } else {
             JsonNode jsonNode = (JsonNode) staticContent;
@@ -61,12 +61,13 @@ public abstract class CommonJSONWriter extends TemplateOutputWriter {
      * template to the json-ld output
      */
     public void writeObjectNode(String nodeName, JsonNode node) throws IOException {
-        if (nodeName != null && !nodeName.equals("")) generator.writeName(nodeName);
+        if (nodeName != null && !nodeName.equals("")) generator.writeFieldName(nodeName);
         writeStartObject();
-        Set<Map.Entry<String, JsonNode>> properties = node.properties();
-        for (Map.Entry<String, JsonNode> nodeEntry : properties) {
-            String entryName = nodeEntry.getKey();
-            JsonNode childNode = nodeEntry.getValue();
+        Iterator<Map.Entry<String, JsonNode>> iterator = node.fields();
+        while (iterator.hasNext()) {
+            Map.Entry<String, JsonNode> nodEntry = iterator.next();
+            String entryName = nodEntry.getKey();
+            JsonNode childNode = nodEntry.getValue();
             if (childNode.isObject()) {
                 writeObjectNode(entryName, childNode);
             } else if (childNode.isValueNode()) {
@@ -83,9 +84,11 @@ public abstract class CommonJSONWriter extends TemplateOutputWriter {
      * template to the json-ld output
      */
     public void writeArrayNode(String nodeName, JsonNode arNode) throws IOException {
-        if (nodeName != null && !nodeName.equals("")) generator.writeName(nodeName);
+        if (nodeName != null && !nodeName.equals("")) generator.writeFieldName(nodeName);
         writeStartArray();
-        for (JsonNode node : arNode.values()) {
+        Iterator<JsonNode> arrayIterator = arNode.elements();
+        while (arrayIterator.hasNext()) {
+            JsonNode node = arrayIterator.next();
             if (node.isValueNode()) {
                 writeValueNode(null, node);
             } else if (node.isObject()) {
@@ -102,9 +105,9 @@ public abstract class CommonJSONWriter extends TemplateOutputWriter {
      * json-ld template to the json-ld output
      */
     public void writeValueNode(String entryName, JsonNode valueNode) throws IOException {
-        if (entryName != null && !entryName.equals("")) generator.writeName(entryName);
-        if (valueNode.isString()) {
-            generator.writeString(valueNode.asString());
+        if (entryName != null && !entryName.equals("")) generator.writeFieldName(entryName);
+        if (valueNode.isTextual()) {
+            generator.writeString(valueNode.asText());
         } else if (valueNode.isFloat() || valueNode.isDouble()) {
             generator.writeNumber(valueNode.asDouble());
         } else if (valueNode.isLong()) {
@@ -158,7 +161,7 @@ public abstract class CommonJSONWriter extends TemplateOutputWriter {
         writeObjectNode(null, node);
     }
 
-    protected JsonNode toJsonNode(Geometry geometry) throws JacksonException {
+    protected JsonNode toJsonNode(Geometry geometry) throws JsonProcessingException {
         String jsonGeom = org.geotools.data.geojson.GeoJSONWriter.toGeoJSON(geometry);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readTree(jsonGeom);
@@ -166,7 +169,7 @@ public abstract class CommonJSONWriter extends TemplateOutputWriter {
 
     @Override
     public void writeElementName(Object elementName, EncodingHints encodingHints) throws IOException {
-        if (elementName != null) generator.writeName(elementName.toString());
+        if (elementName != null) generator.writeFieldName(elementName.toString());
     }
 
     /** Write the result of an xpath or cql expression evaluation operated by the {@link DynamicValueBuilder} */
@@ -216,7 +219,7 @@ public abstract class CommonJSONWriter extends TemplateOutputWriter {
             writeElementNameAndValue(key, list.get(0), encodingHints);
         } else {
             if (!flatOutput) {
-                generator.writeName(key);
+                generator.writeFieldName(key);
                 writeList(encodingHints, list);
             } else {
                 for (int i = 0; i < list.size(); i++) {
@@ -240,9 +243,9 @@ public abstract class CommonJSONWriter extends TemplateOutputWriter {
     public void startTemplateOutput(EncodingHints encodingHints) throws IOException {
 
         writeStartObject();
-        generator.writeName("type");
+        generator.writeFieldName("type");
         generator.writeString("FeatureCollection");
-        generator.writeName("features");
+        generator.writeFieldName("features");
         writeStartArray();
     }
 

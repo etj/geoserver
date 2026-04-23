@@ -5,7 +5,7 @@
  */
 package org.geoserver.ows;
 
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import org.geoserver.platform.ServiceException;
 
 public class HelloWorld {

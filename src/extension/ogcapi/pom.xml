@@ -10,7 +10,7 @@
   <parent>
     <groupId>org.geoserver</groupId>
     <artifactId>extension</artifactId>
-    <version>3.0-SNAPSHOT</version>
+    <version>2.28-SNAPSHOT</version>
   </parent>
 
   <groupId>org.geoserver.extension</groupId>
@@ -22,7 +22,6 @@
     <module>ogcapi-features</module>
     <module>web-ogcapi</module>
     <module>web-features</module>
-    <module>ogcapi-features-assembly</module>
   </modules>
 
   <dependencies>

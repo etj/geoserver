@@ -14,12 +14,11 @@ public class ResourcesTest extends FileWrapperResourceTheoryTest {
 
     @Test
     public void resourcesTest() throws IOException {
-        // --8<-- [start:example]
         Resource source = getResource();
+
         Resource directory = getDirectory();
 
         Resources.copy(source.file(), directory);
-        // --8<-- [end:example]
 
         Resource target = directory.get(source.name());
 

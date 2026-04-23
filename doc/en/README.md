@@ -1,33 +1,38 @@
 # Documentation Instructions
 
-For writing guide please generate and review [docguide](https://docs.geoserver.org/3.0.x/en/docguide/). Documentation is written in a combination of:
+For writing guide please generate and review [docguide](https://docs.geoserver.org/latest/en/docguide/). Documentation is written in a combination of:
 
-* [material for mkdocs](https://squidfunk.github.io/mkdocs-material/): user manual, developers guide and documentation guide
-* [swagger.io](http://swagger.io): REST API reference documentation
+* [sphinx-doc.org](http://www.sphinx-doc.org): user manual, developers guide and documentation guide
+* [swagger.io](http://swagger.io) - REST API reference documentation
 
 GeoServer documentation is released using [Creative Commons Attribution 4.0 International](LICENSE.md).
 
-## Building with Python
+### Python Virtual Environment Setup
 
-The documentation is written with [mkdocs](https://www.mkdocs.org/), which is a Python documentation generator. We use [Material for mkdocs](https://squidfunk.github.io/mkdocs-material/) theme which provides excellent documentation.
+The documentation is written with [sphinx-build](https://www.sphinx-doc.org/en/master/), which is a Python documentation generator.
 
-1. From the root of your GeoServer checkout:
+To establish a virtual environment just for this project (macOS example):
 
-   ```bash
-   python3 -m venv venv
-   ```
+```bash
+brew install virtualenv
+virtualenv venv
+```
 
-2. Activate virtual environment and install (or update) requirements:
-   ```bash
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-   
-3. Use ***mkdocs*** to serve preview from virtual environment:
+To activate python:
+```bash
+source venv/bin/activate
+```
 
-   ```bash
-   mkdocs serve --livereload --no-directory-urls -o
-   ```
+To install requirements into virtual environment:
+```bash
+pip install -r requirements.txt
+```
+
+To confirm installation:
+```bash
+sphinx-build --version
+sphinx-autobuild --version
+```
 
 ## Building with Maven
 
@@ -35,8 +40,6 @@ To build:
 ```bash
 mvn clean install
 ```
-
-The documentation is packaged for offline use (inlining javascript and using `index.html` links).
 
 ### index.html
 
@@ -56,24 +59,68 @@ To generate a specific REST API endpoint:
 mvn process-resources:system-status
 ```
 
-The api documentation is packaged for offline use, as a replacement for the interactive swagger docs
-available on the website (or in local preview).
+### Manuals
 
+To build all restructured text documentation:
+
+```bash
+mvn compile
+```
+
+And to package into zips:
+
+```bash
+mvn package
+```
+
+Profiles are defined to build individual manuals:
+
+```bash
+mvn compile -Puser
+mvn compile -Pdeveloper
+mvn compile -Pdocguide
+```
+
+And can be packaged individually:
+
+```bash    
+mvn package:single@user
+mvn package:single@developer
+mvn package:single@docguide
+```
+To generate user pdf:
+
+```bash
+mvn compile -Puser-pdf
+```
+    
 #### Writing
 
-The ant `build.xml` can also be called directly:
+The ant ``build.xml`` can also be called directly:
 
 ```
-ant build
+ant user
 ```
 
-This uses `mkdocs build` to generate documentation into `../../target/index.html`.
+This uses ``sphinx-build`` to generate documentation into ``target/user/html/index.html``.
 
 To view content while editing:
 ```
-ant site
+ant user-site
 ```
 
-This uses `mkdocs serve` to serve docs locally.
+This uses ``sphinx-autobuild`` to serve docs on next available port, opening a browser to review generated pages. The browser will refresh as pages are edited and saved.
 
-The `../version.py` mkdocs hook looks up the current project version, and most recent release, information in `src/pom.xml`. This information is made availabel to the macros plugin for use when writing.
+
+Additional targets are available:
+```
+ant developer
+ant developer-site
+ant docguide
+ant docguide-site
+```
+Customize output with current ``project.version`` name:
+
+```
+ant user -Dproject.version=2.23.1
+```

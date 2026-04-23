@@ -30,7 +30,7 @@ import org.geoserver.web.GeoServerApplication;
  *   <li>{@code HIDDEN} – a placeholder text (such as "(hidden)") is shown instead of the e-mail address
  * </ul>
  *
- * <p>Optionally, when the web admin interface settings allows it, this component adds an AJAX click behaviour that
+ * Optionally, when the web admin interface settings allows it, this component adds an AJAX click behaviour that
  * replaces the current partially visible e-mail with its full version without reloading the page.
  */
 public class EmailLabel extends Label {

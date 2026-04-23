@@ -21,7 +21,6 @@
     <bean id="gsMainModule" class="org.geoserver.platform.ModuleStatusImpl">
         <constructor-arg index="0" value="gs-main"/>
         <constructor-arg index="1" value="GeoServer Main"/>
-        <property name="category" value="CORE"/>
     </bean>
     <bean class="org.geoserver.platform.RenderingEngineStatus"/>
     <bean class="org.geoserver.platform.SystemPropertyStatus"/>
@@ -81,7 +80,7 @@
      -->
      
     <!-- configuration module -->
-        <!-- note: we use depends on ensure that all datastore plugins are
+        <!-- note: we use depends to ensure that all datastore plugins are 
              loaded from the spring container before processing hte catalog -->
      
     <bean id="rawCatalog" class="org.geoserver.catalog.impl.CatalogImpl" depends-on="configurationLock">
@@ -177,10 +176,6 @@
     <property name="resourceLoader" ref="resourceLoader"/>
     <property name="geoServer" ref="geoServer"/>
   </bean>
-
-  <!-- cors initializer -->
-  <bean id="corsInitializer" class="org.geoserver.security.cors.CORSInitializer">
-  </bean>
   
   <!-- resource pool initializer -->
   <bean id="resourcePoolInitializer" class="org.geoserver.catalog.ResourcePoolInitializer">
@@ -192,7 +187,7 @@
   <bean id="defaultCatalogSecurityFactory" class="org.geoserver.security.decorators.DefaultSecureCatalogFactory"/>
   
   <bean id="disabledServiceChecker" class="org.geoserver.ows.DisabledServiceCheck"/>
-
+  
   <bean id="dispatcherMapping" 
     class="org.geoserver.ows.OWSHandlerMapping">
     <constructor-arg ref="catalog"/>
@@ -207,9 +202,6 @@
   
   <bean id="filePublisherMapping"
     class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
-     <!-- see OWSHandlerMapping.DEFAULT_ORDER -->
-     <property name="order" value="-50"/>
-     <property name="patternParser"><null/></property><!-- Spring 5.x backwards compatibility -->
      <property name="alwaysUseFullPath" value="true"/>
      <property name="mappings">
        <props>
@@ -221,9 +213,6 @@
   
   <bean id="stylePublisherMapping"
     class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
-     <!-- see OWSHandlerMapping.DEFAULT_ORDER -->
-     <property name="order" value="-50"/>
-     <property name="patternParser"><null/></property><!-- Spring 5.x backwards compatibility -->
      <property name="alwaysUseFullPath" value="true"/>
      <property name="mappings">
        <props>
@@ -234,9 +223,6 @@
   
   <bean id="classpathPublisherMapping"
     class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
-     <!-- see OWSHandlerMapping.DEFAULT_ORDER -->
-     <property name="order" value="-50"/>
-     <property name="patternParser"><null/></property><!-- Spring 5.x backwards compatibility -->
      <property name="alwaysUseFullPath" value="true"/>
      <property name="mappings">
        <props>
@@ -304,7 +290,7 @@
     <constructor-arg ref="rawCatalog"/> 
   </bean>
    
-  <!-- Allows to lock the config subsystem to that we serialize accesses to it -->
+  <!-- Alllows to lock the config subsyste to that we serialize accesses to it -->
   <bean id="configurationLock" class="org.geoserver.GeoServerConfigurationLock"/>
   
   <!-- Automatically injects a env map into the env function -->
@@ -334,8 +320,8 @@
   <bean id="cascadedStoredQueryCallback" class="org.geoserver.catalog.CascadedStoredQueryCallback"/>
   
   <!-- Entity resolver provider, to stop xml attacks via system entity resolution -->
-  <!-- The depends-on is important to avoid circularises, when a depends-on is set up a bean does not
-       start creation until the bean it depends on onto is created. This ensures GeoServer post-processing
+  <!-- The depends-on is important to avoid circularities, when a depends-on is setup a bean does not
+       start creation until the bean it depends onto is created. This ensures GeoServer post-processing
        inside GeoServerLoader ends up causing the initialization of entityResolverProvider instead of the 
        opposite, via the ResourcePoolInitializer, and breaks the circularity that would otherwise happen -->
   <bean id="entityResolverProvider" class="org.geoserver.util.EntityResolverProvider" depends-on="geoServer">
@@ -382,23 +368,8 @@
   </bean>
   <bean id="xmlViewParamsFormatParser" class="org.geoserver.ows.kvp.XMLViewParamsFormatParser">
   </bean>
-  <!--
-    Common KVP parsers, services with different syntax can use their own
-    by declaring the service/version parameters to have their own parser prioritized
-  -->
-  <bean id="bboxKvpParser" class="org.geoserver.ows.kvp.BBoxKvpParser"/>
-  <bean id="cqlKvpParser" class="org.geoserver.ows.kvp.CQLFilterKvpParser"/>
-  <bean id="sortByKvpParser" class="org.geoserver.ows.kvp.SortByKvpParser">
-      <constructor-arg ref="filterFactory"/>
-  </bean>
-  <bean id="formatOptionsKvpParser" class="org.geoserver.ows.kvp.FormatOptionsKvpParser"/>
-    <bean id="featureIdKvpParser" class="org.geoserver.ows.FlatKvpParser">
-        <constructor-arg index="0" value="featureId"/>
-        <constructor-arg index="1" value="java.lang.String"/>
-    </bean>
 
-
-    <bean id="authCacheLifecycleHandler" class="org.geoserver.security.auth.GuavaAuthenticationCacheImpl">
+  <bean id="authCacheLifecycleHandler" class="org.geoserver.security.auth.GuavaAuthenticationCacheImpl">
     <constructor-arg value="1000"/>
   </bean>
 

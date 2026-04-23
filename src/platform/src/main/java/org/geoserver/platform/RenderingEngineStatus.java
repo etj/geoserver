@@ -65,9 +65,4 @@ public class RenderingEngineStatus implements ModuleStatus {
     public Optional<String> getDocumentation() {
         return Optional.of("production/container.html#enable-the-marlin-rasterizer");
     }
-
-    @Override
-    public Category getCategory() {
-        return Category.CORE;
-    }
 }

@@ -9,9 +9,7 @@ import static org.geoserver.featurestemplating.web.schema.SchemaRuleProvider.NAM
 import static org.geoserver.featurestemplating.web.schema.SchemaRuleProvider.OUTPUT_FORMAT;
 import static org.geoserver.featurestemplating.web.schema.SchemaRuleProvider.PRIORITY;
 import static org.geoserver.featurestemplating.web.schema.SchemaRuleProvider.PROFILE_FILTER;
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
 
-import java.io.Serial;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.wicket.Component;
@@ -31,19 +29,6 @@ import org.geoserver.web.wicket.LiveCollectionModel;
 import org.geoserver.web.wicket.SimpleAjaxLink;
 
 public class SchemaRulesTablePanel extends Panel {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(SchemaRulesTablePanel.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
 
     private GeoServerTablePanel<SchemaRule> table;
 
@@ -67,7 +52,6 @@ public class SchemaRulesTablePanel extends Panel {
         table.setOutputMarkupId(true);
         add(
                 remove = new AjaxLink<Object>("removeSelected") {
-                    @Serial
                     private static final long serialVersionUID = 2421854498051377608L;
 
                     @Override

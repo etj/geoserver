@@ -5,7 +5,6 @@
  */
 package org.geoserver.platform;
 
-import jakarta.servlet.ServletContext;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.ServletContext;
 import org.geoserver.platform.resource.FilePaths;
 import org.geotools.util.SoftValueHashMap;
 import org.geotools.util.SuppressFBWarnings;
@@ -141,8 +141,7 @@ public class GeoServerExtensions implements ApplicationContextAware, Application
         List<T> result = new ArrayList<>(names.size());
         for (String name : names) {
             Object bean = getBean(context, name, isGeoServerExtensionsContext);
-            // filter via ExtensionFilter and skip NullBean objects (returned by Spring when a FactoryBean returns null)
-            if (!excludeBean(name, bean, filters) && extensionPoint.isInstance(bean)) result.add((T) bean);
+            if (!excludeBean(name, bean, filters)) result.add((T) bean);
         }
 
         // load from secondary extension providers

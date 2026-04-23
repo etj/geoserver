@@ -4,7 +4,6 @@
  */
 package org.geoserver.taskmanager.external.impl;
 
-import jakarta.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.servlet.ServletContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;

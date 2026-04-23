@@ -11,7 +11,7 @@
   <parent>
     <groupId>org.geoserver</groupId>
     <artifactId>extension</artifactId>
-    <version>3.0-SNAPSHOT</version>
+    <version>2.28-SNAPSHOT</version>
   </parent>
 
   <groupId>org.geoserver.extension</groupId>
@@ -46,7 +46,6 @@
     <module>app-schema-core</module>
     <module>app-schema-test</module>
     <module>sample-data-access-test</module>
-    <module>app-schema-assembly</module>
   </modules>
 
   <properties>

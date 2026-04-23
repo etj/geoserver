@@ -4,6 +4,7 @@
  */
 package org.geoserver.featurestemplating.request;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +28,6 @@ import org.geotools.api.filter.expression.Function;
 import org.geotools.api.filter.expression.PropertyName;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.visitor.DuplicatingFilterVisitor;
-import tools.jackson.databind.JsonNode;
 
 /** This visitor search for a Filter in {@link TemplateBuilder} tree using the path provided as a guideline. */
 public class TemplatePathVisitor extends DuplicatingFilterVisitor {
@@ -140,7 +140,7 @@ public class TemplatePathVisitor extends DuplicatingFilterVisitor {
                         staticNode = child != null ? child : staticNode;
                         currentEl++;
                     }
-                    retExpr = ff.literal(staticNode.asString());
+                    retExpr = ff.literal(staticNode.asText());
                 } else {
                     retExpr = ff.literal(staticBuilder.getStrValue());
                 }

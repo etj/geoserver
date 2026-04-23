@@ -10,6 +10,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
@@ -31,10 +35,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.ObjectNode;
 
 /**
  * End-to-end marshaling tests for AuthenticationFilterChain REST API. Uses header-based content negotiation (no
@@ -229,7 +229,7 @@ public class AuthenticationFilterChainRestControllerMarshallingTest extends GeoS
         if (filters != null && filters.isArray()) {
             for (JsonNode n : filters) {
                 JsonNode name = getAttr(n, "name"); // supports "name" and "@name"
-                if (name != null) names.add(name.asString());
+                if (name != null) names.add(name.asText());
             }
         }
         return names;
@@ -385,8 +385,8 @@ public class AuthenticationFilterChainRestControllerMarshallingTest extends GeoS
             JsonNode node = MAPPER.readTree(r.getContentAsByteArray());
             JsonNode target = findFirstChain(node);
             assertNotNull("JSON chain object not found", target);
-            assertEquals(name, target.get("name").asString());
-            assertEquals(CLASS_HTML, target.get("class").asString());
+            assertEquals(name, target.get("name").asText());
+            assertEquals(CLASS_HTML, target.get("class").asText());
             assertFalse(target.get("disabled").asBoolean());
             assertTrue(target.get("allowSessionCreation").asBoolean());
             assertFalse(target.get("ssl").asBoolean());
@@ -437,7 +437,7 @@ public class AuthenticationFilterChainRestControllerMarshallingTest extends GeoS
             MockHttpServletResponse view = doGet(BASE + "/" + name, CT_JSON);
             JsonNode target = findFirstChain(MAPPER.readTree(view.getContentAsByteArray()));
             assertNotNull(target);
-            assertEquals(name, target.get("name").asString());
+            assertEquals(name, target.get("name").asText());
         } finally {
             safeDeleteJson(name);
         }

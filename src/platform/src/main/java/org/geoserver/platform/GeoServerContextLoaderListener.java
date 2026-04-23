@@ -5,7 +5,7 @@
  */
 package org.geoserver.platform;
 
-import jakarta.servlet.ServletContextEvent;
+import javax.servlet.ServletContextEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.ContextLoaderListener;
 

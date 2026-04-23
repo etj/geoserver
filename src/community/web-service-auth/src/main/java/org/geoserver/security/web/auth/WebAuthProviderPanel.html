@@ -6,57 +6,57 @@
     <wicket:extend>
         <fieldset>
         <legend><span><wicket:message key="connectionSettingsLegend">Web Service Setting</wicket:message></span></legend>
-        <div class="gs-unordered-list-class">
+        <ul>
         
-            <div class="gs-list-item-class"> <label for="connectionURL"><wicket:message key="connectionURL"></wicket:message></label> <input type="text"
-                id="connectionURL" wicket:id="connectionURL" /></div>
-            <div class="gs-list-item-class"> <label for="connectionTimeOut"><wicket:message
+            <li><label for="connectionURL"><wicket:message key="connectionURL"></wicket:message></label> <input type="text"
+                id="connectionURL" wicket:id="connectionURL" class="text" /></li>
+            <li><label for="connectionTimeOut"><wicket:message
                         key="connectionTimeOut"></wicket:message></label> <input type="text"
-                id="connectionTimeOut" wicket:id="connectionTimeOut" />
-            </div>
-            <div class="gs-list-item-class"> <label for="readTimeoutOut"><wicket:message
+                id="connectionTimeOut" wicket:id="connectionTimeOut" class="text" />
+            </li>
+            <li><label for="readTimeoutOut"><wicket:message
                         key="readTimeoutOut"></wicket:message></label> <input type="text"
-                id="readTimeoutOut" wicket:id="readTimeoutOut" /></div>
-            <div class="gs-list-item-class choiceItem">
+                id="readTimeoutOut" wicket:id="readTimeoutOut" class="text" /></li>
+            <li class="choiceItem">
                  <input type="checkbox" id="useHeader" wicket:id="useHeader" />
                  <label for="useHeader"><span><wicket:message key="useHeader"></wicket:message></span></label>
-            </div>
-            <div class="gs-list-item-class choiceItem">
+            </li>
+            <li class="choiceItem">
                 <input type="checkbox" id="allowHTTPConnection" wicket:id="allowHTTPConnection" />
                 <label for="allowHTTPConnection"><span><wicket:message key="allowHTTPConnection"></wicket:message></span></label>
-            </div>
-        </div>
+            </li>
+        </ul>
         </fieldset>
         <fieldset>
         <legend><span><wicket:message key="authorizationSettingsLegend">Authorization</wicket:message></span></legend>
         
-<!--         <div id="authorizationOption" wicket:id="authorizationOption"></div> -->
-<!--         </div> -->
+<!--         <li id="authorizationOption" wicket:id="authorizationOption"></li> -->
+<!--         </ul> -->
         <div id="authorizationOption" wicket:id="authorizationOption">
-        <div class="gs-unordered-list-class choiceList">
-          <div class="gs-list-item-class">
+        <ul class="choiceList">
+          <li>
             <input id="roleService" wicket:id="roleService" type="radio"></input>
             <label for="roleService">Use Existing Role Service</label>
-          </div>
-          <div class="gs-list-item-class">
+          </li>          
+          <li>
             <input id="webResponse" wicket:id="webResponse" type="radio"></input>
             <label for="webResponse">Read Roles from Web Response</label>
-          </div>
-        </div>
+          </li>          
+        </ul>
       </div>
         </fieldset>
-        <div  id="webAuthorizationContainer" wicket:id="webAuthorizationContainer">
-        <div class="gs-list-item-class">
+        <ul  id="webAuthorizationContainer" wicket:id="webAuthorizationContainer">
+        <li>
                  <label for="roleRegex"><wicket:message key="roleRegex"></wicket:message></label>
-                 <input type="text" id="roleRegex" wicket:id="roleRegex" />
-        </div>
-        </div>
-        <div  id="roleAuthorizationContainer" wicket:id="roleAuthorizationContainer">
-        <div class="gs-list-item-class">
+                 <input type="text" id="roleRegex" wicket:id="roleRegex" class="text" />
+        </li>
+        </ul>
+        <ul  id="roleAuthorizationContainer" wicket:id="roleAuthorizationContainer">
+        <li>
                 <label for="roleServiceName"><wicket:message key="roleService"></wicket:message></label>
                 <select id="roleServiceName" wicket:id="roleServiceName"></select>
-        </div>
-        </div>
+        </li>
+        </ul>
                 
     </wicket:extend>
 </body>

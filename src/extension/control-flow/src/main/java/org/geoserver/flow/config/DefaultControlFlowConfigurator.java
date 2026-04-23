@@ -90,7 +90,7 @@ public class DefaultControlFlowConfigurator implements ControlFlowConfigurator, 
 
     PropertyFileWatcher configFile;
 
-    volatile long timeout = -1;
+    long timeout = -1;
 
     /** Default watches controlflow.properties */
     public DefaultControlFlowConfigurator() {

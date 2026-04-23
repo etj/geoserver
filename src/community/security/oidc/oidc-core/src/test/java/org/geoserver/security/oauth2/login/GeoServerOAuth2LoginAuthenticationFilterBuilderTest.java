@@ -24,25 +24,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.oauth2.core.ClientAuthenticationMethod.CLIENT_SECRET_POST;
 
-import jakarta.servlet.Filter;
-import jakarta.servlet.http.HttpServletRequest;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.servlet.Filter;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.oauth2.common.ConfidentialLogger;
-import org.geoserver.security.oauth2.common.TokenIntrospector;
 import org.geoserver.security.oauth2.spring.GeoServerAuthorizationRequestCustomizer;
+import org.geoserver.security.oauth2.spring.GeoServerOidcConfigurableTokenValidator;
 import org.geoserver.security.oauth2.spring.GeoServerOidcIdTokenDecoderFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.stubbing.Answer;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationManagerResolver;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer;
@@ -56,8 +50,6 @@ import org.springframework.security.oauth2.client.web.DefaultOAuth2Authorization
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.savedrequest.RequestCacheAwareFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -78,12 +70,11 @@ public class GeoServerOAuth2LoginAuthenticationFilterBuilderTest {
     private GeoServerOidcIdTokenDecoderFactory mockTokenDecoderFactory;
     private OAuth2LoginConfigurer mockOAuth2LoginConfigurer;
 
-    private final UserInfoEndpointConfig mockUserInfoConfig = mock(UserInfoEndpointConfig.class);
-    private final AuthorizationEndpointConfig mockAuthorizationConfig = mock(AuthorizationEndpointConfig.class);
-    private final TokenEndpointConfig mockTokenConfig = mock(TokenEndpointConfig.class);
+    private UserInfoEndpointConfig mockUserInfoConfig = mock(UserInfoEndpointConfig.class);
+    private AuthorizationEndpointConfig mockAuthorizationConfig = mock(AuthorizationEndpointConfig.class);
+    private TokenEndpointConfig mockTokenConfig = mock(TokenEndpointConfig.class);
 
-    private final GeoServerOAuth2LoginAuthenticationFilterBuilder sut =
-            new GeoServerOAuth2LoginAuthenticationFilterBuilder();
+    private GeoServerOAuth2LoginAuthenticationFilterBuilder sut = new GeoServerOAuth2LoginAuthenticationFilterBuilder();
 
     @Before
     public void setupDependencies() throws Exception {
@@ -97,44 +88,16 @@ public class GeoServerOAuth2LoginAuthenticationFilterBuilderTest {
         mockTokenDecoderFactory = mock(GeoServerOidcIdTokenDecoderFactory.class);
         mockOAuth2LoginConfigurer = mock(OAuth2LoginConfigurer.class);
 
-        // Support chaining on the top-level configurer methods that the builder uses
-        when(mockOAuth2LoginConfigurer.clientRegistrationRepository(any())).thenReturn(mockOAuth2LoginConfigurer);
-        when(mockOAuth2LoginConfigurer.authorizedClientRepository(any())).thenReturn(mockOAuth2LoginConfigurer);
-        when(mockOAuth2LoginConfigurer.authorizedClientService(any())).thenReturn(mockOAuth2LoginConfigurer);
-        when(mockOAuth2LoginConfigurer.loginProcessingUrl(any())).thenReturn(mockOAuth2LoginConfigurer);
+        when(mockOAuth2LoginConfigurer.userInfoEndpoint()).thenReturn(mockUserInfoConfig);
+        when(mockOAuth2LoginConfigurer.authorizationEndpoint()).thenReturn(mockAuthorizationConfig);
+        when(mockOAuth2LoginConfigurer.tokenEndpoint()).thenReturn(mockTokenConfig);
 
-        // For the lambda-based (non-deprecated) endpoint customizers, apply the customizer to our mocks
-        when(mockOAuth2LoginConfigurer.userInfoEndpoint(any(Customizer.class)))
-                .thenAnswer((Answer<OAuth2LoginConfigurer>) inv -> {
-                    Customizer<UserInfoEndpointConfig> c = inv.getArgument(0);
-                    c.customize(mockUserInfoConfig);
-                    return mockOAuth2LoginConfigurer;
-                });
-
-        when(mockOAuth2LoginConfigurer.authorizationEndpoint(any(Customizer.class)))
-                .thenAnswer((Answer<OAuth2LoginConfigurer>) inv -> {
-                    Customizer<AuthorizationEndpointConfig> c = inv.getArgument(0);
-                    c.customize(mockAuthorizationConfig);
-                    return mockOAuth2LoginConfigurer;
-                });
-
-        when(mockOAuth2LoginConfigurer.tokenEndpoint(any(Customizer.class)))
-                .thenAnswer((Answer<OAuth2LoginConfigurer>) inv -> {
-                    Customizer<TokenEndpointConfig> c = inv.getArgument(0);
-                    c.customize(mockTokenConfig);
-                    return mockOAuth2LoginConfigurer;
-                });
-
-        // When oauth2Login(customizer) is invoked, we run the customizer against our mock configurer
+        // when oauth2Login(): provide mock configurer
         when(mockHttp.oauth2Login(any())).thenAnswer(stub -> {
-            Customizer<OAuth2LoginConfigurer<HttpSecurity>> callback = stub.getArgument(0, Customizer.class);
-            callback.customize(mockOAuth2LoginConfigurer);
+            Customizer<OAuth2LoginConfigurer<HttpSecurity>> lCallback = stub.getArgument(0, Customizer.class);
+            lCallback.customize(mockOAuth2LoginConfigurer);
             return mockHttp;
         });
-
-        // Resource server (Bearer) configurer is enabled in hybrid mode; stub for builder chaining
-        when(mockHttp.oauth2ResourceServer(any())).thenReturn(mockHttp);
-        when(mockHttp.securityContext(any())).thenReturn(mockHttp);
     }
 
     private void assignDependencies() {
@@ -174,73 +137,14 @@ public class GeoServerOAuth2LoginAuthenticationFilterBuilderTest {
         }
     }
 
+    /**
+     * Verifies that the expected calls on the spring configuration API have occurred and filter chain is reconstructed
+     * as expected.
+     *
+     * @throws Exception
+     */
     @Test
     public void testFilterConstructionWithGoogle() throws Exception {
-        // given
-        assignDependencies();
-
-        ClientRegistrationRepository lRepo = mock(ClientRegistrationRepository.class);
-        OAuth2AuthorizedClientService lService = mock(OAuth2AuthorizedClientService.class);
-        Filter f0 = mock(Filter.class);
-        Filter f1 = new OAuth2AuthorizationRequestRedirectFilter(lRepo);
-        Filter f2 = new OAuth2LoginAuthenticationFilter(lRepo, lService);
-        Filter fBearer = createBearerFilter();
-        Filter f3 = new RequestCacheAwareFilter();
-        Filter f4 = mock(Filter.class);
-        List<Filter> lFilters = Arrays.asList(f0, f1, f2, fBearer, f3, f4);
-
-        when(mockHttp.build()).thenReturn(new DefaultSecurityFilterChain(mock(RequestMatcher.class), lFilters));
-
-        configuration.setGoogleEnabled(true);
-        configuration.setGoogleClientId("myClientId");
-        configuration.setGoogleClientSecret("myClientSecret");
-
-        configuration.setEnableRedirectAuthenticationEntryPoint(true);
-
-        configuration.setOidcAllowUnSecureLogging(true);
-        ConfidentialLogger.setEnabled(false);
-
-        // when
-        GeoServerOAuth2LoginAuthenticationFilter lFilter = sut.build();
-
-        // then
-        assertNotNull(lFilter.getLogoutSuccessHandler());
-
-        assertEquals(5, lFilter.getNestedFilters().size());
-        assertNotNull(sut.getRedirectToProviderFilter());
-        Assert.assertSame(f1, lFilter.getNestedFilters().get(0));
-        Assert.assertSame(f2, lFilter.getNestedFilters().get(1));
-        Assert.assertSame(fBearer, lFilter.getNestedFilters().get(2));
-        Assert.assertSame(f3, lFilter.getNestedFilters().get(3));
-        Assert.assertSame(
-                sut.getRedirectToProviderFilter(), lFilter.getNestedFilters().get(4));
-
-        verify(mockTokenDecoderFactory, times(1)).setGeoServerOAuth2LoginFilterConfig(isNotNull());
-        verify(mockHttp, times(1)).build();
-        verify(mockHttp, times(1)).oauth2ResourceServer(any());
-        verify(mockHttp, times(1)).securityContext(any());
-        verify(mockOAuth2LoginConfigurer, times(1)).clientRegistrationRepository(isNotNull());
-        verify(mockOAuth2LoginConfigurer, times(1)).authorizedClientRepository(isNotNull());
-        verify(mockOAuth2LoginConfigurer, times(1)).authorizedClientService(isNotNull());
-        verify(mockUserInfoConfig, times(1)).userService(isNotNull());
-        verify(mockUserInfoConfig, times(1)).oidcUserService(isNotNull());
-        verify(mockAuthorizationConfig, times(1)).authorizationRequestResolver(isNotNull());
-        verify(mockTokenConfig, times(1)).accessTokenResponseClient(isNotNull());
-
-        verify(mockEventPublisher, times(4)).publishEvent(any(OAuth2LoginButtonEnablementEvent.class));
-
-        ClientRegistrationRepository lClientRepo = sut.getClientRegistrationRepository();
-        assertNotNull(lClientRepo);
-        ClientRegistration lGoogleReg = lClientRepo.findByRegistrationId(REG_ID_GOOGLE);
-        assertNotNull(lGoogleReg);
-        assertEquals("myClientId", lGoogleReg.getClientId());
-        assertEquals("myClientSecret", lGoogleReg.getClientSecret());
-
-        assertTrue(ConfidentialLogger.isEnabled());
-    }
-
-    @Test
-    public void testFilterConstructionWithGoogleResourceServerDisabled() throws Exception {
         // given
         assignDependencies();
 
@@ -253,35 +157,73 @@ public class GeoServerOAuth2LoginAuthenticationFilterBuilderTest {
         Filter f4 = mock(Filter.class);
         List<Filter> lFilters = Arrays.asList(f0, f1, f2, f3, f4);
 
+        // * http returns a "complete" spring chain, here with some mock filters
         when(mockHttp.build()).thenReturn(new DefaultSecurityFilterChain(mock(RequestMatcher.class), lFilters));
 
+        // * Google is active and setup
         configuration.setGoogleEnabled(true);
         configuration.setGoogleClientId("myClientId");
         configuration.setGoogleClientSecret("myClientSecret");
-        configuration.setEnableRedirectAuthenticationEntryPoint(true);
-        configuration.setEnableResourceServerMode(false);
 
-        // when
+        // * skip GS login is enabled
+        configuration.setEnableRedirectAuthenticationEntryPoint(true);
+
+        // * unsecure logging is active
+        configuration.setOidcAllowUnSecureLogging(true);
+        ConfidentialLogger.setEnabled(false);
+
+        // when: building filter
         GeoServerOAuth2LoginAuthenticationFilter lFilter = sut.build();
 
         // then
-        assertNotNull(lFilter);
+        // * logout handler must be in place
+        assertNotNull(lFilter.getLogoutSuccessHandler());
+
+        // * relevant filters are extracted
         assertEquals(4, lFilter.getNestedFilters().size());
+        assertNotNull(sut.getRedirectToProviderFilter());
         Assert.assertSame(f1, lFilter.getNestedFilters().get(0));
         Assert.assertSame(f2, lFilter.getNestedFilters().get(1));
         Assert.assertSame(f3, lFilter.getNestedFilters().get(2));
         Assert.assertSame(
                 sut.getRedirectToProviderFilter(), lFilter.getNestedFilters().get(3));
 
-        verify(mockHttp, times(0)).oauth2ResourceServer(any());
-        verify(mockHttp, times(0)).securityContext(any());
+        // * configuration API has been called, and entire build process is through without nulls
+        verify(mockTokenDecoderFactory, times(1)).setGeoServerOAuth2LoginFilterConfig(isNotNull());
+        verify(mockHttp, times(1)).build();
+        verify(mockOAuth2LoginConfigurer, times(1)).clientRegistrationRepository(isNotNull());
+        verify(mockOAuth2LoginConfigurer, times(1)).authorizedClientRepository(isNotNull());
+        verify(mockOAuth2LoginConfigurer, times(1)).authorizedClientService(isNotNull());
+        verify(mockUserInfoConfig, times(1)).userService(isNotNull());
+        verify(mockUserInfoConfig, times(1)).oidcUserService(isNotNull());
+        verify(mockAuthorizationConfig, times(1)).authorizationRequestResolver(isNotNull());
+        verify(mockTokenConfig, times(1)).accessTokenResponseClient(isNotNull());
+
+        // * events have been published
+        verify(mockEventPublisher, times(4)).publishEvent(any(OAuth2LoginButtonEnablementEvent.class));
+
+        // * google client is setup as expected
+        ClientRegistrationRepository lClientRepo = sut.getClientRegistrationRepository();
+        assertNotNull(lClientRepo);
+        ClientRegistration lGoogleReg = lClientRepo.findByRegistrationId(REG_ID_GOOGLE);
+        assertNotNull(lGoogleReg);
+        assertEquals("myClientId", lGoogleReg.getClientId());
+        assertEquals("myClientSecret", lGoogleReg.getClientSecret());
+
+        assertTrue(ConfidentialLogger.isEnabled());
     }
 
+    /**
+     * Tests OIDC client construction and verifies configured settings and GeoServer customizers are in place.
+     *
+     * @throws Exception
+     */
     @Test
     public void testOidcConstruction() throws Exception {
         // given
         assignDependencies();
 
+        // * OIDC is used, with the respective settings
         configuration.setOidcEnabled(true);
 
         configuration.setOidcClientId("myId");
@@ -296,26 +238,32 @@ public class GeoServerOAuth2LoginAuthenticationFilterBuilderTest {
         configuration.setOidcUserInfoUri("myUserInfoUri");
         configuration.setOidcJwkSetUri("https://myJwkSetUri");
         configuration.setOidcLogoutUri("myLogoutUri");
-        configuration.setOidcIntrospectionUrl("myIntrospectionUrl");
 
+        configuration.setOidcEnforceTokenValidation(false);
         configuration.setOidcUsePKCE(true);
         configuration.setOidcResponseMode("query");
         configuration.setOidcAuthenticationMethodPostSecret(true);
         configuration.setOidcAllowUnSecureLogging(false);
 
+        // * filter construction is tested in testFilterConstructionWithGoogle()
         when(mockHttp.build())
                 .thenReturn(new DefaultSecurityFilterChain(mock(RequestMatcher.class), new ArrayList<>()));
 
+        // * builder uses real factory
         sut.setTokenDecoderFactory(new GeoServerOidcIdTokenDecoderFactory());
 
+        // * confidential logger is enabled before
         ConfidentialLogger.setEnabled(true);
 
         // when
+        // * filter is constructed
         GeoServerOAuth2LoginAuthenticationFilter lFilter = sut.build();
 
         // then
+        // * filter was created
         assertNotNull(lFilter);
 
+        // * settings where transmitted
         ClientRegistrationRepository lClientRepo = sut.getClientRegistrationRepository();
         assertNotNull(lClientRepo);
 
@@ -342,34 +290,32 @@ public class GeoServerOAuth2LoginAuthenticationFilterBuilderTest {
         JwtDecoder lDecoder = lTokenDecoderFactory.createDecoder(lReg);
         Object lValidatorObject = readField(lDecoder, "jwtValidator", true);
         assertNotNull(lValidatorObject);
+        assertEquals(GeoServerOidcConfigurableTokenValidator.class, lValidatorObject.getClass());
+        GeoServerOidcConfigurableTokenValidator lValidator = (GeoServerOidcConfigurableTokenValidator) lValidatorObject;
 
-        // NEW ASSERTION: introspection URL is now wired into the resource-server OpaqueTokenIntrospector,
-        // not stored in the GS filter.
-        OpaqueTokenIntrospector opaque = invokeOpaqueIntrospectorFactory(sut);
-        assertNotNull(opaque);
-        Assert.assertEquals(GeoServerOAuth2OpaqueTokenIntrospector.class, opaque.getClass());
+        // * enforceTokenValidation is addressed by validator
+        Assert.assertSame(configuration, lValidator.getConfiguration());
 
-        TokenIntrospector delegate = (TokenIntrospector) readField(opaque, "delegate", true);
-        assertNotNull(delegate);
-
-        Object introspectionUrl = readField(delegate, "introspectionEndpointUrl", true);
-        assertEquals("myIntrospectionUrl", introspectionUrl);
-
-        // Optional (if you added client_secret_post support in TokenIntrospector)
-        Object clientSecretPost = readField(delegate, "clientSecretPost", true);
-        assertEquals(true, clientSecretPost);
-
+        // * PKCE, extra request parameters (response mode)
         DefaultOAuth2AuthorizationRequestResolver lResolver = sut.getAuthorizationRequestResolver();
         assertNotNull(lResolver);
         Object lCustomizerObject = readField(lResolver, "authorizationRequestCustomizer", true);
         assertNotNull(lCustomizerObject);
         assertEquals(GeoServerAuthorizationRequestCustomizer.class, lCustomizerObject.getClass());
 
+        // * authentication method post secret
         assertEquals(CLIENT_SECRET_POST, lReg.getClientAuthenticationMethod());
 
+        // * insecure logging
         assertFalse(ConfidentialLogger.isEnabled());
     }
 
+    /**
+     * Verifies that the expected calls on the spring configuration API have occurred and filter chain is reconstructed
+     * as expected.
+     *
+     * @throws Exception
+     */
     @Test
     public void testFilterConstructionWithFurtherProviders() throws Exception {
         // given
@@ -380,23 +326,27 @@ public class GeoServerOAuth2LoginAuthenticationFilterBuilderTest {
         Filter f0 = mock(Filter.class);
         Filter f1 = new OAuth2AuthorizationRequestRedirectFilter(lRepo);
         Filter f2 = new OAuth2LoginAuthenticationFilter(lRepo, lService);
-        Filter fBearer = createBearerFilter();
         Filter f3 = new RequestCacheAwareFilter();
         Filter f4 = mock(Filter.class);
-        List<Filter> lFilters = Arrays.asList(f0, f1, f2, fBearer, f3, f4);
+        List<Filter> lFilters = Arrays.asList(f0, f1, f2, f3, f4);
 
+        // * http returns a "complete" spring chain, here with some mock filters
         when(mockHttp.build()).thenReturn(new DefaultSecurityFilterChain(mock(RequestMatcher.class), lFilters));
 
+        // * GitHub is active and setup
         configuration.setGitHubEnabled(true);
         configuration.setGitHubClientId("ghClientId");
         configuration.setGitHubClientSecret("ghClientSecret");
 
+        // * GitHub is active and setup
         configuration.setMsEnabled(true);
         configuration.setMsClientId("msClientId");
         configuration.setMsClientSecret("msClientSecret");
 
+        // when: building filter
         sut.build();
 
+        // * google client is setup as expected
         ClientRegistrationRepository lClientRepo = sut.getClientRegistrationRepository();
         assertNotNull(lClientRepo);
         ClientRegistration lClientReg = lClientRepo.findByRegistrationId(REG_ID_GIT_HUB);
@@ -408,94 +358,5 @@ public class GeoServerOAuth2LoginAuthenticationFilterBuilderTest {
         assertNotNull(lClientReg);
         assertEquals("msClientId", lClientReg.getClientId());
         assertEquals("msClientSecret", lClientReg.getClientSecret());
-    }
-
-    @Test
-    public void testScopedRegistrationIdsWithNamedConfig() throws Exception {
-        // given: a named configuration
-        assignDependencies();
-        configuration.setName("my-oidc-filter");
-
-        configuration.setGoogleEnabled(true);
-        configuration.setGoogleClientId("gClientId");
-        configuration.setGoogleClientSecret("gClientSecret");
-
-        configuration.setOidcEnabled(true);
-        configuration.setOidcClientId("oidcId");
-        configuration.setOidcClientSecret("oidcSecret");
-        configuration.setOidcUserNameAttribute("email");
-        configuration.setOidcScopes("openid");
-        configuration.setOidcTokenUri("https://token");
-        configuration.setOidcAuthorizationUri("https://auth");
-        configuration.setOidcJwkSetUri("https://jwks");
-
-        when(mockHttp.build())
-                .thenReturn(new DefaultSecurityFilterChain(mock(RequestMatcher.class), new ArrayList<>()));
-        sut.setTokenDecoderFactory(new GeoServerOidcIdTokenDecoderFactory());
-
-        // when
-        sut.build();
-
-        // then: registrations use scoped IDs
-        ClientRegistrationRepository lClientRepo = sut.getClientRegistrationRepository();
-        assertNotNull(lClientRepo);
-
-        String lScopedGoogle = GeoServerOAuth2ClientRegistrationId.scopedRegId("my-oidc-filter", REG_ID_GOOGLE);
-        String lScopedOidc = GeoServerOAuth2ClientRegistrationId.scopedRegId("my-oidc-filter", REG_ID_OIDC);
-
-        assertNotNull("Scoped Google registration expected", lClientRepo.findByRegistrationId(lScopedGoogle));
-        assertNotNull("Scoped OIDC registration expected", lClientRepo.findByRegistrationId(lScopedOidc));
-        assertNull("Bare Google ID should not exist", lClientRepo.findByRegistrationId(REG_ID_GOOGLE));
-        assertNull("Bare OIDC ID should not exist", lClientRepo.findByRegistrationId(REG_ID_OIDC));
-
-        // and: button events carry scoped registration IDs
-        ArgumentCaptor<OAuth2LoginButtonEnablementEvent> lCaptor =
-                ArgumentCaptor.forClass(OAuth2LoginButtonEnablementEvent.class);
-        verify(mockEventPublisher, times(4)).publishEvent(lCaptor.capture());
-
-        List<OAuth2LoginButtonEnablementEvent> lEvents = lCaptor.getAllValues();
-        // Google enabled
-        OAuth2LoginButtonEnablementEvent lGoogleEvent = lEvents.stream()
-                .filter(e -> REG_ID_GOOGLE.equals(e.getRegistrationId()))
-                .findFirst()
-                .orElse(null);
-        assertNotNull(lGoogleEvent);
-        assertTrue(lGoogleEvent.isEnable());
-        assertEquals(lScopedGoogle, lGoogleEvent.getScopedRegistrationId());
-
-        // OIDC enabled
-        OAuth2LoginButtonEnablementEvent lOidcEvent = lEvents.stream()
-                .filter(e -> REG_ID_OIDC.equals(e.getRegistrationId()))
-                .findFirst()
-                .orElse(null);
-        assertNotNull(lOidcEvent);
-        assertTrue(lOidcEvent.isEnable());
-        assertEquals(lScopedOidc, lOidcEvent.getScopedRegistrationId());
-    }
-
-    private static Filter createBearerFilter() {
-        try {
-            AuthenticationManagerResolver<HttpServletRequest> resolver = request -> authentication -> authentication;
-            try {
-                return BearerTokenAuthenticationFilter.class
-                        .getConstructor(AuthenticationManagerResolver.class)
-                        .newInstance(resolver);
-            } catch (NoSuchMethodException e) {
-                AuthenticationManager manager = authentication -> authentication;
-                return BearerTokenAuthenticationFilter.class
-                        .getConstructor(AuthenticationManager.class)
-                        .newInstance(manager);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static OpaqueTokenIntrospector invokeOpaqueIntrospectorFactory(
-            GeoServerOAuth2LoginAuthenticationFilterBuilder builder) throws Exception {
-        Method m = GeoServerOAuth2LoginAuthenticationFilterBuilder.class.getDeclaredMethod(
-                "createResourceServerOpaqueTokenIntrospectorIfApplicable");
-        m.setAccessible(true);
-        return (OpaqueTokenIntrospector) m.invoke(builder);
     }
 }

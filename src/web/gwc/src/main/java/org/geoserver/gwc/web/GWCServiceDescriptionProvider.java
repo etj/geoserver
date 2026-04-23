@@ -151,56 +151,46 @@ public class GWCServiceDescriptionProvider extends ServiceDescriptionProvider {
         }
 
         WMTSInfo info = info(workspaceInfo, layerInfo);
-        List<Version> disabledVersions = (info != null) ? info.getDisabledVersions() : null;
 
         final GeoServerApplication app = GeoServerApplication.get();
         final GWCConfig gwcConfig = gwc.getConfig();
 
         try {
             if (gwcConfig.isWMSCEnabled() && null != app.getBean("gwcServiceWMS")) {
-                Version wmscVersion = new Version("1.1.1");
-                if (disabledVersions == null || !disabledVersions.contains(wmscVersion)) {
-                    links.add(new ServiceLinkDescription(
-                            serviceType,
-                            wmscVersion,
-                            createLinkWMSC(workspaceInfo, layerInfo),
-                            workspaceInfo != null ? workspaceInfo.getName() : null,
-                            layerInfo != null ? layerInfo.getName() : null,
-                            "WMS-C"));
-                }
+                links.add(new ServiceLinkDescription(
+                        serviceType,
+                        new Version("1.1.1"),
+                        createLinkWMSC(workspaceInfo, layerInfo),
+                        workspaceInfo != null ? workspaceInfo.getName() : null,
+                        layerInfo != null ? layerInfo.getName() : null,
+                        "WMS-C"));
             }
         } catch (NoSuchBeanDefinitionException e) {
             // service not found, ignore exception
         }
 
         try {
-            if (info != null && info.isEnabled() && null != app.getBean("gwcServiceWMTS")) {
-                Version wmtsVersion = new Version("1.0.0");
-                if (disabledVersions == null || !disabledVersions.contains(wmtsVersion)) {
-                    links.add(new ServiceLinkDescription(
-                            serviceType,
-                            wmtsVersion,
-                            createLinkWMTS(workspaceInfo, layerInfo),
-                            workspaceInfo != null ? workspaceInfo.getName() : null,
-                            layerInfo != null ? layerInfo.getName() : null,
-                            "WMTS"));
-                }
+            if (info.isEnabled() && null != app.getBean("gwcServiceWMTS")) {
+                links.add(new ServiceLinkDescription(
+                        serviceType,
+                        new Version("1.0.0"),
+                        createLinkWMTS(workspaceInfo, layerInfo),
+                        workspaceInfo != null ? workspaceInfo.getName() : null,
+                        layerInfo != null ? layerInfo.getName() : null,
+                        "WMTS"));
             }
         } catch (NoSuchBeanDefinitionException e) {
             // service not found, ignore exception
         }
         try {
             if (gwcConfig.isTMSEnabled() && null != app.getBean("gwcServiceTMS")) {
-                Version tmsVersion = new Version("1.0.0");
-                if (disabledVersions == null || !disabledVersions.contains(tmsVersion)) {
-                    links.add(new ServiceLinkDescription(
-                            serviceType,
-                            tmsVersion,
-                            createLinkTMS(workspaceInfo, layerInfo),
-                            workspaceInfo != null ? workspaceInfo.getName() : null,
-                            layerInfo != null ? layerInfo.getName() : null,
-                            "TMS"));
-                }
+                links.add(new ServiceLinkDescription(
+                        serviceType,
+                        new Version("1.0.0"),
+                        createLinkTMS(workspaceInfo, layerInfo),
+                        workspaceInfo != null ? workspaceInfo.getName() : null,
+                        layerInfo != null ? layerInfo.getName() : null,
+                        "TMS"));
             }
         } catch (NoSuchBeanDefinitionException e) {
             // service not found, ignore exception

@@ -87,6 +87,9 @@ public class GPXHelper {
             if (commentStr != null) wpt.setCmt(commentStr);
             if (descriptionStr != null) wpt.setDesc(descriptionStr);
             gpxType.getWpt().add(wpt);
+        } else {
+            // no useful geometry, no feature!
+            return;
         }
     }
 
@@ -105,9 +108,9 @@ public class GPXHelper {
         RteType rte = new RteType();
         List<WptType> rtePts = rte.getRtept();
 
-        Coordinate[] coordinates = ls.getCoordinates();
-        for (Coordinate coordinate : coordinates) {
-            rtePts.add(coordToWpt(coordinate.x, coordinate.y));
+        Coordinate[] coordinates = ((Geometry) ls).getCoordinates();
+        for (int pi = 0; pi < coordinates.length; pi++) {
+            rtePts.add(coordToWpt(coordinates[pi].x, coordinates[pi].y));
         }
         return rte;
     }

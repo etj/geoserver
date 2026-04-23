@@ -4,6 +4,7 @@
  */
 package org.geoserver.featurestemplating.builders.selectionwrappers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import org.geoserver.featurestemplating.builders.AbstractTemplateBuilder;
 import org.geoserver.featurestemplating.builders.TemplateBuilder;
@@ -15,7 +16,6 @@ import org.geoserver.featurestemplating.builders.visitors.PropertySelectionVisit
 import org.geoserver.featurestemplating.writers.TemplateOutputWriter;
 import org.geotools.api.feature.Property;
 import org.geotools.api.feature.type.PropertyType;
-import tools.jackson.databind.JsonNode;
 
 /** A PropertySelectionWrapper meant to wrap a DynamicMergeBuilder. */
 public class MergePropertySelection extends PropertySelectionWrapper {

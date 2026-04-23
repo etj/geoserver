@@ -4,8 +4,8 @@
  */
 package org.geoserver.rest;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.method.HandlerMethod;
 
 /** Provides callbacks for the life cycle of a rest request. */

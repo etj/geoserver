@@ -14,21 +14,19 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.util.string.StringValue;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.catalog.LayerGroupInfo;
-import org.geoserver.catalog.Predicates;
 import org.geoserver.web.CatalogIconFactory;
 import org.geoserver.web.ComponentAuthorizer;
 import org.geoserver.web.GeoServerSecuredPage;
 import org.geoserver.web.data.SelectionRemovalLink;
 import org.geoserver.web.data.workspace.WorkspaceEditPage;
+import org.geoserver.web.wicket.CachingImage;
 import org.geoserver.web.wicket.DateTimeLabel;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.SimpleBookmarkableLink;
-import org.geotools.api.filter.Filter;
 
 /** Lists layer groups, allows removal and editing */
 public class LayerGroupPage extends GeoServerSecuredPage {
@@ -36,30 +34,13 @@ public class LayerGroupPage extends GeoServerSecuredPage {
     @Serial
     private static final long serialVersionUID = 5039809655908312633L;
 
-    private String targetWorkspaceStr = null;
-
     GeoServerTablePanel<LayerGroupInfo> table;
     GeoServerDialog dialog;
     SelectionRemovalLink removal;
 
-    LayerGroupProvider provider = new LayerGroupProvider() {
-        @Override
-        protected Filter getContextFilter() {
-            if (targetWorkspaceStr != null) {
-                return Predicates.equal("workspace.name", targetWorkspaceStr);
-            }
-            return null;
-        }
-    };
-
-    public LayerGroupPage(PageParameters parameters) {
+    public LayerGroupPage() {
         final CatalogIconFactory icons = CatalogIconFactory.get();
-
-        StringValue wsParam = parameters.get("workspace");
-        if (!wsParam.isEmpty()) {
-            this.targetWorkspaceStr = wsParam.toString();
-        }
-
+        LayerGroupProvider provider = new LayerGroupProvider();
         add(
                 table = new GeoServerTablePanel<>("table", provider, true) {
 
@@ -88,9 +69,9 @@ public class LayerGroupPage extends GeoServerSecuredPage {
                             // disabled
                             // resource/store
                             boolean enabled = layerGroupInfo.isEnabled();
-                            String icon = enabled ? icons.getEnabledIcon() : icons.getDisabledIcon();
+                            PackageResourceReference icon = enabled ? icons.getEnabledIcon() : icons.getDisabledIcon();
                             Fragment f = new Fragment(id, "iconFragment", LayerGroupPage.this);
-                            f.add(icons.getIcon("layerIcon", icon));
+                            f.add(new CachingImage("layerIcon", icon));
                             return f;
                         }
                         if (property == LayerGroupProvider.MODIFIED_BY) {
@@ -130,21 +111,11 @@ public class LayerGroupPage extends GeoServerSecuredPage {
         setHeaderPanel(headerPanel());
     }
 
-    public LayerGroupPage() {
-        this(new PageParameters());
-    }
-
     protected Component headerPanel() {
         Fragment header = new Fragment(HEADER_PANEL, "header", this);
 
         // the add button
-        StringValue workspace = getPageParameters().get(LayerGroupEditPage.WORKSPACE);
-        if (!workspace.isNull() && !workspace.isEmpty()) {
-            PageParameters addParams = new PageParameters().add(LayerGroupEditPage.WORKSPACE, workspace.toString());
-            header.add(new BookmarkablePageLink<>("addNew", LayerGroupEditPage.class, addParams));
-        } else {
-            header.add(new BookmarkablePageLink<>("addNew", LayerGroupEditPage.class));
-        }
+        header.add(new BookmarkablePageLink<>("addNew", LayerGroupEditPage.class));
 
         // the removal button
         header.add(removal = new SelectionRemovalLink("removeSelected", table, dialog));
@@ -180,7 +151,7 @@ public class LayerGroupPage extends GeoServerSecuredPage {
         IModel<?> wsNameModel = LayerGroupProvider.WORKSPACE.getModel(itemModel);
         String wsName = (String) wsNameModel.getObject();
         if (wsName != null) {
-            return new SimpleBookmarkableLink(id, WorkspaceEditPage.class, new Model<>(wsName), "workspace", wsName);
+            return new SimpleBookmarkableLink(id, WorkspaceEditPage.class, new Model<>(wsName), "name", wsName);
         } else {
             return new WebMarkupContainer(id);
         }

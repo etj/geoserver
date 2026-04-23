@@ -1162,12 +1162,7 @@ public class ConfigDatabase implements ApplicationContextAware {
             return;
         }
         real = ModificationProxy.unwrap(real);
-        boolean isRemoteStyle = real instanceof StyleInfoImpl
-                && ((StyleInfoImpl) real).getMetadata().containsKey(StyleInfoImpl.IS_REMOTE);
-        if (!isRemoteStyle
-                && (real instanceof StyleInfoImpl
-                        || real instanceof StoreInfoImpl
-                        || real instanceof ResourceInfoImpl)) {
+        if (real instanceof StyleInfoImpl || real instanceof StoreInfoImpl || real instanceof ResourceInfoImpl) {
             OwsUtils.set(real, "catalog", catalog);
         }
         if (real instanceof ResourceInfoImpl impl) {

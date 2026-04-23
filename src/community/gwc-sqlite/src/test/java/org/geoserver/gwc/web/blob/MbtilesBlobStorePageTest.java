@@ -24,16 +24,10 @@ import org.geowebcache.config.BlobStoreInfo;
 import org.geowebcache.config.ConfigurationException;
 import org.geowebcache.layer.TileLayer;
 import org.geowebcache.sqlite.MbtilesInfo;
-import org.junit.Before;
 import org.junit.Test;
 
 /** Test for the BlobStorePage with the MBTiles blob store panel. */
 public class MbtilesBlobStorePageTest extends GeoServerWicketTestSupport {
-
-    @Before
-    public void login() {
-        super.loginAsAdmin();
-    }
 
     @Test
     public void testOpeningTheBlobStoresPage() {
@@ -85,7 +79,7 @@ public class MbtilesBlobStorePageTest extends GeoServerWicketTestSupport {
         String storeId = UUID.randomUUID().toString();
         formTester.setValue("name", storeId);
         formTester.setValue("enabled", false);
-        formTester.setValue("blobSpecificPanel:rootDirectory:fileInput:border:border_body:paramValue", "/tmp/gwc");
+        formTester.setValue("blobSpecificPanel:rootDirectory:border:border_body:paramValue", "/tmp/gwc");
         formTester.setValue("blobSpecificPanel:templatePath", "{grid}/{layer}/{params}/tiles-{z}.sqlite");
         formTester.setValue("blobSpecificPanel:rowRangeCount", "1500");
         formTester.setValue("blobSpecificPanel:columnRangeCount", "500");
@@ -94,8 +88,7 @@ public class MbtilesBlobStorePageTest extends GeoServerWicketTestSupport {
         formTester.setValue("blobSpecificPanel:eagerDelete", "true");
         formTester.setValue("blobSpecificPanel:useCreateTime", "true");
         formTester.setValue(
-                "blobSpecificPanel:mbtilesMetadataDirectory:fileInput:border:border_body:paramValue",
-                "/tmp/gwc/mbtilesMetadata");
+                "blobSpecificPanel:mbtilesMetadataDirectory:border:border_body:paramValue", "/tmp/gwc/mbtilesMetadata");
         // submit the form
         tester.executeAjaxEvent("blobConfigContainer:blobStoreForm:save", "click");
 

@@ -15,6 +15,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.apache.commons.text.StringEscapeUtils;
 import org.geoserver.test.GeoServerSystemTestSupport;
 import org.geotools.api.geometry.Bounds;
@@ -22,8 +24,6 @@ import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 import org.geotools.referencing.CRS;
 import org.junit.Before;
 import org.junit.Test;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONObject;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 public class CRSControllerTest extends GeoServerSystemTestSupport {

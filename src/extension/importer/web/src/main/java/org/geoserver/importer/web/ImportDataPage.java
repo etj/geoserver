@@ -27,12 +27,14 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.StoreInfo;
@@ -51,7 +53,6 @@ import org.geoserver.web.data.workspace.WorkspaceDetachableModel;
 import org.geoserver.web.data.workspace.WorkspacesModel;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerDialog.DialogDelegate;
-import org.geoserver.web.wicket.GsIcon;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geotools.api.data.DataStoreFactorySpi;
 import org.geotools.util.logging.Logging;
@@ -308,7 +309,9 @@ public class ImportDataPage extends GeoServerSecuredPage {
             add(new Label("name", source.getName(ImportDataPage.this)));
             add(new Label("description", source.getDescription(ImportDataPage.this)));
 
-            add(new GsIcon("icon", source.getIcon()));
+            Image icon = new Image("icon", source.getIcon());
+            icon.add(new AttributeModifier("alt", source.getDescription(ImportDataPage.this)));
+            add(icon);
 
             WebMarkupContainer extra = new WebMarkupContainer("extra");
             add(extra);
@@ -385,7 +388,7 @@ public class ImportDataPage extends GeoServerSecuredPage {
             return new ParamResourceModel(this.name().toLowerCase() + "_helpLink", component);
         }
 
-        String getIcon() {
+        PackageResourceReference getIcon() {
             return icon.getIcon();
         }
 
@@ -439,7 +442,7 @@ public class ImportDataPage extends GeoServerSecuredPage {
         protected void disableLink(ComponentTag tag) {
             super.disableLink(tag);
             tag.setName("a");
-            tag.addBehavior(AttributeModifier.append("class", "disabled"));
+            tag.addBehavior(AttributeModifier.replace("class", "disabled"));
         }
 
         @Override

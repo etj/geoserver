@@ -73,7 +73,7 @@ public class CssHandler extends StyleHandler implements ModuleStatus {
 
     private SLDHandler sldHandler;
 
-    public CssHandler(GeoServerExtensions extensions, SLDHandler sldHandler) {
+    protected CssHandler(GeoServerExtensions extensions, SLDHandler sldHandler) {
         super("CSS", FORMAT);
         this.sldHandler = sldHandler;
         this.zoomContextFinders = extensions.extensions(ZoomContextFinder.class);
@@ -212,10 +212,5 @@ public class CssHandler extends StyleHandler implements ModuleStatus {
     @Override
     public Optional<String> getDocumentation() {
         return Optional.of("https://docs.geoserver.org/latest/en/user/styling/css/index.html");
-    }
-
-    @Override
-    public Category getCategory() {
-        return Category.EXTENSION;
     }
 }

@@ -4,10 +4,6 @@
  */
 package org.geoserver.logging;
 
-import static org.geoserver.logging.LoggingUtils.GEOSERVER_LOG_LOCATION;
-import static org.geoserver.logging.LoggingUtils.STANDARD_LOGGING_CONFIGURATIONS;
-import static org.geoserver.logging.LoggingUtils.updateBuiltInLoggingProfiles;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -162,24 +158,8 @@ class LoggingUtilsDelegate {
             }
         }
 
-        suppressSpringPostProcessingWarnings();
-
         LoggingStartupContextListener.getLogger()
                 .fine("FINISHED CONFIGURING GEOSERVER LOGGING -------------------------");
-    }
-
-    /** Suppress the Spring BeanPostProcessorChecker warnings about infrastructure beans. */
-    private static void suppressSpringPostProcessingWarnings() {
-        @SuppressWarnings({"PMD.CloseResource"}) // current context, no need to enforce AutoClosable
-        LoggerContext loggerContext = (LoggerContext) LogManager.getContext(false);
-        Configuration configuration = loggerContext.getConfiguration();
-
-        // Suppress the BeanPostProcessorChecker warnings about infrastructure beans
-        org.apache.logging.log4j.core.config.LoggerConfig loggerConfig = configuration.getLoggerConfig(
-                "org.springframework.beans.factory.support.PostProcessorRegistrationDelegate$BeanPostProcessorChecker");
-        loggerConfig.setLevel(org.apache.logging.log4j.Level.ERROR);
-
-        loggerContext.updateLoggers();
     }
 
     /**
@@ -201,9 +181,7 @@ class LoggingUtilsDelegate {
         boolean reloadRequired = false;
 
         if (!suppressFileLogging) {
-            LoggingStartupContextListener.getLogger()
-                    .warning(() -> "The logging location can be set using " + GEOSERVER_LOG_LOCATION + " property");
-            if (configuration.getProperties().containsKey(GEOSERVER_LOG_LOCATION)) {
+            if (configuration.getProperties().containsKey("GEOSERVER_LOG_LOCATION")) {
                 // this is a log4j 2 configuration using default properties
                 LoggingStartupContextListener.getLogger()
                         .fine("Logging property GEOSERVER_LOG_LOCATION set to file '"
@@ -573,7 +551,7 @@ class LoggingUtilsDelegate {
 
         File target = new File(logsDirectory.getAbsolutePath(), logConfigXml);
         if (target.exists()) {
-            if (updateBuiltInLoggingProfiles) {
+            if (LoggingUtils.updateBuiltInLoggingProfiles) {
                 try (FileInputStream targetContents = new FileInputStream(target);
                         InputStream template = getStreamFromResource(logConfigXml)) {
                     if (!IOUtils.contentEquals(targetContents, template)) {
@@ -625,7 +603,7 @@ class LoggingUtilsDelegate {
         Resource logs = resourceLoader.get("logs");
         File logsDirectory = logs.dir();
 
-        for (String logConfigFile : STANDARD_LOGGING_CONFIGURATIONS) {
+        for (String logConfigFile : LoggingUtils.STANDARD_LOGGING_CONFIGURATIONS) {
             String logConfigProperties = logConfigFile + ".properties";
 
             File properties = new File(logsDirectory.getAbsolutePath(), logConfigProperties);

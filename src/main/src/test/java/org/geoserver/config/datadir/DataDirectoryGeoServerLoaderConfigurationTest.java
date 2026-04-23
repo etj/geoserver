@@ -12,7 +12,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import jakarta.servlet.ServletContext;
+import javax.servlet.ServletContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

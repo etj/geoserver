@@ -4,7 +4,6 @@
  */
 package org.geoserver.security.oauth2.login;
 
-import java.io.Serial;
 import org.springframework.context.ApplicationEvent;
 
 /**
@@ -16,36 +15,28 @@ import org.springframework.context.ApplicationEvent;
 public class OAuth2LoginButtonEnablementEvent extends ApplicationEvent {
 
     /** serialVersionUID */
-    @Serial
     private static final long serialVersionUID = 513879448251262654L;
 
-    public static final OAuth2LoginButtonEnablementEvent enableButtonEvent(
-            Object pSource, String pBaseRegId, String pScopedRegId) {
-        return new OAuth2LoginButtonEnablementEvent(pSource, true, pBaseRegId, pScopedRegId);
+    public static final OAuth2LoginButtonEnablementEvent enableButtonEvent(Object pSource, String pId) {
+        return new OAuth2LoginButtonEnablementEvent(pSource, true, pId);
     }
 
-    public static final OAuth2LoginButtonEnablementEvent disableButtonEvent(
-            Object pSource, String pBaseRegId, String pScopedRegId) {
-        return new OAuth2LoginButtonEnablementEvent(pSource, false, pBaseRegId, pScopedRegId);
+    public static final OAuth2LoginButtonEnablementEvent disableButtonEvent(Object pSource, String pId) {
+        return new OAuth2LoginButtonEnablementEvent(pSource, false, pId);
     }
 
     private boolean enable;
     private String registrationId;
-    private String scopedRegistrationId;
 
     /**
-     * @param pSource event source
-     * @param pEnable whether to enable or disable the button
-     * @param pRegistrationId base registration ID for matching (e.g. {@code "google"})
-     * @param pScopedRegistrationId scoped registration ID for constructing login paths (e.g.
-     *     {@code "myfilter__google"})
+     * @param pSource
+     * @param pEnable
+     * @param pRegistrationId
      */
-    public OAuth2LoginButtonEnablementEvent(
-            Object pSource, boolean pEnable, String pRegistrationId, String pScopedRegistrationId) {
+    public OAuth2LoginButtonEnablementEvent(Object pSource, boolean pEnable, String pRegistrationId) {
         super(pSource);
         enable = pEnable;
         registrationId = pRegistrationId;
-        scopedRegistrationId = pScopedRegistrationId;
     }
 
     /** @return the enable */
@@ -53,13 +44,8 @@ public class OAuth2LoginButtonEnablementEvent extends ApplicationEvent {
         return enable;
     }
 
-    /** @return the base registration ID */
+    /** @return the registrationId */
     public String getRegistrationId() {
         return registrationId;
-    }
-
-    /** @return the scoped registration ID (includes filter name prefix) */
-    public String getScopedRegistrationId() {
-        return scopedRegistrationId;
     }
 }

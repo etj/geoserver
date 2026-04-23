@@ -231,7 +231,8 @@ public class ExecuteResponseBuilder {
                     }
 
                     String mimeType = odt.getMimeType();
-                    boolean asReference = odt instanceof DocumentOutputDefinitionType dodt && dodt.isAsReference();
+                    boolean asReference = odt instanceof DocumentOutputDefinitionType
+                            && ((DocumentOutputDefinitionType) odt).isAsReference();
                     OutputDataType output = encodeOutput(key, outputParam, mimeType, asReference, listener);
                     processOutputs.getOutput().add(output);
                 }

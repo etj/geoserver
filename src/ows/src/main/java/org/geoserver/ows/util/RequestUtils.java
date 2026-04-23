@@ -5,7 +5,6 @@
  */
 package org.geoserver.ows.util;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 import org.geoserver.ows.Request;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.Service;

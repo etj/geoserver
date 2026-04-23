@@ -51,7 +51,7 @@ import org.geotools.data.postgis.PostgisNGDataStoreFactory;
 import org.geotools.jdbc.JDBCDataStoreFactory;
 import org.geotools.util.GrowableInternationalString;
 import org.geotools.util.Version;
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Support to configure some concrete {@link ServiceInfo} classes and xstream loaders for tests, since there're no

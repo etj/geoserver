@@ -5,8 +5,6 @@
  */
 package org.geoserver.web.data.layer;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.io.IOException;
 import java.util.logging.Level;
 import org.apache.wicket.Component;
@@ -18,10 +16,9 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.util.string.Strings;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogBuilder;
 import org.geoserver.catalog.CoverageInfo;
@@ -35,7 +32,6 @@ import org.geoserver.catalog.WMSLayerInfo;
 import org.geoserver.catalog.WMSStoreInfo;
 import org.geoserver.catalog.WMTSLayerInfo;
 import org.geoserver.catalog.WMTSStoreInfo;
-import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.web.CatalogIconFactory;
 import org.geoserver.web.ComponentAuthorizer;
 import org.geoserver.web.GeoServerSecuredPage;
@@ -44,6 +40,7 @@ import org.geoserver.web.data.importer.WMTSLayerImporterPage;
 import org.geoserver.web.data.resource.ResourceConfigurationPage;
 import org.geoserver.web.data.store.StoreListChoiceRenderer;
 import org.geoserver.web.data.store.StoreListModel;
+import org.geoserver.web.wicket.CachingImage;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;
@@ -66,8 +63,6 @@ import org.geotools.util.decorate.Wrapper;
 @SuppressWarnings("serial")
 public class NewLayerPage extends GeoServerSecuredPage {
 
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(NewLayerPage.class);
-
     String storeId;
     private NewLayerPageProvider provider;
     private GeoServerTablePanel<Resource> layers;
@@ -81,36 +76,12 @@ public class NewLayerPage extends GeoServerSecuredPage {
     private WebMarkupContainer createWMSLayerImportContainer;
     private WebMarkupContainer createWMTSLayerImportContainer;
 
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the page-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
-
     public NewLayerPage() {
         this(null);
     }
 
-    @Override
-    public PageParameters getPageParameters() {
-        PageParameters params = super.getPageParameters();
-        if (params.isEmpty() && storeId != null) {
-            StoreInfo store = getCatalog().getStore(storeId, StoreInfo.class);
-            if (store != null) {
-                return new PageParameters()
-                        .add("workspace", store.getWorkspace().getName());
-            }
-        }
-        return params;
-    }
-
     public NewLayerPage(String storeId) {
-        this.storeId = storeId != null ? storeId : resolveStoreIdFromWorkspaceParam();
+        this.storeId = storeId;
 
         // the store selector, used when no store is initially known
         Form<?> selector = new Form<>("selector");
@@ -147,9 +118,9 @@ public class NewLayerPage extends GeoServerSecuredPage {
                     final Resource resource = itemModel.getObject();
                     final CatalogIconFactory icons = CatalogIconFactory.get();
                     if (resource.isPublished()) {
-                        String icon = icons.getEnabledIcon();
+                        PackageResourceReference icon = icons.getEnabledIcon();
                         Fragment f = new Fragment(id, "iconFragment", selectLayers);
-                        f.add(icons.getIcon("layerIcon", icon));
+                        f.add(new CachingImage("layerIcon", icon));
                         return f;
                     } else {
                         return new Label(id);
@@ -207,27 +178,6 @@ public class NewLayerPage extends GeoServerSecuredPage {
         }
     }
 
-    private String resolveStoreIdFromWorkspaceParam() {
-        String workspaceName = getPageParameters().get("workspace").toOptionalString();
-        if (Strings.isEmpty(workspaceName)) {
-            return null;
-        }
-
-        Catalog catalog = getCatalog();
-        WorkspaceInfo workspace = catalog.getWorkspaceByName(workspaceName);
-        if (workspace == null) {
-            return null;
-        }
-
-        StoreInfo defaultDataStore = catalog.getDefaultDataStore(workspace);
-        if (defaultDataStore != null) {
-            return defaultDataStore.getId();
-        }
-
-        java.util.List<StoreInfo> stores = catalog.getStoresByWorkspace(workspace, StoreInfo.class);
-        return stores.isEmpty() ? null : stores.get(0).getId();
-    }
-
     Component newFeatureTypeLink() {
         return new AjaxLink<Void>("createFeatureType") {
 
@@ -235,7 +185,7 @@ public class NewLayerPage extends GeoServerSecuredPage {
             public void onClick(AjaxRequestTarget target) {
                 DataStoreInfo ds = getCatalog().getStore(storeId, DataStoreInfo.class);
                 PageParameters pp = new PageParameters()
-                        .add("workspace", ds.getWorkspace().getName())
+                        .add("wsName", ds.getWorkspace().getName())
                         .add("storeName", ds.getName());
                 setResponsePage(NewFeatureTypePage.class, pp);
             }
@@ -249,7 +199,7 @@ public class NewLayerPage extends GeoServerSecuredPage {
             public void onClick(AjaxRequestTarget target) {
                 DataStoreInfo ds = getCatalog().getStore(storeId, DataStoreInfo.class);
                 PageParameters pp = new PageParameters()
-                        .add("workspace", ds.getWorkspace().getName())
+                        .add("wsName", ds.getWorkspace().getName())
                         .add("storeName", ds.getName());
                 setResponsePage(SQLViewNewPage.class, pp);
             }
@@ -263,7 +213,7 @@ public class NewLayerPage extends GeoServerSecuredPage {
             public void onClick(AjaxRequestTarget target) {
                 CoverageStoreInfo cs = getCatalog().getStore(storeId, CoverageStoreInfo.class);
                 PageParameters pp = new PageParameters()
-                        .add("workspace", cs.getWorkspace().getName())
+                        .add("wsName", cs.getWorkspace().getName())
                         .add("storeName", cs.getName());
                 setResponsePage(CoverageViewNewPage.class, pp);
             }
@@ -277,7 +227,7 @@ public class NewLayerPage extends GeoServerSecuredPage {
             public void onClick(AjaxRequestTarget target) {
                 DataStoreInfo ds = getCatalog().getStore(storeId, DataStoreInfo.class);
                 PageParameters pp = new PageParameters()
-                        .add("workspace", ds.getWorkspace().getName())
+                        .add("wsName", ds.getWorkspace().getName())
                         .add("storeName", ds.getName());
                 setResponsePage(CascadedWFSStoredQueryNewPage.class, pp);
             }
@@ -307,26 +257,8 @@ public class NewLayerPage extends GeoServerSecuredPage {
     }
 
     private Select2DropDownChoice<StoreInfo> storesDropDown() {
-        IModel<java.util.List<StoreInfo>> storeChoices = new LoadableDetachableModel<>() {
-            @Override
-            protected java.util.List<StoreInfo> load() {
-                String workspaceName = getPageParameters().get("workspace").toOptionalString();
-                java.util.List<StoreInfo> stores;
-                if (!Strings.isEmpty(workspaceName)) {
-                    WorkspaceInfo workspace = getCatalog().getWorkspaceByName(workspaceName);
-                    if (workspace == null) {
-                        return java.util.Collections.emptyList();
-                    }
-                    stores = new java.util.ArrayList<>(getCatalog().getStoresByWorkspace(workspace, StoreInfo.class));
-                    stores.sort(java.util.Comparator.comparing(StoreInfo::getName));
-                } else {
-                    stores = new StoreListModel().getObject();
-                }
-                return stores;
-            }
-        };
         final Select2DropDownChoice<StoreInfo> stores = new Select2DropDownChoice<>(
-                "storesDropDown", new Model<>(), storeChoices, new StoreListChoiceRenderer());
+                "storesDropDown", new Model<>(), new StoreListModel(), new StoreListChoiceRenderer());
         stores.setOutputMarkupId(true);
         stores.add(new AjaxFormComponentUpdatingBehavior("change") {
 

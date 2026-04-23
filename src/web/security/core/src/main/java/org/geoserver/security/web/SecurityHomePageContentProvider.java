@@ -7,7 +7,6 @@ package org.geoserver.security.web;
 
 import static org.geoserver.security.impl.GeoServerUser.ADMIN_USERNAME;
 import static org.geoserver.security.impl.GeoServerUser.DEFAULT_ADMIN_PASSWD;
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,8 +21,6 @@ import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
-import org.geoserver.catalog.PublishedInfo;
-import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.platform.resource.Resources;
 import org.geoserver.security.GeoServerSecurityManager;
@@ -37,24 +34,9 @@ import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerHomePageContentProvider;
 import org.geotools.util.logging.Logging;
 
-/**
- * Checks secutity configuration and warns about potential security issues, such as the use of the default master
- * password.
- */
 public class SecurityHomePageContentProvider implements GeoServerHomePageContentProvider {
 
     static Logger LOGGER = Logging.getLogger(SecurityHomePageContentProvider.class);
-
-    /** Only show to admin for top-level global context. */
-    @Override
-    public boolean checkContext(boolean isAdmin, WorkspaceInfo workspaceInfo, PublishedInfo layerInfo) {
-        return isAdmin && workspaceInfo == null && layerInfo == null;
-    }
-
-    @Override
-    public int getOrder() {
-        return 0;
-    }
 
     @Override
     public Component getPageBodyComponent(String id) {
@@ -86,20 +68,6 @@ public class SecurityHomePageContentProvider implements GeoServerHomePageContent
 
     // PasswordChangeWarningPanel
     static class SecurityWarningsPanel extends Panel {
-
-        private static final boolean isCssEmpty =
-                IsWicketCssFileEmpty(SecurityHomePageContentProvider.SecurityWarningsPanel.class);
-
-        @Override
-        public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-            super.renderHead(response);
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
-        }
 
         public SecurityWarningsPanel(String id) {
             super(id);

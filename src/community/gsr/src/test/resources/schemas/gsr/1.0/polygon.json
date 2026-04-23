@@ -1,5 +1,5 @@
 {
-    "$schema":"https://json-schema.org/draft/2020-12/schema",
+    "$schema":"http://json-schema.org/draft-03/schema#",
 
     "title":"polygon",
     "type":"object",
@@ -10,6 +10,7 @@
         "rings":{
             "title":"rings",
             "type":"array",
+         "required":true,
             "items":{
                  "title":"ring",
                  "type":"array",
@@ -21,6 +22,5 @@
                          "type":"number"}}}},
         "spatialReference":{
             "$ref" : "spatialreference.json"}
-    },
-    "required":["rings"]
+    }
 }

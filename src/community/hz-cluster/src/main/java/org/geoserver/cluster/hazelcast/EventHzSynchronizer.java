@@ -224,9 +224,12 @@ public class EventHzSynchronizer extends HzSynchronizer {
         }
 
         if (subj == null) { // can't happen if type == DELETE
-            String message = "%s - Error processing event %s: object not found in catalog".formatted(nodeId(), event);
-            LOGGER.warning(message);
-            return;
+            if (subj == null) {
+                String message =
+                        "%s - Error processing event %s: object not found in catalog".formatted(nodeId(), event);
+                LOGGER.warning(message);
+                return;
+            }
         }
 
         evt.setSource(subj);
@@ -247,7 +250,6 @@ public class EventHzSynchronizer extends HzSynchronizer {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void processGeoServerConfigEvent(ConfigChangeEvent ce) throws NoSuchMethodException, SecurityException {
 
         final Class<? extends Info> clazz = ce.getObjectInterface();
@@ -333,7 +335,6 @@ public class EventHzSynchronizer extends HzSynchronizer {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private CatalogInfo getCatalogInfo(Catalog cat, String id, Class<? extends Info> clazz) {
         CatalogInfo subj = null;
         if (WorkspaceInfo.class.isAssignableFrom(clazz)) {

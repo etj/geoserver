@@ -6,6 +6,7 @@
 package org.geoserver.wps.ppio;
 
 import com.bedatadriven.jackson.datatype.jts.JtsModule;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -16,8 +17,6 @@ import org.geotools.data.geojson.GeoJSONWriter;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.FeatureCollection;
 import org.locationtech.jts.geom.Geometry;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Inputs and outputs feature collections in GeoJSON format using gt-geojson
@@ -29,7 +28,9 @@ public abstract class GeoJSONPPIO extends CDataPPIO {
     static final ObjectMapper MAPPER;
 
     static {
-        MAPPER = JsonMapper.builder().addModule(new JtsModule(6)).build();
+        MAPPER = new ObjectMapper();
+        JtsModule module = new JtsModule(6);
+        MAPPER.registerModule(module);
     }
 
     GeoServer gs;
@@ -63,7 +64,7 @@ public abstract class GeoJSONPPIO extends CDataPPIO {
             super(FeatureCollection.class);
         }
 
-        public FeatureCollections(GeoServer gs) {
+        protected FeatureCollections(GeoServer gs) {
             super(FeatureCollection.class, gs);
         }
 
@@ -96,7 +97,7 @@ public abstract class GeoJSONPPIO extends CDataPPIO {
             super(Geometry.class);
         }
 
-        public Geometries(GeoServer gs) {
+        protected Geometries(GeoServer gs) {
             super(Geometry.class, gs);
         }
 
@@ -111,8 +112,9 @@ public abstract class GeoJSONPPIO extends CDataPPIO {
             if (decimals == 6) {
                 return MAPPER;
             }
-            ObjectMapper mapper =
-                    JsonMapper.builder().addModule(new JtsModule(decimals)).build();
+            ObjectMapper mapper = new ObjectMapper();
+            JtsModule module = new JtsModule(decimals);
+            mapper.registerModule(module);
             return mapper;
         }
 

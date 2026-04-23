@@ -19,11 +19,5 @@ public class AdminPagePanel extends Panel {
         super(id, model);
     }
 
-    /**
-     * Called on form submit, panels that maintain their own model are required to save (for example to
-     * {@code getDefaultModel())}
-     *
-     * <p>Use {@link org.apache.wicket.WicketRuntimeException} if unable to save.
-     */
     public void onMainFormSubmit() {}
 }

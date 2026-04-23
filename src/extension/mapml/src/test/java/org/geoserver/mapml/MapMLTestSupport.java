@@ -7,12 +7,12 @@ package org.geoserver.mapml;
 import static org.geowebcache.grid.GridSubsetFactory.createGridSubSet;
 import static org.junit.Assert.fail;
 
-import jakarta.xml.bind.DataBindingException;
-import jakarta.xml.bind.JAXBException;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 import java.util.Map;
+import javax.xml.bind.DataBindingException;
+import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.LayerInfo;
@@ -53,13 +53,12 @@ public class MapMLTestSupport extends WMSTestSupport {
      */
     protected Mapml mapml(MockHttpServletResponse response) throws JAXBException, UnsupportedEncodingException {
         MapMLEncoder encoder = new MapMLEncoder();
-        String responseContent = response.getContentAsString();
-        StringReader reader = new StringReader(responseContent);
+        StringReader reader = new StringReader(response.getContentAsString());
         Mapml mapml = null;
         try {
             mapml = encoder.decode(reader);
-        } catch (DataBindingException | org.geoserver.platform.ServiceException e) {
-            fail("MapML response is not valid XML: " + e.getMessage());
+        } catch (DataBindingException e) {
+            fail("MapML response is not valid XML");
         }
         return mapml;
     }

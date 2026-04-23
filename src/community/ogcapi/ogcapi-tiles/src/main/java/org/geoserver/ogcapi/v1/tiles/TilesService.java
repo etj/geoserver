@@ -4,12 +4,11 @@
  */
 package org.geoserver.ogcapi.v1.tiles;
 
-import static org.geoserver.ogcapi.SwaggerJSONAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE;
+import static org.geoserver.ogcapi.MappingJackson2YAMLMessageConverter.APPLICATION_YAML_VALUE;
+import static org.geoserver.ogcapi.OpenAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE;
 import static org.geowebcache.conveyor.Conveyor.CacheResult.MISS;
-import static org.springframework.http.MediaType.APPLICATION_YAML_VALUE;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -22,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerGroupInfo;
 import org.geoserver.catalog.LayerInfo;
@@ -565,7 +565,9 @@ public class TilesService {
             long tileCol,
             TileLayer tileLayer,
             ConveyorTile tile) {
-        String layerName = tileLayer instanceof GeoServerTileLayer gstl ? gstl.getSimpleName() : tileLayer.getName();
+        String layerName = tileLayer instanceof GeoServerTileLayer
+                ? ((GeoServerTileLayer) tileLayer).getSimpleName()
+                : tileLayer.getName();
         return layerName
                 + "_"
                 + getExternalZIndex(tileMatrixSetId, tileMatrix, tileLayer)

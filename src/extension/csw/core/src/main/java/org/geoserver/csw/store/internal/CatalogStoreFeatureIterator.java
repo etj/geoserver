@@ -21,7 +21,6 @@ import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogFacade;
 import org.geoserver.catalog.CatalogInfo;
 import org.geoserver.catalog.CoverageInfo;
-import org.geoserver.catalog.KeywordInfo;
 import org.geoserver.catalog.LayerGroupInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.MetadataMap;
@@ -279,11 +278,7 @@ class CatalogStoreFeatureIterator implements Iterator<Feature> {
                 if (element instanceof Collection<?> collection) {
                     result = interpolate(properties, collection);
                 } else if (element != null) {
-                    if (element instanceof KeywordInfo) {
-                        result = interpolate(properties, ((KeywordInfo) element).getValue());
-                    } else {
-                        result = interpolate(properties, element.toString());
-                    }
+                    result = interpolate(properties, element.toString());
                 }
                 elements.add(result);
             }

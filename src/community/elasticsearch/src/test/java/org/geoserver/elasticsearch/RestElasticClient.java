@@ -4,6 +4,8 @@
  */
 package org.geoserver.elasticsearch;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -37,9 +39,6 @@ import org.geotools.util.logging.Logging;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 /** ElasticSearch client implementation using the REST API */
 public class RestElasticClient implements ElasticClient {
@@ -70,7 +69,8 @@ public class RestElasticClient implements ElasticClient {
         this.client = client;
         this.proxyClient = proxyClient;
         this.responseBufferLimit = responseBufferLimit;
-        this.mapper = JsonMapper.builder().defaultDateFormat(DATE_FORMAT).build();
+        this.mapper = new ObjectMapper();
+        this.mapper.setDateFormat(DATE_FORMAT);
         this.enableRunAs = enableRunAs;
     }
 

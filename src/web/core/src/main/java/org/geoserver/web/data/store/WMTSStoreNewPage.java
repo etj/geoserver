@@ -18,7 +18,6 @@ import org.apache.wicket.validation.ValidationError;
 import org.geoserver.catalog.CatalogBuilder;
 import org.geoserver.catalog.ValidationResult;
 import org.geoserver.catalog.WMTSStoreInfo;
-import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.platform.GeoServerEnvironment;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.util.EntityResolverProvider;
@@ -35,19 +34,10 @@ import org.xml.sax.EntityResolver;
 public class WMTSStoreNewPage extends AbstractWMTSStorePage {
 
     public WMTSStoreNewPage() {
-        this(null);
-    }
-
-    public WMTSStoreNewPage(final String workspaceName) {
         try {
             CatalogBuilder builder = new CatalogBuilder(getCatalog());
 
             WMTSStoreInfo store = builder.buildWMTSStore(null);
-
-            if (workspaceName != null && !workspaceName.isEmpty()) {
-                WorkspaceInfo ws = getCatalog().getWorkspaceByName(workspaceName);
-                if (ws != null) store.setWorkspace(ws);
-            }
 
             initUI(store);
 

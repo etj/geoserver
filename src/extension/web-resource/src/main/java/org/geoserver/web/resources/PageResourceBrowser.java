@@ -244,7 +244,7 @@ public class PageResourceBrowser extends GeoServerSecuredPage {
 
         @Override
         public void onClick(AjaxRequestTarget target) {
-            dialog.setInitialHeight(300);
+            dialog.setInitialHeight(225);
 
             dialog.showOkCancel(target, new DialogDelegate() {
                 @Serial
@@ -303,8 +303,7 @@ public class PageResourceBrowser extends GeoServerSecuredPage {
 
         @Override
         public void onClick(AjaxRequestTarget target) {
-            dialog.setInitialHeight(560);
-            dialog.setTitle(new ParamResourceModel("titleEdit", PageResourceBrowser.this));
+            dialog.setInitialHeight(525);
 
             dialog.showOkCancel(target, new DialogDelegate() {
                 @Serial
@@ -401,8 +400,7 @@ public class PageResourceBrowser extends GeoServerSecuredPage {
 
         @Override
         public void onClick(AjaxRequestTarget target) {
-            dialog.setInitialHeight(560);
-            dialog.setTitle(new ParamResourceModel("titleEdit", PageResourceBrowser.this));
+            dialog.setInitialHeight(500);
             final Resource resource = treeView.getSelectedNode().getObject();
             final String contents;
             try (InputStream is = resource.in()) {
@@ -457,7 +455,7 @@ public class PageResourceBrowser extends GeoServerSecuredPage {
 
         @Override
         public void onClick(AjaxRequestTarget target) {
-            dialog.setInitialHeight(350);
+            dialog.setInitialHeight(240);
 
             final List<Resource> sources = new ArrayList<>();
             for (TreeNode<Resource> node : clipBoard.getItems()) {
@@ -611,8 +609,7 @@ public class PageResourceBrowser extends GeoServerSecuredPage {
 
         @Override
         public void onClick(AjaxRequestTarget target) {
-            dialog.setInitialHeight(160);
-            dialog.setTitle(new ParamResourceModel("titleRename", PageResourceBrowser.this));
+            dialog.setInitialHeight(150);
 
             dialog.showOkCancel(target, new DialogDelegate() {
                 @Serial
@@ -676,7 +673,7 @@ public class PageResourceBrowser extends GeoServerSecuredPage {
 
         @Override
         public void onClick(AjaxRequestTarget target) {
-            dialog.setInitialHeight(160);
+            dialog.setInitialHeight(100);
 
             final List<Resource> toBeDeleted = new ArrayList<>();
             for (TreeNode<Resource> selectedNode : treeView.getSelectedNodes()) {

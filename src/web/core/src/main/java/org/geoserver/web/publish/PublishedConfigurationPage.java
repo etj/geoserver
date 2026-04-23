@@ -5,8 +5,6 @@
  */
 package org.geoserver.web.publish;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.io.IOException;
 import java.io.Serial;
 import java.util.ArrayList;
@@ -51,20 +49,21 @@ import org.geoserver.web.security.LayerAccessDataRulePanel;
  * <p>The page is completely pluggable, the UI will be made up by scanning the Spring context for implementations of
  * {@link ResourceConfigurationPanel} and {@link PublishedConfigurationPanel}.
  *
- * <p>WARNING: one crucial aspect of this page is its ability to not lose edits when one switches from one tab to the
+ * <p>WARNING: one crucial aspect of this page is its ability to not loose edits when one switches from one tab to the
  * other. I did not find any effective way to unit test this, so _please_, if you do modify anything in this class
  * (especially the models), manually retest that the edits are not lost on tab switch.
  *
  * @author Niels Charlier
  */
+// TODO WICKET8 - Verify this page works OK
 public abstract class PublishedConfigurationPage<T extends PublishedInfo> extends GeoServerSecuredPage {
 
     @Serial
     private static final long serialVersionUID = 7870938096047218989L;
 
-    public static final String LAYER = "layer";
+    public static final String NAME = "name";
 
-    public static final String WORKSPACE = "workspace";
+    public static final String WORKSPACE = "wsName";
 
     protected IModel<T> myModel;
 
@@ -73,9 +72,9 @@ public abstract class PublishedConfigurationPage<T extends PublishedInfo> extend
     protected TabbedPanel<ITab> tabbedPanel;
 
     /**
-     * {@link PublishedEditTabPanel} contributions may need to edit something different fron the LayerInfo and
+     * {@link PublishedEditTabPanel} contributions may need to edit something different than the LayerInfo and
      * ResourceInfo this page holds models to. In such cases {@link PublishedEditTabPanelInfo#createOwnModel} will
-     * return a non-null model and well pass it back to the concrete LayerEditTabPanel constructor. This is so because
+     * return a non null model and well pass it back to the concrete LayerEditTabPanel constructor. This is so because
      * LayerEditTabPanel are re-created everytime the user switches tabs.
      */
     private LinkedHashMap<Class<? extends PublishedEditTabPanel<T>>, IModel<?>> tabPanelCustomModels;
@@ -146,11 +145,11 @@ public abstract class PublishedConfigurationPage<T extends PublishedInfo> extend
 
         // sort the tabs based on order
         sortTabPanels(tabPanels);
-        for (PublishedEditTabPanelInfo panelInfo : tabPanels) {
-            if (panelInfo.supports(getPublishedInfo())) {
+        for (PublishedEditTabPanelInfo ttabPanelInfo : tabPanels) {
+            if (ttabPanelInfo.supports(getPublishedInfo())) {
 
                 @SuppressWarnings("unchecked")
-                PublishedEditTabPanelInfo<T> tabPanelInfo = (PublishedEditTabPanelInfo<T>) panelInfo;
+                PublishedEditTabPanelInfo<T> tabPanelInfo = (PublishedEditTabPanelInfo<T>) ttabPanelInfo;
 
                 String titleKey = tabPanelInfo.getTitleKey();
                 IModel<String> titleModel = null;
@@ -234,15 +233,6 @@ public abstract class PublishedConfigurationPage<T extends PublishedInfo> extend
             Integer order2 = o2.getOrder() >= 0 ? o2.getOrder() : Integer.MAX_VALUE;
 
             return order1.compareTo(order2);
-        });
-    }
-
-    private void sortPublishPanels(List<PublishedConfigurationPanelInfo<T>> configurationPanels) {
-        Collections.sort(configurationPanels, (o1, o2) -> {
-            Integer order1 = o1.getOrder() >= 0 ? o1.getOrder() : Integer.MAX_VALUE;
-            Integer order2 = o2.getOrder() >= 0 ? o2.getOrder() : Integer.MAX_VALUE;
-
-            return order2.compareTo(order1);
         });
     }
 
@@ -363,29 +353,11 @@ public abstract class PublishedConfigurationPage<T extends PublishedInfo> extend
     @SuppressWarnings("unchecked")
     private List<PublishedConfigurationPanelInfo<T>> filterPublishedPanels(List<PublishedConfigurationPanelInfo> list) {
         List<PublishedConfigurationPanelInfo<T>> result = new ArrayList<>();
-        // Collect applicable panels and sort into display order
         for (PublishedConfigurationPanelInfo info : list) {
             if (info.canHandle(getPublishedInfo())) {
                 result.add((PublishedConfigurationPanelInfo<T>) info);
             }
         }
-        sortPublishPanels(result);
-
-        // scan through and remove unused headings and subheadings
-        List<PublishedConfigurationPanelInfo<T>> toRemove = new ArrayList<>();
-        List<PublishedConfigurationPanelInfo<T>> headings = new ArrayList<>();
-        for (PublishedConfigurationPanelInfo<T> info : result) {
-            if (info.getComponentClass().isAssignableFrom(HeadingConfigurationPanel.class)) {
-                toRemove.addAll(headings);
-                headings.clear();
-                headings.add(info);
-            } else if (info.getComponentClass().isAssignableFrom(SubheadingConfigurationPanel.class)) {
-                headings.add(info);
-            } else if (!headings.isEmpty()) {
-                headings.clear();
-            }
-        }
-        result.removeAll(toRemove);
         return result;
     }
 
@@ -411,20 +383,6 @@ public abstract class PublishedConfigurationPage<T extends PublishedInfo> extend
     }
 
     protected abstract class ListEditTabPanel extends PublishedEditTabPanel<T> {
-
-        private static final boolean isCssEmpty =
-                IsWicketCssFileEmpty(PublishedConfigurationPage.ListEditTabPanel.class);
-
-        @Override
-        public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-            super.renderHead(response);
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
-        }
 
         @Serial
         private static final long serialVersionUID = -7279044666531992361L;
@@ -455,37 +413,23 @@ public abstract class PublishedConfigurationPage<T extends PublishedInfo> extend
         public ListView<PublishedConfigurationPanelInfo<T>> createList(String id) {
             List<PublishedConfigurationPanelInfo<T>> pubPanels = filterPublishedPanels(
                     getGeoServerApplication().getBeansOfType(PublishedConfigurationPanelInfo.class));
-
             ListView<PublishedConfigurationPanelInfo<T>> pubPanelList = new ListView<>(id, pubPanels) {
                 @Serial
-                private static final long serialVersionUID = -6651640961641287572L;
+                private static final long serialVersionUID = 1L;
 
                 @Override
                 protected void populateItem(ListItem<PublishedConfigurationPanelInfo<T>> item) {
                     PublishedConfigurationPanelInfo<T> panelInfo = item.getModelObject();
-                    PublishedConfigurationPanel<T> panel;
                     try {
-                        panel = panelInfo
+                        PublishedConfigurationPanel<T> panel = panelInfo
                                 .getComponentClass()
                                 .getConstructor(String.class, IModel.class)
                                 .newInstance("content", myModel);
-                    } catch (NoSuchMethodException wrongConstructor) {
-                        try {
-                            panel = panelInfo
-                                    .getComponentClass()
-                                    .getConstructor(String.class, IModel.class, PublishedConfigurationPanelInfo.class)
-                                    .newInstance("content", myModel, panelInfo);
-                        } catch (NoSuchMethodException e) {
-                            throw new WicketRuntimeException(
-                                    "Failed to add pluggable layer configuration panels", wrongConstructor);
-                        } catch (Exception e) {
-                            throw new WicketRuntimeException("Failed to add pluggable layer configuration panels", e);
-                        }
+                        panel.setOutputMarkupId(true); // allow cross panel ajax updates
+                        item.add(panel);
                     } catch (Exception e) {
                         throw new WicketRuntimeException("Failed to add pluggable layer configuration panels", e);
                     }
-                    panel.setOutputMarkupId(true); // allow cross panel ajax updates
-                    item.add(panel);
                 }
             };
             return pubPanelList;

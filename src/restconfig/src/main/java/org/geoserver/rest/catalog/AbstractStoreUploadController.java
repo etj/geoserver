@@ -4,16 +4,15 @@
  */
 package org.geoserver.rest.catalog;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.io.FilenameUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.platform.resource.Resources;
 import org.geoserver.rest.RestException;
-import org.geoserver.rest.util.RESTFileValidatorCallback;
 import org.geoserver.rest.util.RESTUtils;
 import org.geotools.util.logging.Logging;
 import org.springframework.http.HttpMethod;
@@ -53,8 +52,7 @@ public abstract class AbstractStoreUploadController extends AbstractCatalogContr
             UploadMethod method,
             String format,
             Resource directory,
-            HttpServletRequest request,
-            RESTFileValidatorCallback validationCallback) {
+            HttpServletRequest request) {
 
         List<Resource> files = new ArrayList<>();
 
@@ -68,8 +66,8 @@ public abstract class AbstractStoreUploadController extends AbstractCatalogContr
                 if (filename == null) {
                     filename = buildUploadedFilename(store, format);
                 }
-                uploadedFile = RESTUtils.handleBinUpload(
-                        filename, directory, cleanPreviousContents, request, workspace, validationCallback);
+                uploadedFile =
+                        RESTUtils.handleBinUpload(filename, directory, cleanPreviousContents, request, workspace);
             } else if (method == UploadMethod.url) {
                 uploadedFile =
                         RESTUtils.handleURLUpload(buildUploadedFilename(store, format), workspace, directory, request);

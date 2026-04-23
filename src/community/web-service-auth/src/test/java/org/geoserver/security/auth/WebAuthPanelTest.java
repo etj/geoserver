@@ -4,7 +4,6 @@
  */
 package org.geoserver.security.auth;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -22,7 +21,6 @@ import org.geoserver.security.web.auth.AuthenticationPage;
 import org.geoserver.security.web.auth.WebAuthProviderPanel;
 import org.geoserver.security.web.auth.WebAuthProviderPanelInfo;
 import org.geoserver.security.web.role.RoleServiceChoice;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -123,7 +121,7 @@ public class WebAuthPanelTest extends AbstractSecurityNamedServicePanelTest {
         WebAuthenticationConfig savedConfig =
                 (WebAuthenticationConfig) getSecurityManager().loadAuthenticationProviderConfig(webAuthProviderName);
         assertNotNull(savedConfig);
-        assertThat(savedConfig.getRoleServiceName(), Matchers.equalToIgnoringCase(roleServiceName));
+        assertNotNull(savedConfig.getRoleServiceName().equalsIgnoreCase(roleServiceName));
     }
 
     @Test

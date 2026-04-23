@@ -38,7 +38,8 @@ public class GHRSSTEncoderFactory implements NetCDFEncoderFactory {
         // is the layer configured to have a GHRSST format?
         NetCDFLayerSettingsContainer settings = NetCDFEncoder.getSettings(coverageId);
         MetadataMap metadata = settings.getMetadata();
-        if (!Boolean.TRUE.equals(metadata.get(GHRSSTEncoder.SETTINGS_KEY, Boolean.class))) {
+        if (settings == null || !Boolean.TRUE.equals(metadata.get(GHRSSTEncoder.SETTINGS_KEY, Boolean.class))) {
+            // nope;
             return null;
         }
 
@@ -48,7 +49,6 @@ public class GHRSSTEncoderFactory implements NetCDFEncoderFactory {
         Date referenceDate = null;
         for (NetCDFDimensionsManager.NetCDFDimensionMapping dimension : dimensionsManager.getDimensions()) {
             if ("time".equalsIgnoreCase(dimension.getName())) {
-                @SuppressWarnings("unchecked")
                 TreeSet<Object> values =
                         (TreeSet<Object>) dimension.getDimensionValues().getValues();
                 Object first = values.first();

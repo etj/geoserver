@@ -5,13 +5,11 @@
 package org.geoserver.ogcapi.v1.images;
 
 import static java.util.stream.Collectors.toList;
-import static org.geoserver.ogcapi.SwaggerJSONAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE;
+import static org.geoserver.ogcapi.MappingJackson2YAMLMessageConverter.APPLICATION_YAML_VALUE;
+import static org.geoserver.ogcapi.OpenAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE;
 import static org.geotools.gce.imagemosaic.Utils.FF;
-import static org.springframework.http.MediaType.APPLICATION_YAML_VALUE;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -29,6 +27,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import net.opengis.wfs20.Wfs20Factory;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.catalog.CoverageInfo;
@@ -469,7 +469,7 @@ public class ImagesService implements ApplicationContextAware {
                     UUID.randomUUID().toString() + "." + MimeTypeSupport.guessFileExtension(request.getContentType());
         }
         Resource uploadRoot = RESTUtils.createUploadRoot(geoServer.getCatalog(), workspace, storeName, true);
-        Resource uploadedResource = RESTUtils.handleBinUpload(filename, uploadRoot, false, request, workspace, null);
+        Resource uploadedResource = RESTUtils.handleBinUpload(filename, uploadRoot, false, request, workspace);
 
         List<Resource> resources = new ArrayList<>();
         if (isZipFile(request)) {

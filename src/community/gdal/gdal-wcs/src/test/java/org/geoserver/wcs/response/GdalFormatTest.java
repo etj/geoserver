@@ -83,7 +83,7 @@ public class GdalFormatTest {
         File tempFile = prepareInput();
         try {
             GridCoverage2DReader covReader = new GeoTiffReader(tempFile);
-            GridCoverage2D cov = covReader.read();
+            GridCoverage2D cov = covReader.read(null);
 
             try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
                 // write out
@@ -107,7 +107,7 @@ public class GdalFormatTest {
         File tempFile = prepareInput();
         try {
             GridCoverage2DReader covReader = new GeoTiffReader(tempFile);
-            GridCoverage2D cov = covReader.read();
+            GridCoverage2D cov = covReader.read(null);
 
             try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
                 // write out

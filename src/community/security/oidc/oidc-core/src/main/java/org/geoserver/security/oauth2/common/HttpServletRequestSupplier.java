@@ -4,8 +4,8 @@
  */
 package org.geoserver.security.oauth2.common;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.function.Supplier;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -22,6 +22,7 @@ public class HttpServletRequestSupplier implements Supplier<HttpServletRequest> 
         if (lAttrs == null) {
             throw new IllegalStateException("Failed to obtain ServletRequestAttributes.");
         }
-        return lAttrs.getRequest();
+        HttpServletRequest lRequest = lAttrs.getRequest();
+        return lRequest;
     }
 }

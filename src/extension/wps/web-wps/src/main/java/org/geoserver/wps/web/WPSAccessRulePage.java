@@ -165,9 +165,7 @@ public class WPSAccessRulePage extends AbstractSecurityPage {
                 new PropertyModel<>(wpsInfo, "catalogMode"),
                 CATALOG_MODES,
                 new CatalogModeRenderer());
-        // Wrap each radio input + label pair in a <div>...</div>
-        catalogModeChoice.setPrefix("<div>");
-        catalogModeChoice.setSuffix("</div>");
+        catalogModeChoice.setSuffix(" ");
         form.add(catalogModeChoice);
 
         SubmitLink submit = new SubmitLink("submit", new StringResourceModel("save", null, null)) {

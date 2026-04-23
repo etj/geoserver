@@ -5,7 +5,6 @@
  */
 package org.geoserver.catalog;
 
-import jakarta.activation.MimetypesFileTypeMap;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileReader;
@@ -19,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import javax.activation.MimetypesFileTypeMap;
 import org.geoserver.platform.resource.Resource;
 import org.geotools.api.style.ResourceLocator;
 import org.geotools.api.style.StyleFactory;

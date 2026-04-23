@@ -5,11 +5,10 @@
  */
 package org.vfny.geoserver.util;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * <b>PartialBufferedOutputStream</b><br>
@@ -57,7 +56,7 @@ public class PartialBufferedOutputStream2 extends OutputStream {
     private HttpServletResponse response;
 
     /** Set to true when close() is called to prevent further writing */
-    private AtomicBoolean closed = new AtomicBoolean(false);
+    private boolean closed = false;
 
     /** Constructor Defaults buffer size to 50KB */
     public PartialBufferedOutputStream2(HttpServletResponse response) throws IOException {
@@ -112,7 +111,7 @@ public class PartialBufferedOutputStream2 extends OutputStream {
      */
     @Override
     public synchronized void write(int b) throws IOException {
-        if (closed.get()) {
+        if (closed) {
             return;
         }
 
@@ -122,7 +121,7 @@ public class PartialBufferedOutputStream2 extends OutputStream {
 
     @Override
     public void write(byte[] b) throws IOException {
-        if (closed.get()) {
+        if (closed) {
             return;
         }
 
@@ -132,7 +131,7 @@ public class PartialBufferedOutputStream2 extends OutputStream {
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        if (closed.get()) {
+        if (closed) {
             return;
         }
 
@@ -161,7 +160,7 @@ public class PartialBufferedOutputStream2 extends OutputStream {
      */
     @Override
     public synchronized void flush() throws IOException {
-        if (closed.get()) {
+        if (closed) {
             return;
         }
 
@@ -183,13 +182,13 @@ public class PartialBufferedOutputStream2 extends OutputStream {
      */
     @Override
     public void close() throws IOException {
-        if (closed.get()) {
+        if (closed) {
             return;
         }
 
         forceFlush();
 
-        closed.set(true);
+        closed = true;
 
         out_buffer.close();
         out_buffer = null;

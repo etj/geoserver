@@ -32,7 +32,7 @@ import org.geotools.api.feature.type.FeatureType;
 public class DataAccessEditPage extends AbstractDataAccessPage implements Serializable {
 
     public static final String STORE_NAME = "storeName";
-    public static final String WS_NAME = "workspace";
+    public static final String WS_NAME = "wsName";
 
     /** Dialog to ask for save confirmation in case the store can't be reached */
     private GeoServerDialog dialog;
@@ -46,7 +46,7 @@ public class DataAccessEditPage extends AbstractDataAccessPage implements Serial
         if (dsi == null) {
             getSession()
                     .error(new ParamResourceModel("DataAccessEditPage.notFound", this, storeName, wsName).getString());
-            doReturn(getDefaultReturnPage());
+            doReturn(StorePage.class);
             return;
         }
 
@@ -54,7 +54,7 @@ public class DataAccessEditPage extends AbstractDataAccessPage implements Serial
             initUI(dsi);
         } catch (IllegalArgumentException e) {
             error(e.getMessage());
-            doReturn(getDefaultReturnPage());
+            doReturn(StorePage.class);
         }
     }
 
@@ -125,7 +125,7 @@ public class DataAccessEditPage extends AbstractDataAccessPage implements Serial
                 if (!doSaveStore(info)) return;
 
                 if (doReturn) {
-                    doReturn(getDefaultReturnPage());
+                    doReturn(StorePage.class);
                 }
             } catch (IOException | RuntimeException e) {
                 LOGGER.log(Level.WARNING, "Error obtaining datastore with the modified values", e);
@@ -135,7 +135,7 @@ public class DataAccessEditPage extends AbstractDataAccessPage implements Serial
             // store's disabled, no need to check the connection parameters
             if (!doSaveStore(info)) return;
             if (doReturn) {
-                doReturn(getDefaultReturnPage());
+                doReturn(StorePage.class);
             }
         }
     }
@@ -179,7 +179,7 @@ public class DataAccessEditPage extends AbstractDataAccessPage implements Serial
             @Override
             public void onClose(AjaxRequestTarget target) {
                 if (accepted) {
-                    doReturn(getDefaultReturnPage());
+                    doReturn(StorePage.class);
                 }
             }
         });

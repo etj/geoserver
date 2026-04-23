@@ -21,6 +21,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import javax.xml.namespace.QName;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONNull;
+import net.sf.json.JSONObject;
 import org.geoserver.config.GeoServer;
 import org.geoserver.data.test.MockData;
 import org.geoserver.data.test.SystemTestData;
@@ -29,9 +32,6 @@ import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 import org.geotools.api.referencing.operation.TransformException;
 import org.geotools.data.util.DefaultProgressListener;
 import org.junit.Test;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONNull;
-import org.kordamp.json.JSONObject;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.WKTReader;
@@ -61,6 +61,7 @@ public class LongitudinalProfileProcessTest extends WPSTestSupport {
     private static final String LINESTRING_2154_EWKT = "SRID=2154;" + LINESTRING_2154_WKT;
     private static final String LINESTRING_4326_EWKT =
             "SRID=4326;LINESTRING(4.816667349546753 44.86746046117114, 4.820617515841021 44.86445081066109, 4.829431492334357 44.86579440463876, 4.82464829777395 44.869717699053616)";
+    private static final double DELTA = 1e-3;
 
     @Override
     protected void onSetUp(SystemTestData testData) throws Exception {

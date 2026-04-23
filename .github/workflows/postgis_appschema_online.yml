@@ -1,12 +1,6 @@
 name: PostGIS app-schema online tests
 
-on:
-  pull_request:
-    paths-ignore:
-      - 'doc/**'
-      - 'mkdocs.yml'
-      - 'requirements.txt'
-      - '.github/workflows/docs.yml'
+on: [ pull_request ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

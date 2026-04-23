@@ -37,12 +37,9 @@ public class DownloadLimitsPanelTest extends GeoServerWicketTestSupport {
     public void testDefaults() throws Exception {
         tester.startPage(WPSAdminPage.class);
 
-        // change to WPS tab
-        tester.clickLink("form:tabs:tabs-container:tabs:1:link");
-
         // pluggable panels, make sure to get the right one
-        ListView extensions = (ListView) tester.getComponentFromLastRenderedPage("form:tabs:panel:extensions");
-        String path = getComponentPath(extensions, DownloadLimitsPanel.class);
+        ListView lv = (ListView) tester.getComponentFromLastRenderedPage("form:extensions");
+        String path = getComponentPath(lv, DownloadLimitsPanel.class);
         assertNotNull(path);
 
         tester.assertModelValue(path + ":maxFeatures", 100000l);
@@ -56,24 +53,21 @@ public class DownloadLimitsPanelTest extends GeoServerWicketTestSupport {
     @Test
     public void testSave() throws Exception {
         WPSAdminPage page = tester.startPage(WPSAdminPage.class);
-        // change to WPS tab
-        tester.clickLink("form:tabs:tabs-container:tabs:1:link");
-
         print(page, true, true, true);
 
-        ListView extensions = (ListView) tester.getComponentFromLastRenderedPage("form:tabs:panel:extensions");
-        String path = getComponentPath(extensions, DownloadLimitsPanel.class);
+        ListView lv = (ListView) tester.getComponentFromLastRenderedPage("form:extensions");
+        String path = getComponentPath(lv, DownloadLimitsPanel.class);
         assertNotNull(path);
 
-        FormTester form = tester.newFormTester("form");
+        FormTester ft = tester.newFormTester("form");
         String formPath = path.substring("form".length() + 1);
-        form.setValue(formPath + ":maxFeatures", "123");
-        form.setValue(formPath + ":rasterSizeLimits", "456000");
-        form.setValue(formPath + ":writeLimits", "789000");
-        form.setValue(formPath + ":hardOutputLimit", "1234567");
-        form.setValue(formPath + ":maxAnimationFrames", "56");
-        form.setValue(formPath + ":compressionLevel", "8");
-        form.submit();
+        ft.setValue(formPath + ":maxFeatures", "123");
+        ft.setValue(formPath + ":rasterSizeLimits", "456000");
+        ft.setValue(formPath + ":writeLimits", "789000");
+        ft.setValue(formPath + ":hardOutputLimit", "1234567");
+        ft.setValue(formPath + ":maxAnimationFrames", "56");
+        ft.setValue(formPath + ":compressionLevel", "8");
+        ft.submit();
 
         DownloadServiceConfigurationWatcher watcher =
                 GeoServerExtensions.bean(DownloadServiceConfigurationWatcher.class);

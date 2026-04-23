@@ -26,8 +26,6 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import org.geoserver.config.GeoServer;
 import org.geoserver.data.util.TemporalUtils;
-import org.geoserver.json.GeoJSONBuilder;
-import org.geoserver.json.JSONType;
 import org.geoserver.ows.Dispatcher;
 import org.geoserver.ows.Request;
 import org.geoserver.ows.util.KvpUtils;
@@ -582,7 +580,6 @@ public class SpatialJSONGetFeatureResponse extends GeoJSONGetFeatureResponse {
 
                         case '^':
                             buf.append("\\^");
-                            break;
 
                         case ']':
                             if (buf.length() == l1) {
@@ -721,7 +718,7 @@ public class SpatialJSONGetFeatureResponse extends GeoJSONGetFeatureResponse {
     }
 
     /** Helper class for building a Shared String Table */
-    private static class SharedStringTable {
+    private class SharedStringTable {
 
         /**
          * The string table. This map's keys are the strings stored in the string table. Each mapping's value is the
@@ -890,7 +887,7 @@ public class SpatialJSONGetFeatureResponse extends GeoJSONGetFeatureResponse {
      *
      * @see #Context
      */
-    private static class GeoJSONBuilderWithContext extends GeoJSONBuilder implements Context {
+    private class GeoJSONBuilderWithContext extends GeoJSONBuilder implements Context {
 
         private List<String> propertyNames;
 

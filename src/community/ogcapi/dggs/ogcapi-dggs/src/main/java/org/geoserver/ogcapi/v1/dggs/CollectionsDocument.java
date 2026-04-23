@@ -8,6 +8,7 @@ import static org.geoserver.catalog.util.CloseableIteratorAdapter.filter;
 import static org.geoserver.catalog.util.CloseableIteratorAdapter.transform;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -45,6 +46,7 @@ public class CollectionsDocument extends AbstractDocument {
     }
 
     @Override
+    @JacksonXmlProperty(localName = "Links")
     public List<Link> getLinks() {
         return links;
     }
@@ -54,6 +56,7 @@ public class CollectionsDocument extends AbstractDocument {
      *     {@code org.geoserver.ogcapi.CloseableIteratorSerializer} for JSON output or
      *     {@code org.geoserver.ogcapi.AutoCloseableTracker} for HTML output
      */
+    @JacksonXmlProperty(localName = "Collection")
     @SuppressWarnings("PMD.CloseResource")
     public CloseableIterator<CollectionDocument> getCollections() {
         Catalog catalog = geoServer.getCatalog();

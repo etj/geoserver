@@ -1,5 +1,5 @@
 {
-   "$schema":"https://json-schema.org/draft/2020-12/schema",
+   "$schema":"http://json-schema.org/draft-03/schema#",
 
     "title":"range domain",
     "type":"object",
@@ -10,29 +10,32 @@
         "type":{
             "title":"domain type",
             "type":"string",
+            "required":true,
             "enum":["codedValue"]
         },
         "name":{
             "title":"domain name",
-            "type":"string"
+            "type":"string",
+            "required":true
         },
         "codedValues":{
             "title":"coded values",
             "type":"array",
+            "required":true,
             "minItems":1,
             "items":{
                 "type":"object",
                 "properties":{
                     "name":{
-                        "type":"string"
+                        "type":"string",
+                        "required":true
                     },
                     "code":{
-                        "type":["number","string"]
+                        "type":["number","string"],
+                        "required":true
                     }
-                },
-                "required":["name","code"]
+                }
             }
         }
-    },
-    "required":["type","name","codedValues"]
+    }
 }

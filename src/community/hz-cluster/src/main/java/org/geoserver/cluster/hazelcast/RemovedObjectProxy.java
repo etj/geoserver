@@ -71,7 +71,7 @@ class RemovedObjectProxy implements InvocationHandler {
         this.name = name;
         this.infoInterface = infoInterface;
         this.nativeName = nativeName;
-        this.catalogCollaborators = new HashMap<>();
+        this.catalogCollaborators = new HashMap<String, CatalogInfo>();
     }
 
     /** Makes the proxy return a catalog object */

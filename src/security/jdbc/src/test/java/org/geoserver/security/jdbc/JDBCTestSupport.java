@@ -58,12 +58,12 @@ public class JDBCTestSupport {
         return property != null && "false".equals(property.toLowerCase());
     }
 
-    protected static JDBCUserGroupServiceConfig createConfigObjectHSQL(
+    protected static JDBCUserGroupServiceConfig createConfigObjectH2(
             String serviceName, GeoServerSecurityManager securityManager) {
         JDBCUserGroupServiceConfig config = new JDBCUserGroupServiceConfig();
         config.setName(serviceName);
-        config.setConnectURL("jdbc:hsqldb:file:target/hsql/security");
-        config.setDriverClassName("org.hsqldb.jdbc.JDBCDriver");
+        config.setConnectURL("jdbc:h2:target/h2/security");
+        config.setDriverClassName("org.h2.Driver");
         config.setUserName("sa");
         config.setPassword("");
         config.setClassName(JDBCUserGroupService.class.getName());
@@ -77,7 +77,7 @@ public class JDBCTestSupport {
         return config;
     }
 
-    protected static GeoServerUserGroupService createHsqlUserGroupService(
+    protected static GeoServerUserGroupService createH2UserGroupService(
             String serviceName, GeoServerSecurityManager securityManager) throws Exception {
 
         if (securityManager.listUserGroupServices().contains(serviceName)) {
@@ -91,16 +91,16 @@ public class JDBCTestSupport {
             securityManager.removeUserGroupService(old);
         }
 
-        securityManager.saveUserGroupService(createConfigObjectHSQL(serviceName, securityManager));
+        securityManager.saveUserGroupService(createConfigObjectH2(serviceName, securityManager));
         return securityManager.loadUserGroupService(serviceName);
     }
 
-    protected static JDBCUserGroupServiceConfig createConfigObjectHSQLJNDI(
+    protected static JDBCUserGroupServiceConfig createConfigObjectH2Jndi(
             String serviceName, GeoServerSecurityManager securityManager) {
         JDBCUserGroupServiceConfig config = new JDBCUserGroupServiceConfig();
         config.setName(serviceName);
         config.setJndi(true);
-        config.setJndiName("ds.hsql");
+        config.setJndiName("ds.h2");
         config.setClassName(JDBCUserGroupService.class.getName());
         config.setPropertyFileNameDDL(JDBCUserGroupService.DEFAULT_DDL_FILE);
         config.setPropertyFileNameDML(JDBCUserGroupService.DEFAULT_DML_FILE);
@@ -112,13 +112,13 @@ public class JDBCTestSupport {
         return config;
     }
 
-    protected static GeoServerUserGroupService createHSQLUserGroupServiceFromJNDI(
+    protected static GeoServerUserGroupService createH2UserGroupServiceFromJNDI(
             String serviceName, GeoServerSecurityManager securityManager) throws Exception {
-        securityManager.saveUserGroupService(createConfigObjectHSQLJNDI(serviceName, securityManager));
+        securityManager.saveUserGroupService(createConfigObjectH2Jndi(serviceName, securityManager));
         return securityManager.loadUserGroupService(serviceName);
     }
 
-    protected static GeoServerRoleService createHSQLRoleService(
+    protected static GeoServerRoleService createH2RoleService(
             String serviceName, GeoServerSecurityManager securityManager) throws Exception {
 
         if (securityManager.listRoleServices().contains(serviceName)) {
@@ -140,24 +140,26 @@ public class JDBCTestSupport {
         JDBCRoleServiceConfig config = new JDBCRoleServiceConfig();
 
         config.setName(serviceName);
-        config.setConnectURL("jdbc:hsqldb:file:target/hsql/security");
-        config.setDriverClassName("org.hsqldb.jdbc.JDBCDriver");
-        config.setUserName("SA");
+        config.setConnectURL("jdbc:h2:target/h2/security");
+        config.setDriverClassName("org.h2.Driver");
+        config.setUserName("sa");
+        config.setPassword("");
         config.setClassName(JDBCRoleService.class.getName());
+        config.setPropertyFileNameDDL(JDBCRoleService.DEFAULT_DDL_FILE);
         config.setPropertyFileNameDML(JDBCRoleService.DEFAULT_DML_FILE);
         config.setCreatingTables(false);
         securityManager.saveRoleService(config);
         return securityManager.loadRoleService(serviceName);
     }
 
-    protected static GeoServerRoleService createHSQLRoleServiceFromJNDI(
+    protected static GeoServerRoleService createH2RoleServiceFromJNDI(
             String serviceName, GeoServerSecurityManager securityManager) throws Exception {
 
         JDBCRoleServiceConfig config = new JDBCRoleServiceConfig();
 
         config.setName(serviceName);
         config.setJndi(true);
-        config.setJndiName("ds.hsql");
+        config.setJndiName("ds.h2");
         config.setClassName(JDBCRoleService.class.getName());
         config.setPropertyFileNameDDL(JDBCRoleService.DEFAULT_DDL_FILE);
         config.setPropertyFileNameDML(JDBCRoleService.DEFAULT_DML_FILE);
@@ -181,8 +183,8 @@ public class JDBCTestSupport {
         config.setPassword(props.getProperty("password"));
         config.setClassName(JDBCRoleService.class.getName());
         config.setCreatingTables(false);
-        if ("hsql".equals(fixtureId)) {
-            config.setPropertyFileNameDDL("rolesddl.hsql.xml");
+        if ("h2".equals(fixtureId)) {
+            config.setPropertyFileNameDDL("rolesddl.h2.xml");
         } else if ("postgis".equals(fixtureId)) {
             config.setPropertyFileNameDDL("rolesddl.postgis.xml");
         } else if ("mysql".equals(fixtureId)) {

@@ -75,7 +75,6 @@ public class WMSServiceDescriptionProvider extends ServiceDescriptionProvider {
         if (workspaceInfo == null && !geoserver.getGlobal().isGlobalServices()) {
             return links;
         }
-
         WMSInfo info = info(workspaceInfo, layerInfo);
         List<Version> disabledVersions = (info != null) ? info.getDisabledVersions() : null;
 

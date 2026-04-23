@@ -6,7 +6,7 @@ package org.geoserver.backuprestore;
 
 import com.thoughtworks.xstream.XStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +34,6 @@ import org.geotools.util.logging.Logging;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.JobParametersInvalidException;
@@ -44,6 +43,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
+import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRepository;
@@ -64,7 +64,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * @author Alessio Fabiani, GeoSolutions
  */
 @SuppressWarnings("rawtypes")
-public class Backup implements DisposableBean, ApplicationContextAware, ApplicationListener, JobExecutionListener {
+public class Backup extends JobExecutionListenerSupport
+        implements DisposableBean, ApplicationContextAware, ApplicationListener {
 
     public static final String PARAM_PASSWORD_TOKENS = "BK_PASSWORD_TOKENS";
 
@@ -434,7 +435,7 @@ public class Backup implements DisposableBean, ApplicationContextAware, Applicat
                     backupExecution.setLiFilter(liFilter);
 
                     backupExecution.getOptions().add("OVERWRITE=" + overwrite);
-                    for (Entry jobParam : jobParameters.getParameters().entrySet()) {
+                    for (Entry jobParam : jobParameters.toProperties().entrySet()) {
                         if (!PARAM_OUTPUT_FILE_PATH.equals(jobParam.getKey())
                                 && !PARAM_INPUT_FILE_PATH.equals(jobParam.getKey())
                                 && !PARAM_TIME.equals(jobParam.getKey())) {
@@ -536,7 +537,7 @@ public class Backup implements DisposableBean, ApplicationContextAware, Applicat
                     restoreExecution.setSiFilter(siFilter);
                     restoreExecution.setLiFilter(liFilter);
 
-                    for (Entry jobParam : jobParameters.getParameters().entrySet()) {
+                    for (Entry jobParam : jobParameters.toProperties().entrySet()) {
                         if (!PARAM_OUTPUT_FILE_PATH.equals(jobParam.getKey())
                                 && !PARAM_INPUT_FILE_PATH.equals(jobParam.getKey())
                                 && !PARAM_TIME.equals(jobParam.getKey())) {
@@ -599,7 +600,7 @@ public class Backup implements DisposableBean, ApplicationContextAware, Applicat
 
                 if (!status.isGreaterThan(BatchStatus.STARTED)) {
                     jobExecution.setStatus(BatchStatus.STOPPING);
-                    jobExecution.setEndTime(LocalDateTime.now());
+                    jobExecution.setEndTime(new Date());
                     jobRepository.update(jobExecution);
                 }
             }
@@ -640,7 +641,7 @@ public class Backup implements DisposableBean, ApplicationContextAware, Applicat
         } finally {
             if (jobExecution != null) {
                 jobExecution.setStatus(BatchStatus.ABANDONED);
-                jobExecution.setEndTime(LocalDateTime.now());
+                jobExecution.setEndTime(new Date());
                 jobRepository.update(jobExecution);
             }
 

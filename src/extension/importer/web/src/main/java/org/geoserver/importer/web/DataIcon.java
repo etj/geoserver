@@ -5,23 +5,26 @@
  */
 package org.geoserver.importer.web;
 
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.geoserver.web.GeoServerApplication;
+
 public enum DataIcon {
-    FOLDER("gs-icon-folder"),
-    VECTOR("gs-icon-vector"),
-    RASTER("gs-icon-raster"),
-    FILE("gs-icon-page-white-text"),
-    FILE_VECTOR("gs-icon-page-white-vector"),
-    FILE_RASTER("gs-icon-page-white-raster"),
-    DATABASE("gs-icon-database-vector"),
-    POSTGIS("gs-icon-postgis");
+    FOLDER("img/icons/silk/folder.png"),
+    VECTOR("img/icons/geosilk/vector.png"),
+    RASTER("img/icons/geosilk/raster.png"),
+    FILE("img/icons/silk/page_white_text.png"),
+    FILE_VECTOR("img/icons/geosilk/page_white_vector.png"),
+    FILE_RASTER("img/icons/geosilk/page_white_raster.png"),
+    DATABASE("img/icons/geosilk/database_vector.png"),
+    POSTGIS("img/icons/geosilk/postgis.png");
 
-    final String cssClass;
+    PackageResourceReference icon;
 
-    DataIcon(String cssClass) {
-        this.cssClass = cssClass;
+    DataIcon(String iconPath) {
+        this.icon = new PackageResourceReference(GeoServerApplication.class, iconPath);
     }
 
-    public String getIcon() {
-        return cssClass;
+    public PackageResourceReference getIcon() {
+        return icon;
     }
 }

@@ -4,6 +4,7 @@
  */
 package org.geoserver.featurestemplating.builders.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +20,6 @@ import org.geotools.feature.ComplexAttributeImpl;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.util.logging.Logging;
 import org.xml.sax.helpers.NamespaceSupport;
-import tools.jackson.databind.JsonNode;
 
 /** Evaluates xpath and cql functions, writing their results to the output. */
 public class DynamicValueBuilder extends AbstractTemplateBuilder {

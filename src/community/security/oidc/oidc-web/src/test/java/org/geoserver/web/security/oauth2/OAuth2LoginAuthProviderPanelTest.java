@@ -28,12 +28,7 @@ public class OAuth2LoginAuthProviderPanelTest extends AbstractSecurityNamedServi
 
     @Before
     public void setup() {
-        // This system property is the lowest-priority fallback in resolveBaseRedirectUri().
-        // It must match the base URL used in testUserInputSaveModify() so that after save/reload
-        // (where the transient baseRedirectUriExplicitlySet flag resets), the dynamic getter
-        // resolves to the expected value.
-        System.setProperty(
-                GeoServerOAuth2LoginFilterConfig.OPENID_TEST_GS_PROXY_BASE, "https://localhost:9090/geoserver");
+        System.setProperty(GeoServerOAuth2LoginFilterConfig.OPENID_TEST_GS_PROXY_BASE, "http://localhost/geoserver");
     }
 
     @Test
@@ -45,11 +40,8 @@ public class OAuth2LoginAuthProviderPanelTest extends AbstractSecurityNamedServi
 
     /**
      * Creates a new configuration for a {@link GeoServerOAuth2LoginFilterConfig} providing all user input and verifies
-     * the configuration object contains the input after saving and reopening. The OIDC provider is selected (default)
-     * and configured. Further steps change the user input and verify changes are also written to configuration.
-     *
-     * <p>Note: The panel uses a mutually exclusive provider dropdown selector, so only one provider can be active at a
-     * time. This test focuses on the OIDC provider which is the default and most feature-rich.
+     * the configuration object contains the input after saving and reopening. Further steps change the user input and
+     * verify changes are also written to configuration.
      *
      * @throws Exception
      */
@@ -58,41 +50,42 @@ public class OAuth2LoginAuthProviderPanelTest extends AbstractSecurityNamedServi
         String filterName = "OpenIdFilter1";
         navigateToOpenIdPanel(filterName);
 
+        // redirectUri Ajax test
+        // Unfortunately wicketTester forgets existing form data on ajax request, even if not submitting.
+        // So input has to provided twice. I think is a wicketTester bug...
         String prefix = "panel:content:";
         String baseUrl = "https://localhost:9090";
         String baseUrlComponentPath = prefix + "baseRedirectUri";
-
-        // --- Phase 1: trigger AJAX events to update dynamic state ---
-
-        // baseRedirectUri AJAX: updates redirect URIs for all providers
         formTester.setValue(baseUrlComponentPath, baseUrl + "/geoserver");
-        Component baseUriComponent = formTester.getForm().get(baseUrlComponentPath);
-        tester.executeAjaxEvent(baseUriComponent, "change");
-
-        // providerSelector AJAX: calls setSelectedProvider("oidc") which sets oidcEnabled=true
-        // and updates container visibility. This is necessary because
-        // AjaxFormComponentUpdatingBehavior explicitly calls config.setSelectedProvider().
-        formTester.select(prefix + "providerSelector", 0);
-        Component providerSelectorComponent = formTester.getForm().get(prefix + "providerSelector");
-        tester.executeAjaxEvent(providerSelectorComponent, "change");
-
-        // --- Phase 2: re-set ALL form values after AJAX events ---
-        // (WicketTester clears queued form data on each AJAX request)
-
-        // Common fields
+        Component lComponent = formTester.getForm().get(baseUrlComponentPath);
+        tester.executeAjaxEvent(lComponent, "change");
         formTester.setValue(baseUrlComponentPath, baseUrl + "/geoserver");
+
+        // filter
         formTester.setValue(prefix + "name", filterName);
+
+        // common
         formTester.setValue(prefix + "postLogoutRedirectUri", baseUrl + "/geoserver/postlogout");
         formTester.setValue(prefix + "enableRedirectAuthenticationEntryPoint", false);
 
-        // Re-select OIDC provider so the dropdown value is submitted with the form save
-        formTester.select(prefix + "providerSelector", 0);
+        // Google
+        prefix = "panel:content:pfv:1:";
+        setBasicProviderValues(prefix, "google");
 
-        // OIDC provider settings (pfv:4 — the 4th provider panel added by addProviderComponents)
-        prefix = "panel:content:pfv:4:settings:";
-        formTester.setValue(prefix + "clientId", "oidcClientId");
-        formTester.setValue(prefix + "clientSecret", "oidcClientSecret");
-        formTester.setValue(prefix + "userNameAttribute", "oidcUserNameAttribute");
+        // GitHub
+        prefix = "panel:content:pfv:2:";
+        setBasicProviderValues(prefix, "gitHub");
+
+        // Microsoft
+        prefix = "panel:content:pfv:3:";
+        setBasicProviderValues(prefix, "ms");
+        prefix = prefix + "settings:";
+        formTester.setValue(prefix + "displayOnScopeSupport:scopes", "msScopes");
+
+        // OIDC
+        prefix = "panel:content:pfv:4:";
+        setBasicProviderValues(prefix, "oidc");
+        prefix = prefix + "settings:";
         formTester.setValue(prefix + "displayOnScopeSupport:scopes", "oidcScopes");
 
         String authUrl = "https://localhost:9000";
@@ -104,7 +97,7 @@ public class OAuth2LoginAuthProviderPanelTest extends AbstractSecurityNamedServi
 
         formTester.setValue(prefix + "displayOnOidc:oidcForceAuthorizationUriHttps", true);
         formTester.setValue(prefix + "displayOnOidc:oidcForceTokenUriHttps", true);
-        formTester.setValue(prefix + "displayOnOidc:disableSignatureValidation", true);
+        formTester.setValue(prefix + "displayOnOidc:oidcEnforceTokenValidation", true);
         formTester.setValue(prefix + "displayOnOidc:oidcUsePKCE", true);
         formTester.setValue(prefix + "displayOnOidc:oidcAllowUnSecureLogging", true);
 
@@ -129,17 +122,34 @@ public class OAuth2LoginAuthProviderPanelTest extends AbstractSecurityNamedServi
         GeoServerOAuth2LoginFilterConfig lConfig = lOauthPanel.getConfigModel().getObject();
 
         // common
-        assertEquals("https://localhost:9090/geoserver/", lConfig.getBaseRedirectUri());
-        assertEquals("https://localhost:9090/geoserver/web/", lConfig.getPostLogoutRedirectUri());
-        assertFalse(lConfig.getEnableRedirectAuthenticationEntryPoint());
+        assertEquals("https://localhost:9090/geoserver", lConfig.getBaseRedirectUri());
+        assertEquals("https://localhost:9090/geoserver/postlogout", lConfig.getPostLogoutRedirectUri());
+        assertEquals(Boolean.FALSE, lConfig.getEnableRedirectAuthenticationEntryPoint());
 
-        // OIDC should be the only enabled provider (dropdown is mutually exclusive)
-        assertTrue(lConfig.isOidcEnabled());
-        assertFalse(lConfig.isGoogleEnabled());
-        assertFalse(lConfig.isGitHubEnabled());
-        assertFalse(lConfig.isMsEnabled());
+        // Google
+        assertEquals(Boolean.TRUE, lConfig.isGoogleEnabled());
+        assertEquals("googleClientId", lConfig.getGoogleClientId());
+        assertEquals("googleClientSecret", lConfig.getGoogleClientSecret());
+        assertEquals("googleUserNameAttribute", lConfig.getGoogleUserNameAttribute());
+        assertEquals("https://localhost:9090/geoserver/web/login/oauth2/code/google", lConfig.getGoogleRedirectUri());
 
-        // OIDC values
+        // gitHub
+        assertEquals(Boolean.TRUE, lConfig.isGitHubEnabled());
+        assertEquals("gitHubClientId", lConfig.getGitHubClientId());
+        assertEquals("gitHubClientSecret", lConfig.getGitHubClientSecret());
+        assertEquals("gitHubUserNameAttribute", lConfig.getGitHubUserNameAttribute());
+        assertEquals("https://localhost:9090/geoserver/web/login/oauth2/code/gitHub", lConfig.getGitHubRedirectUri());
+
+        // MS
+        assertEquals(Boolean.TRUE, lConfig.isMsEnabled());
+        assertEquals("msClientId", lConfig.getMsClientId());
+        assertEquals("msClientSecret", lConfig.getMsClientSecret());
+        assertEquals("msUserNameAttribute", lConfig.getMsUserNameAttribute());
+        assertEquals("msScopes", lConfig.getMsScopes());
+        assertEquals("https://localhost:9090/geoserver/web/login/oauth2/code/microsoft", lConfig.getMsRedirectUri());
+
+        // OIDC
+        assertEquals(Boolean.TRUE, lConfig.isOidcEnabled());
         assertEquals("oidcClientId", lConfig.getOidcClientId());
         assertEquals("oidcClientSecret", lConfig.getOidcClientSecret());
         assertEquals("oidcUserNameAttribute", lConfig.getOidcUserNameAttribute());
@@ -147,7 +157,7 @@ public class OAuth2LoginAuthProviderPanelTest extends AbstractSecurityNamedServi
         assertEquals("https://localhost:9090/geoserver/web/login/oauth2/code/oidc", lConfig.getOidcRedirectUri());
 
         assertTrue(lConfig.getOidcForceAuthorizationUriHttps());
-        assertTrue(lConfig.isDisableSignatureValidation());
+        assertTrue(lConfig.isOidcEnforceTokenValidation());
         assertTrue(lConfig.isOidcUsePKCE());
         assertTrue(lConfig.isOidcAllowUnSecureLogging());
         assertEquals("query", lConfig.getOidcResponseMode());
@@ -159,7 +169,7 @@ public class OAuth2LoginAuthProviderPanelTest extends AbstractSecurityNamedServi
         prefix = "panel:pfv:4:settings:";
 
         formTester.setValue(prefix + "displayOnOidc:oidcForceAuthorizationUriHttps", false);
-        formTester.setValue(prefix + "displayOnOidc:disableSignatureValidation", false);
+        formTester.setValue(prefix + "displayOnOidc:oidcEnforceTokenValidation", false);
         formTester.setValue(prefix + "displayOnOidc:oidcUsePKCE", false);
         formTester.setValue(prefix + "displayOnOidc:oidcAllowUnSecureLogging", false);
         formTester.setValue(prefix + "displayOnOidc:oidcResponseMode", "");
@@ -181,11 +191,21 @@ public class OAuth2LoginAuthProviderPanelTest extends AbstractSecurityNamedServi
         lConfig = lOauthPanel.getConfigModel().getObject();
 
         assertFalse(lConfig.getOidcForceAuthorizationUriHttps());
-        assertFalse(lConfig.isDisableSignatureValidation());
+        assertFalse(lConfig.isOidcEnforceTokenValidation());
         assertFalse(lConfig.isOidcUsePKCE());
         assertFalse(lConfig.isOidcAllowUnSecureLogging());
         assertNull(lConfig.getOidcResponseMode());
         assertFalse(lConfig.isOidcAuthenticationMethodPostSecret());
+    }
+
+    private void setBasicProviderValues(String pPrefix, String pValuePrefix) {
+        String enableComponentPath = pPrefix + "enabled";
+        formTester.setValue(enableComponentPath, true);
+
+        pPrefix = pPrefix + "settings:";
+        formTester.setValue(pPrefix + "clientId", pValuePrefix + "ClientId");
+        formTester.setValue(pPrefix + "clientSecret", pValuePrefix + "ClientSecret");
+        formTester.setValue(pPrefix + "userNameAttribute", pValuePrefix + "UserNameAttribute");
     }
 
     @Override

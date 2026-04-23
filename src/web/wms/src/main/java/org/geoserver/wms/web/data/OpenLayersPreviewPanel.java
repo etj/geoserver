@@ -6,12 +6,10 @@
 package org.geoserver.wms.web.data;
 
 import static freemarker.ext.beans.BeansWrapper.EXPOSE_NOTHING;
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serial;
@@ -22,6 +20,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
@@ -63,8 +62,6 @@ import org.geotools.util.logging.Logging;
  */
 // TODO: WICKET 9 test this page
 public class OpenLayersPreviewPanel extends StyleEditTabPanel implements IHeaderContributor {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(OpenLayersPreviewPanel.class);
 
     @Serial
     private static final long serialVersionUID = -8742721113748106000L;
@@ -148,19 +145,13 @@ public class OpenLayersPreviewPanel extends StyleEditTabPanel implements IHeader
     }
 
     @Override
-    public void renderHead(IHeaderResponse response) {
-        super.renderHead(response);
+    public void renderHead(IHeaderResponse header) {
+        super.renderHead(header);
         try {
-            renderHeaderCss(response);
-            renderHeaderScript(response);
+            renderHeaderCss(header);
+            renderHeaderScript(header);
         } catch (IOException | TemplateException e) {
             throw new WicketRuntimeException(e);
-        }
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
         }
     }
 

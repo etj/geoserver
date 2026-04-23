@@ -6,7 +6,6 @@
 package org.geoserver.importer.web;
 
 import static org.geoserver.importer.web.ImporterWebUtils.importer;
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,6 +34,7 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.importer.BasicImportFilter;
 import org.geoserver.importer.Database;
@@ -49,7 +49,7 @@ import org.geoserver.importer.job.Task;
 import org.geoserver.web.GeoServerSecuredPage;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerDialog.DialogDelegate;
-import org.geoserver.web.wicket.GsIcon;
+import org.geoserver.web.wicket.Icon;
 
 public class ImportPage extends GeoServerSecuredPage {
 
@@ -272,7 +272,7 @@ public class ImportPage extends GeoServerSecuredPage {
         });
         add(selectPanel);
 
-        add(new GsIcon("icon", new DataIconModel(imp.getData())));
+        add(new Icon("icon", new DataIconModel(imp.getData())));
         add(new Label("title", new DataTitleModel(imp))
                 .add(new AttributeModifier("title", new DataTitleModel(imp, false))));
 
@@ -317,7 +317,7 @@ public class ImportPage extends GeoServerSecuredPage {
         return null;
     }
 
-    static class DataIconModel extends LoadableDetachableModel<String> {
+    static class DataIconModel extends LoadableDetachableModel<PackageResourceReference> {
 
         ImportData data;
 
@@ -326,7 +326,7 @@ public class ImportPage extends GeoServerSecuredPage {
         }
 
         @Override
-        protected String load() {
+        protected PackageResourceReference load() {
             DataIcon icon = null;
             if (data instanceof FileData df) {
                 if (data instanceof Directory) {
@@ -391,19 +391,6 @@ public class ImportPage extends GeoServerSecuredPage {
     }
 
     static class TextAreaPanel extends Panel {
-
-        private static final boolean isCssEmpty = IsWicketCssFileEmpty(ImportPage.TextAreaPanel.class);
-
-        @Override
-        public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-            super.renderHead(response);
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
-        }
 
         public TextAreaPanel(String id, IModel<String> textAreaModel) {
             super(id);

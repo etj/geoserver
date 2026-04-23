@@ -5,10 +5,10 @@
  */
 package org.geoserver.wps.gs;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.io.OutputStream;
 import org.geoserver.wps.ppio.CDataPPIO;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * A PPIO to generate good looking JSON for the PagedUnique process results
@@ -20,7 +20,7 @@ public class PagedUniqueProcessPPIO extends CDataPPIO {
 
     static final ObjectMapper MAPPER = new ObjectMapper();
 
-    public PagedUniqueProcessPPIO() {
+    protected PagedUniqueProcessPPIO() {
         super(PagedUniqueProcess.Results.class, PagedUniqueProcess.Results.class, "application/json");
     }
 

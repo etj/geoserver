@@ -7,44 +7,81 @@
       <wicket:message key="workspace">Workspace</wicket:message>
       <a href="#" wicket:id="workspaceHelp" class="help-link"></a>
     </legend>
-    <div class="gs-unordered-list-class">
-      <div class="gs-list-item-class">
+    <ul>
+      <li>
         <div wicket:id="workspace"></div>
-      </div>
-    </div>
+      </li>
+    </ul>
   </fieldset>
-  <div wicket:id="tabs" class="tabpanel"></div>
-  <div wicket:id="general"></div>
-  <wicket:child/>
-  <div wicket:id="extensions">
-    <div wicket:id="content"></div>
-  </div>
+  <fieldset>
+    <legend><wicket:message key="serviceMetadata">Service Metadata</wicket:message></legend>
+    <ul>
+      <li class="choiceItem">
+        <input wicket:id="enabled" type="checkbox">
+        <label for="enabled"><span wicket:id="service.enabled">enable</span></label>
+      </li>
+      <li class="choiceItem">
+        <input wicket:id="citeCompliant" type="checkbox">
+        <label for="citeCompliant"><wicket:message key="strictCITECompliance">Strict CITE compliance</wicket:message></label>
+      </li>
+      <li>
+        <label><wicket:message key="maintainer">Maintainer</wicket:message></label>
+        <input wicket:id="maintainer" class="field text">
+      </li>
+      <li>
+        <label><wicket:message key="onlineResource">Online resource</wicket:message></label>
+        <input wicket:id="onlineResource" class="field text">
+      </li>
+      <li>
+        <div wicket:id="serviceTitleAndAbstract"></div>
+      </li>
+      <li>
+         <label><wicket:message key="fees">Fees</wicket:message></label>
+         <input wicket:id="fees" class="field text">
+      </li>
+      <li>
+         <label><wicket:message key="accessConstraints">Access Constraints</wicket:message></label>
+         <input wicket:id="accessConstraints" class="field text">
+      </li>
+      <li>
+         <div wicket:id="keywords"></div>
+      </li>
+      <li>
+         <div wicket:id="disabledVersions"></div>
+      </li>
+    </ul>
+  </fieldset>
+    <wicket:child>
+    </wicket:child>
+    <div wicket:id="extensions">
+      <div wicket:id="content"></div>
+    </div>
   <div class="button-group toolbar-sticky selfclear">
-    <button wicket:id="submit" class="form-button-save primary" type="submit"><wicket:message key="save"/></button>
-    <a href="#a" class="form-button-apply button outline-primary" wicket:id="apply"><wicket:message key="apply">Apply</wicket:message></a>
-    <button wicket:id="cancel" class="form-button-cancel outline-danger" type="submit"><wicket:message key="cancel"/></button>
+    <button wicket:id="submit" class="form-button-save" type="submit"><wicket:message key="save"/></button>
+    <a href="#a" class="form-button-apply" wicket:id="apply"><wicket:message key="apply">Apply</wicket:message></a>
+    <button wicket:id="cancel" class="form-button-cancel" type="submit"><wicket:message key="cancel"/></button>
   </div>
 </form>
 <div wicket:id="dialog"></div>
 
   <wicket:fragment id="stringFragment" wicket:id="stringFragment">
-    <div class="gs-form">
-      <div class="gs-form-group">
+    <ul>
+      <li>
         <label for="title"><wicket:message key="titleMsg">Title</wicket:message></label>
-        <input type="text" wicket:id="title"/>
-      </div>
-      <div class="gs-form-group">
+        <input class="text" type="text" wicket:id="title"/>
+      </li>
+      <li>
         <label for="abstract"><wicket:message key="abstract">Abstract</wicket:message></label>
         <textarea wicket:id="abstract" class="field textarea" rows="10" cols="30"></textarea>
-      </div>
-    </div>
+      </li>
+    </ul>
   </wicket:fragment>
   <wicket:fragment id="internationalStringFragment" wicket:id="internationalStringFragment">
-    <div class="gs-form">
-      <div class="">
+    <ul>
+      <li>
         <div id="titleAndAbstract" wicket:id="titleAndAbstract"/>
-      </div>
-    </div>
+      </li>
+    </ul>
   </wicket:fragment>
 
 </wicket:extend>

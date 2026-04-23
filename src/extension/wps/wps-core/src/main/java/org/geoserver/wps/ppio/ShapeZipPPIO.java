@@ -5,7 +5,6 @@
  */
 package org.geoserver.wps.ppio;
 
-import jakarta.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +15,7 @@ import java.util.Collections;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import javax.servlet.ServletContext;
 import org.apache.commons.io.FileUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.config.GeoServer;
@@ -45,7 +45,7 @@ public class ShapeZipPPIO extends BinaryPPIO {
     private final GeoServerResourceLoader resourceLoader;
     WPSResourceManager resources;
 
-    public ShapeZipPPIO(
+    protected ShapeZipPPIO(
             WPSResourceManager resources, GeoServer gs, Catalog catalog, GeoServerResourceLoader resourceLoader) {
         super(FeatureCollection.class, FeatureCollection.class, "application/zip");
         this.resources = resources;

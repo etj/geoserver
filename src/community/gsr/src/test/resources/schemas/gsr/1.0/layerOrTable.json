@@ -1,11 +1,12 @@
 {
-   "$schema":"https://json-schema.org/draft/2020-12/schema",
+   "$schema":"http://json-schema.org/draft-03/schema#",
    "title":"layer/table resource",
    "type":"object",
    "properties":{
       "id":{
          "title":"layer or table identifier",
-         "type":"integer"
+         "type":"integer",
+         "required":true
       },
       "name":{
          "title":"layer or table name",
@@ -16,7 +17,8 @@
       },
       "type":{
          "title":"type ('Feature Layer' or 'Table')",
-         "type":"string"
+         "type":"string",
+         "required":true
       },
       "description":{
          "title":"layer or table description",
@@ -41,7 +43,8 @@
             "properties":{
                "id":{
                   "title":"relationship id",
-                  "type":"integer"
+                  "type":"integer",
+                  "required":true
                },
                "name":{
                   "title":"relationship name",
@@ -49,10 +52,10 @@
                },
                "relatedTableId":{
                   "title":"related layer/table id",
-                  "type":"integer"
+                  "type":"integer",
+                  "required":true
                }
-            },
-            "required":["id","relatedTableId"]
+            }
          }
       },
       "geometryType":{
@@ -91,7 +94,8 @@
          "properties":{
             "renderer":{
                "title":"renderer",
-               "$ref":"renderer.json"
+               "$ref":"renderer.json",
+               "required":true
             },
             "transparency":{
                "title":"transparency",
@@ -105,8 +109,7 @@
                   "null"
                ]
             }
-         },
-         "required":["renderer"]
+         }
       },
       "timeInfo":{
          "title":"temporal information",
@@ -209,11 +212,13 @@
             "properties":{
                "name":{
                   "title":"field name",
-                  "type":"string"
+                  "type":"string",
+                  "required":true
                },
                "type":{
                   "title":"field type",
-                  "type":"string"
+                  "type":"string",
+                  "required":true
                },
                "length":{
                   "title":"field length",
@@ -232,11 +237,13 @@
                   "properties":{
                      "type":{
                         "title":"type",
-                        "type":"string"
+                        "type":"string",
+                        "required":true
                      },
                      "name":{
                         "title":"domain name",
-                        "type":"string"
+                        "type":"string",
+                        "required":true
                      },
                      "codedValues":{
                         "title":"values",
@@ -247,21 +254,20 @@
                            "properties":{
                               "name":{
                                  "title":"name",
-                                 "type":"string"
+                                 "type":"string",
+                                 "required":true
                               },
                               "code":{
                                  "title":"code",
-                                 "type":"integer"
+                                 "type":"integer",
+                                 "required":true
                               }
-                           },
-                           "required":["name","code"]
+                           }
                         }
                      }
-                  },
-                  "required":["type","name"]
+                  }
                }
-            },
-            "required":["name","type"]
+            }
          }
       },
       "types":{
@@ -276,11 +282,13 @@
             "properties":{
                "id":{
                   "title":"sub-type id",
-                  "type":"string"
+                  "type":"string",
+                  "required":true
                },
                "name":{
                   "title":"sub-type name",
-                  "type":"string"
+                  "type":"string",
+                  "required":true
                },
                "domains":{
                   "title":"value domains",
@@ -299,8 +307,7 @@
                      "$ref":"template.json"
                   }
                }
-            },
-            "required":["id","name"]
+            }
          }
       },
       "templates":{
@@ -316,6 +323,5 @@
          "description":"comma separated list of supported capabilities, e.g. 'Query,Editing'",
          "type":"string"
       }
-   },
-   "required":["id","type"]
+   }
 }

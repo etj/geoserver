@@ -5,7 +5,6 @@
 package org.geoserver.taskmanager.data;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,6 +27,4 @@ public interface BatchElement extends SoftRemove, Serializable, Identifiable {
     void setIndex(Integer index);
 
     List<Run> getRuns();
-
-    void setRuns(ArrayList<Run> runs);
 }

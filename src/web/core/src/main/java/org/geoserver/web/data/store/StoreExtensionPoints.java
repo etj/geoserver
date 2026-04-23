@@ -122,7 +122,7 @@ public class StoreExtensionPoints {
                     "Default DataStorePanelInfo '" + panelInfo.getId() + "' does not define a componentClass property");
         }
 
-        if (panelInfo.getIcon() == null) {
+        if (panelInfo.getIconBase() == null || panelInfo.getIcon() == null) {
             throw new IllegalStateException(
                     "Default DataStorePanelInfo '" + panelInfo.getId() + "' does not define default icon");
         }

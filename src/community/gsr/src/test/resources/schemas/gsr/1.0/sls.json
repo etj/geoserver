@@ -1,5 +1,5 @@
 {
-   "$schema":"https://json-schema.org/draft/2020-12/schema",
+   "$schema":"http://json-schema.org/draft-03/schema#",
 
     "title":"simple marker symbol",
     "type":"object",
@@ -10,20 +10,23 @@
         "type":{
             "title":"marker type",
             "type":"string",
+            "required":true,
             "enum":["esriSLS"]
         },
         "style":{
             "title":"marker style",
             "description":"value SHOULD be SLSDash, SLSDashDotDot, SLSDot, SLSNull, SLSSolid",
-            "type":"string"
+            "type":"string",
+            "required":true
         },
         "color":{
-            "$ref":"color.json"
+            "$ref":"color.json",
+            "required":true
         },
         "width":{
             "title":"width",
-            "type":"number"
+            "type":"number",
+            "required":true
         }
-    },
-    "required":["type","style","color","width"]
+    }
 }

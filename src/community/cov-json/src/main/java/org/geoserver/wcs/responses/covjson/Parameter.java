@@ -12,7 +12,7 @@ import org.geotools.coverage.GridSampleDimension;
 @JsonPropertyOrder({"type", "description", "unit"})
 public class Parameter extends CoverageJson {
 
-    static class ObservedProperty {
+    class ObservedProperty {
 
         @JsonProperty(required = true)
         private Map<String, String> label;
@@ -22,7 +22,7 @@ public class Parameter extends CoverageJson {
         }
     }
 
-    static class Unit {
+    class Unit {
 
         @JsonProperty
         private Map<String, String> label;

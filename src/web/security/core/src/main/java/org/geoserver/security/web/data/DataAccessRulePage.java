@@ -92,9 +92,7 @@ public class DataAccessRulePage extends AbstractSecurityPage {
             }
         });
         catalogModeChoice = new RadioChoice<>("catalogMode", CATALOG_MODES, new CatalogModeRenderer());
-        // Wrap each radio input + label pair in a <div>...</div>
-        catalogModeChoice.setPrefix("<div>");
-        catalogModeChoice.setSuffix("</div>");
+        catalogModeChoice.setSuffix(" ");
         form.add(catalogModeChoice);
 
         form.add(new SubmitLink("save") {
@@ -122,9 +120,20 @@ public class DataAccessRulePage extends AbstractSecurityPage {
         String css =
                 """
                  #catalogMode {
-                    display:block;
-                    padding-top: 0.5em;
-                }\
+                         display:block;
+                         padding-top: 0.5em;
+                       }
+                       #catalogMode input {
+                          display: block;
+                          float: left;
+                          clear:left;
+                          padding-top:0.5em;
+                          margin-bottom: 0.5em;
+                       }
+                       #catalogMode label {
+                          clear:right;
+                          margin-bottom: 0.5em;
+                       }\
                 """;
         response.render(CssHeaderItem.forCSS(css, "org-geoserver-security-web-data-DataAccessRulePage"));
     }

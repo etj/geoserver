@@ -7,6 +7,7 @@ package org.geoserver.rest.catalog;
 
 import static org.custommonkey.xmlunit.XMLAssert.assertXpathEvaluatesTo;
 import static org.geoserver.rest.RestBaseController.ROOT_PATH;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,6 +27,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import net.sf.json.JSON;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CoverageDimensionCustomizerReader;
@@ -46,9 +50,6 @@ import org.geotools.gce.geotiff.GeoTiffReader;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.kordamp.json.JSON;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.w3c.dom.Document;
@@ -467,8 +468,7 @@ public class CoverageStoreControllerTest extends CatalogRESTTestSupport {
         final File storeDir = Resources.find(
                 Resources.fromURL(Files.asResource(loader.getBaseDirectory()), "data/wcs/mosaicfordelete"), true);
         File[] content = storeDir.listFiles();
-        // the various config files, the image, and the geopackage index file
-        assertThat(content.length, equalTo(8));
+        assertThat(content.length, anyOf(equalTo(9), equalTo(10), equalTo(11)));
 
         assertEquals(
                 200,

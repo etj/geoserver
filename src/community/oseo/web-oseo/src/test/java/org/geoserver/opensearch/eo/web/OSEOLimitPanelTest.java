@@ -15,26 +15,16 @@ import org.geoserver.opensearch.eo.security.EOCollectionAccessLimitInfo;
 import org.geoserver.opensearch.eo.security.EOCollectionAccessLimitInfoImpl;
 import org.geoserver.opensearch.eo.security.EOProductAccessLimitInfo;
 import org.geoserver.opensearch.eo.security.EOProductAccessLimitInfoImpl;
-import org.geoserver.opensearch.eo.store.OSEOPostGISResource;
 import org.geoserver.security.impl.GeoServerRole;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 public class OSEOLimitPanelTest extends OSEOWebTestSupport {
-
-    @ClassRule
-    public static final OSEOPostGISResource postgis = new OSEOPostGISResource(false);
 
     public static final String ROLE1 = "R1";
     public static final String ROLE2 = "R2";
     public static final String PLATFORM_IS_S2 = "\"eo:platform\" = 's2a'";
     public static final String CLOUDCOVER_LT_10 = "\"opt:cloudCover\" < 10";
-
-    @Override
-    protected OSEOPostGISResource getOSEOPostGIS() {
-        return postgis;
-    }
 
     @Before
     public void setup() throws IOException {

@@ -28,7 +28,7 @@ public class SLDStylePPIO extends XMLPPIO {
 
     Configuration sldConfiguration;
 
-    public SLDStylePPIO() {
+    protected SLDStylePPIO() {
         super(Style.class, Style.class, "text/xml; subtype=sld/1.0.0", SLD.STYLEDLAYERDESCRIPTOR);
         sldConfiguration = new SLDConfiguration();
     }

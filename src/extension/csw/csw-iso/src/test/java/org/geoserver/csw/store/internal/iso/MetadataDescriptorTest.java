@@ -16,8 +16,7 @@ public class MetadataDescriptorTest extends GeoServerSystemTestSupport {
 
     @Test
     public void testCreateDefaultQueryablesMapping() {
-        MetaDataDescriptor mdDescriptor = applicationContext.getBean(MetaDataDescriptor.class);
-        QueryablesMapping qMapping = mdDescriptor.getQueryablesMapping(null);
+        QueryablesMapping qMapping = MetaDataDescriptor.getInstance().getQueryablesMapping(null);
         assertNotNull(qMapping);
         assertEquals(
                 "identificationInfo.MD_DataIdentification.extent.EX_Extent.geographicElement.EX_GeographicBoundingBox",

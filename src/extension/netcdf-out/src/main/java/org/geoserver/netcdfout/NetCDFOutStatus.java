@@ -83,9 +83,4 @@ public class NetCDFOutStatus implements ModuleStatus {
     public Optional<String> getDocumentation() {
         return Optional.ofNullable("");
     }
-
-    @Override
-    public Category getCategory() {
-        return Category.EXTENSION;
-    }
 }

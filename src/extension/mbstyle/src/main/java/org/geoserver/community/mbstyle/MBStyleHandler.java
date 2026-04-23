@@ -61,7 +61,7 @@ public class MBStyleHandler extends StyleHandler {
 
     private SLDHandler sldHandler;
 
-    public MBStyleHandler(SLDHandler sldHandler) {
+    protected MBStyleHandler(SLDHandler sldHandler) {
         super("MBStyle", FORMAT);
         this.sldHandler = sldHandler;
     }

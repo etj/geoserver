@@ -3,10 +3,6 @@ name: Run CITE Tests
 on:
   pull_request:
     paths-ignore:
-      - 'doc/**'
-      - 'mkdocs.yml'
-      - 'requirements.txt'
-      - '.github/workflows/docs.yml'
       - '**/src/main/resources/GeoServerApplication_*.properties'
       - '!**/src/main/resources/GeoServerApplication_fr.properties'
 
@@ -28,7 +24,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '17'        # only build the oldest Java version, but below run against the matrix of LTS versions
+          java-version: '17'
       - name: Set up Maven
         uses: stCarolas/setup-maven@v5
         with:
@@ -56,15 +52,25 @@ jobs:
     runs-on: ubuntu-latest
     name: CITE
     strategy:
-      fail-fast: false  # Prevents other matrix jobs from being cancelled if one fails
+      fail-fast: false  # Prevents other matrix jobs from being canceled if one fails
       matrix:
         suite: [ogcapi-features10, ogcapi-tiles10, wms11, wms13, wmts10, wfs10, wfs11, wfs20, wcs11, geotiff11, gpkg12]
-        java-version: [17, 21, 25]
     steps:
       - name: Checkout repository (shallow clone)
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.9.8
 
       - name: Download geoserver.war artifact
         uses: actions/download-artifact@v8
@@ -85,7 +91,7 @@ jobs:
 
       - name: Build ogccite/geoserver:${{ matrix.suite }} docker image
         working-directory: build/cite
-        run: make build-geoserver-image suite=${{ matrix.suite }} java-version=${{ matrix.java-version }}
+        run: make build-geoserver-image suite=${{ matrix.suite }}
 
       - name: Build the ETS docker image
         working-directory: build/cite
@@ -96,7 +102,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y xmlstarlet
 
-      - name: Run the ${{ matrix.suite }} CITE test suite (against Java ${{ matrix.java-version }})
+      - name: Run the ${{ matrix.suite }} CITE test suite
         working-directory: build/cite
         run: |
           chmod o+w logs
@@ -146,5 +152,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: cite-${{ matrix.suite }}-java-${{ matrix.java-version }}-logs
+          name: cite-${{ matrix.suite }}-logs
           path: build/cite/logs/

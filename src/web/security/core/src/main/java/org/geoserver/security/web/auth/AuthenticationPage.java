@@ -5,23 +5,6 @@
  */
 package org.geoserver.security.web.auth;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
-import jakarta.servlet.AsyncContext;
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletConnection;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.HttpUpgradeHandler;
-import jakarta.servlet.http.Part;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -34,6 +17,20 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
+import javax.servlet.AsyncContext;
+import javax.servlet.DispatcherType;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
+import javax.servlet.http.Part;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
@@ -219,20 +216,6 @@ public class AuthenticationPage extends AbstractSecurityPage {
 
     static class AuthenticationChainPanel extends FormComponentPanel<SecurityManagerConfig> {
 
-        private static final boolean isCssEmpty =
-                IsWicketCssFileEmpty(AuthenticationPage.AuthenticationChainPanel.class);
-
-        @Override
-        public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-            super.renderHead(response);
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
-        }
-
         public AuthenticationChainPanel(String id) {
             super(id, new Model<>());
 
@@ -241,19 +224,6 @@ public class AuthenticationPage extends AbstractSecurityPage {
     }
 
     class AuthFilterChainPanel extends FormComponentPanel<GeoServerSecurityFilterChain> {
-
-        private static final boolean isCssEmpty = IsWicketCssFileEmpty(AuthenticationPage.AuthFilterChainPanel.class);
-
-        @Override
-        public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-            super.renderHead(response);
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
-        }
 
         DropDownChoice<HTTPMethod> httpMethodChoice;
         TextField<String> urlPathField, chainTestResultField;
@@ -370,6 +340,11 @@ public class AuthenticationPage extends AbstractSecurityPage {
                                 }
 
                                 @Override
+                                public String getRealPath(String path) {
+                                    return null;
+                                }
+
+                                @Override
                                 public BufferedReader getReader() throws IOException {
                                     return null;
                                 }
@@ -452,21 +427,6 @@ public class AuthenticationPage extends AbstractSecurityPage {
                                 }
 
                                 @Override
-                                public String getRequestId() {
-                                    return "";
-                                }
-
-                                @Override
-                                public String getProtocolRequestId() {
-                                    return "";
-                                }
-
-                                @Override
-                                public ServletConnection getServletConnection() {
-                                    return null;
-                                }
-
-                                @Override
                                 public String getLocalName() {
                                     return null;
                                 }
@@ -518,6 +478,11 @@ public class AuthenticationPage extends AbstractSecurityPage {
 
                                 @Override
                                 public boolean isRequestedSessionIdValid() {
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean isRequestedSessionIdFromUrl() {
                                     return false;
                                 }
 

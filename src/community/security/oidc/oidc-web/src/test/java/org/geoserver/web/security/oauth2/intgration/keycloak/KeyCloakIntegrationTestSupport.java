@@ -6,41 +6,40 @@ package org.geoserver.web.security.oauth2.intgration.keycloak;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import java.io.IOException;
-import java.util.logging.Logger;
 import org.geoserver.web.GeoServerWicketTestSupport;
-import org.geotools.util.logging.Logging;
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
-import org.testcontainers.DockerClientFactory;
 import org.testcontainers.utility.MountableFile;
 
 /**
- * Spins up a pre-configured Keycloak docker container for integration tests.
+ * Spins up a pre-configured Keycloak docker container.
  *
- * <p>If Docker is not available, the entire test class will be <b>skipped</b>.
+ * <p>administration is done through the main (master) realm. Login as geoserver/geoserver.
  *
- * <p>Realms are provided via classpath resources:
+ * <p>You can connect to the keycloak if you put a breakpoint in after keycloakContainer.start(). Use `docker ps`.
  *
- * <ul>
- *   <li>master-realm.json (admin user geoserver/geoserver)
- *   <li>gs-realm-realm.json (test users & client)
- * </ul>
- *
- * <p>See README in resources/org/geoserver/web/security/oauth2/intgration/keycloak for details.
+ * <p>Please see the README.md in the `resources/org/geoserver/web/security/oauth2/intgration/keycloak` directory for
+ * more information on how to change the keycloak configuration.
  */
 public class KeyCloakIntegrationTestSupport extends GeoServerWicketTestSupport {
 
-    private static final Logger LOGGER = Logging.getLogger(KeyCloakIntegrationTestSupport.class);
-
-    /** Base URL for the Keycloak container (e.g., http://localhost:RANDOM_PORT). */
+    /** base URL for the keycloak container (http://localhost:RANDOM_PORT). */
     static String authServerUrl;
 
-    /** The Keycloak container (created only if Docker is available). */
-    protected static KeycloakContainer keycloakContainer;
+    /** keycloak container setup. We bring in 2 realms - master-realm and gs-realm. */
+    static KeycloakContainer keycloakContainer = new KeycloakContainer("quay.io/keycloak/keycloak:26.1")
+            .withCopyToContainer(
+                    MountableFile.forClasspathResource(
+                            "org/geoserver/web/security/oauth2/login/keycloak/master-realm.json"),
+                    "/opt/keycloak//data/import/master-realm.json")
+            .withCopyToContainer(
+                    MountableFile.forClasspathResource(
+                            "org/geoserver/web/security/oauth2/login/keycloak/gs-realm-realm.json"),
+                    "/opt/keycloak//data/import/gs-realm-realm.json")
+            .withVerboseOutput()
+            .withCustomCommand("--log-level=DEBUG"); // useful to see what's going on.  use `docker logs <container>`
 
     // defined in master-realm.json
     String masterRealmUser = "geoserver";
@@ -60,88 +59,13 @@ public class KeyCloakIntegrationTestSupport extends GeoServerWicketTestSupport {
 
     @BeforeClass
     public static void beforeAll() throws IOException, InterruptedException {
-        LOGGER.info("KeyCloakIntegrationTestSupport.beforeAll() STARTING");
-
-        // Skip entire class when Docker/Testcontainers is not usable
-        if (!dockerAvailable()) {
-            LOGGER.info("Docker NOT available - skipping tests");
-            Assume.assumeTrue("Skipping Keycloak integration tests: Docker not available", false);
-        }
-
-        LOGGER.info("Docker available - starting Keycloak container");
-
-        try {
-            // Construct the container only after the assumption passes
-            // Note: Do NOT use .useTls() as the self-signed certificate will cause
-            // SSL validation failures when GeoServer tries to exchange tokens or fetch JWKS
-            keycloakContainer = new KeycloakContainer("quay.io/keycloak/keycloak:26.1")
-                    // Import realms into the default Keycloak import directory
-                    .withCopyToContainer(
-                            MountableFile.forClasspathResource(
-                                    "org/geoserver/web/security/oauth2/login/keycloak/master-realm.json"),
-                            "/opt/keycloak/data/import/master-realm.json")
-                    .withCopyToContainer(
-                            MountableFile.forClasspathResource(
-                                    "org/geoserver/web/security/oauth2/login/keycloak/gs-realm-realm.json"),
-                            "/opt/keycloak/data/import/gs-realm-realm.json")
-                    // Use INFO logging level to avoid memory issues from verbose output
-                    .withCustomCommand("--log-level=INFO");
-
-            LOGGER.info("Calling keycloakContainer.start()");
-            keycloakContainer.start();
-            authServerUrl = keycloakContainer.getAuthServerUrl();
-            LOGGER.info("Keycloak started at: " + authServerUrl);
-        } catch (Exception e) {
-            // Handle Docker API version mismatch or other known container infrastructure failures
-            String message = e.getMessage();
-            if (message != null
-                    && (message.contains("API version")
-                            || message.contains("too old")
-                            || message.contains("client version"))) {
-                LOGGER.warning("Docker API version mismatch - skipping tests: " + message);
-                Assume.assumeTrue("Skipping Keycloak tests: Docker API version incompatible", false);
-            }
-            // Skip on container startup failures related to Docker availability
-            if (message != null
-                    && (message.contains("Could not find a valid Docker environment")
-                            || message.contains("docker")
-                            || message.contains("Container startup failed")
-                            || message.contains("Timed out waiting for container"))) {
-                LOGGER.warning("Failed to start Keycloak container - skipping tests: " + e.getMessage());
-                Assume.assumeTrue("Skipping Keycloak tests: Container failed to start - " + e.getMessage(), false);
-            }
-            // Rethrow unexpected exceptions so genuine regressions (e.g., broken realm JSON,
-            // wrong image tag) are visible in CI rather than silently skipped
-            throw e;
-        }
-    }
-
-    @AfterClass
-    public static void afterAll() {
-        if (keycloakContainer != null) {
-            try {
-                keycloakContainer.stop();
-            } catch (Throwable ignore) {
-                // best-effort shutdown
-            } finally {
-                keycloakContainer = null;
-            }
-        }
+        keycloakContainer.start();
+        authServerUrl = keycloakContainer.getAuthServerUrl();
     }
 
     @After
     public void clear() {
         SecurityContextHolder.clearContext();
         RequestContextHolder.resetRequestAttributes();
-    }
-
-    private static boolean dockerAvailable() {
-        try {
-            // Causes Testcontainers to probe for a working Docker client; throws if not available
-            DockerClientFactory.instance().client();
-            return true;
-        } catch (Throwable t) {
-            return false;
-        }
     }
 }

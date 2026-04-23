@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>gs-docs</artifactId>
   <groupId>org.geoserver.en</groupId>
-  <version>3.0-SNAPSHOT</version>
+  <version>2.28-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>GeoServer English Documentation</name>
   <description>GeoServer English documentation</description>
@@ -18,6 +18,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <target>full</target>
     <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
     <copyright.year>${maven.build.timestamp}</copyright.year>
     <maven.compiler.source>11</maven.compiler.source>
@@ -137,7 +138,7 @@
             <language/>
             </configuration>
           </execution>
-		  <execution>
+          <execution>
             <id>crs</id>
             <phase>process-resources</phase>
             <goals><goal>generate</goal></goals>
@@ -664,12 +665,12 @@
             </goals>
           </execution>
           <execution>
-            <id>mkdocs</id>
+            <id>sphinx</id>
             <phase>compile</phase>
             <configuration>
               <target>
-                <ant antfile="doc/en/build.xml" dir="${project.basedir}/../.." target="build">
-                  <property name="build.directory" value="${project.basedir}/../../target"/>
+                <ant antfile="build.xml" dir="${basedir}" target="${target}">
+                  <property name="build.directory" value="${project.build.directory}"/>
                   <property name="project.version" value="${project.version}"/>
                 </ant>
               </target>
@@ -684,6 +685,9 @@
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>3.2.0</version>
+        <configuration>
+          <finalName>geoserver-${project.version}</finalName>
+        </configuration>
         <executions>
           <execution>
             <id>api</id>
@@ -691,6 +695,42 @@
             <configuration>
               <descriptors>
                 <descriptor>release/api.xml</descriptor>
+              </descriptors>
+            </configuration>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>user</id>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>release/user.xml</descriptor>
+              </descriptors>
+            </configuration>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>developer</id>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>release/developer.xml</descriptor>
+              </descriptors>
+            </configuration>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>docguide</id>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>release/docguide.xml</descriptor>
               </descriptors>
             </configuration>
             <goals>
@@ -713,5 +753,33 @@
       </plugin>
     </plugins>
   </build>
-    
+  
+  <!-- sphinx build targets - default to full -->
+  <profiles>
+    <profile>
+      <id>docguide</id>
+      <properties>
+        <target>docguide</target>
+      </properties>
+    </profile>
+    <profile>
+      <id>user</id>
+      <properties>
+        <target>user</target>
+      </properties>
+    </profile>
+    <profile>
+      <id>user-pdf</id>
+      <properties>
+        <target>user-pdf</target>
+      </properties>
+    </profile>
+    <profile>
+      <id>developer</id>
+      <properties>
+        <target>developer</target>
+      </properties>
+    </profile>
+  </profiles>
+  
 </project>

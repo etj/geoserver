@@ -6,12 +6,11 @@ package org.geoserver.rest.security;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.xstream.XStream;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,15 +23,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
 import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.rest.RestBaseController;
 import org.geoserver.rest.converters.XStreamMessageConverter;
-import org.geoserver.rest.security.xml.AllowedAuthFilterChainClasses;
 import org.geoserver.rest.security.xml.AuthFilterChainCollection;
 import org.geoserver.rest.security.xml.AuthFilterChainFilters;
 import org.geoserver.rest.security.xml.AuthFilterChainOrder;
@@ -41,7 +38,6 @@ import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.RequestFilterChain;
 import org.geoserver.security.config.SecurityManagerConfig;
-import org.geotools.util.logging.Logging;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -57,21 +53,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
-import tools.jackson.databind.DatabindException;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping(path = RestBaseController.ROOT_PATH + "/security/filterchain")
 public class AuthenticationFilterChainRestController extends RestBaseController {
-    private static final Logger LOGGER = Logging.getLogger(AuthenticationFilterChainRestController.class);
-
-    private static final Pattern SAFE_CHAIN_NAME = Pattern.compile("^[A-Za-z0-9_.-]{1,64}$");
 
     private static final Set<String> RESERVED = Set.of("order");
 
     // --- JSON/XML parsing ----------------------------------------------------
-    private static final tools.jackson.databind.ObjectMapper MAPPER = new tools.jackson.databind.ObjectMapper();
+    private static final com.fasterxml.jackson.databind.ObjectMapper MAPPER =
+            new com.fasterxml.jackson.databind.ObjectMapper();
 
     private static final String CHAIN_PATH = "/{chainName:^(?!order(?:\\.(?:json|xml))?$).+}";
 
@@ -194,7 +185,7 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
     @PutMapping(
             path = {"/order", "/order.{ext}"},
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<Void> reorder(jakarta.servlet.http.HttpServletRequest request) {
+    public ResponseEntity<Void> reorder(javax.servlet.http.HttpServletRequest request) {
         checkAuthorised();
         try {
             List<String> wanted = parseOrderFromRequest(request);
@@ -269,14 +260,13 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
             consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<RestWrapper<AuthFilterChainFilters>> create(
-            jakarta.servlet.http.HttpServletRequest request,
+            javax.servlet.http.HttpServletRequest request,
             @RequestParam(name = "position", required = false) Integer position,
             UriComponentsBuilder builder) {
 
         checkAuthorised();
         try {
             AuthFilterChainFilters dto = parseFiltersFromRequest(request);
-            validateChainName(dto.getName());
             ensureNotReserved(dto.getName());
             RequestFilterChain model = toModel(dto);
 
@@ -296,10 +286,8 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
 
             HttpHeaders headers = new HttpHeaders();
             UriComponentsBuilder ub = (builder != null ? builder : UriComponentsBuilder.newInstance());
-            headers.setLocation(ub.path("/security/filterchain")
-                    .pathSegment(model.getName())
-                    .build()
-                    .encode()
+            headers.setLocation(ub.path("/security/filterchain/{name}")
+                    .buildAndExpand(model.getName())
                     .toUri());
 
             return new ResponseEntity<>(wrapObject(dto, AuthFilterChainFilters.class), headers, HttpStatus.CREATED);
@@ -323,7 +311,7 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public RestWrapper<AuthFilterChainFilters> update(
             @PathVariable String chainName,
-            jakarta.servlet.http.HttpServletRequest request,
+            javax.servlet.http.HttpServletRequest request,
             @RequestParam(name = "position", required = false) Integer position) {
 
         chainName = normalizeChainName(chainName);
@@ -434,12 +422,6 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
 
     private RequestFilterChain toModel(AuthFilterChainFilters dto) {
         try {
-            if (!AllowedAuthFilterChainClasses.load().isAllowed(dto.getClazz())) {
-                LOGGER.log(Level.WARNING, "Rejected authentication filter chain class {0} for chain {1}", new Object[] {
-                    dto.getClazz(), dto.getName()
-                });
-                throw new BadRequest("Unsupported className");
-            }
             Class<?> raw = Class.forName(dto.getClazz());
             checkArgument(
                     RequestFilterChain.class.isAssignableFrom(raw),
@@ -461,26 +443,27 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
             invokeStringSetter(chain, "setExceptionTranslationName", dto.getExceptionTranslationName());
             return chain;
 
-        } catch (BadRequest | IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
             throw new CannotMakeChain(dto.getClazz(), e);
         }
     }
 
+    @SuppressWarnings("PMD.UseExplicitTypes")
     private RequestFilterChain instantiateChain(Class<? extends RequestFilterChain> type, AuthFilterChainFilters dto)
             throws Exception {
 
         // Prefer a no-arg if it exists
         try {
-            Constructor<? extends RequestFilterChain> c0 = type.getDeclaredConstructor();
+            var c0 = type.getDeclaredConstructor();
             c0.setAccessible(true);
             return c0.newInstance();
         } catch (NoSuchMethodException ignore) {
         }
 
-        // Prefer a single String[] constructor used by VariableFilterChain.
-        for (Constructor<?> ctor : type.getDeclaredConstructors()) {
+        // Prefer a single var-arg String[] (VariableFilterChain pattern-ctor)
+        for (var ctor : type.getDeclaredConstructors()) {
             Class<?>[] p = ctor.getParameterTypes();
             if (p.length == 1 && p[0].isArray() && p[0].getComponentType() == String.class) {
                 ctor.setAccessible(true);
@@ -491,7 +474,7 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
 
         // Generic fallback: try each ctor with best-effort args
         Exception last = null;
-        for (Constructor<?> ctor : type.getDeclaredConstructors()) {
+        for (var ctor : type.getDeclaredConstructors()) {
             try {
                 ctor.setAccessible(true);
                 Class<?>[] p = ctor.getParameterTypes();
@@ -546,7 +529,7 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
         try {
             Method m = target.getClass().getMethod(method);
             Object val = m.invoke(target);
-            return (val instanceof String s) ? s : null;
+            return (val instanceof String) ? (String) val : null;
         } catch (Exception ignored) {
             return null; // method not present; fine
         }
@@ -564,16 +547,16 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
 
     // ---------- Body parsing helpers (minimal, robust to wrapped/bare JSON) ----------
 
-    private AuthFilterChainFilters parseFiltersFromRequest(jakarta.servlet.http.HttpServletRequest request) {
+    private AuthFilterChainFilters parseFiltersFromRequest(javax.servlet.http.HttpServletRequest request) {
         String ct = Optional.ofNullable(request.getContentType()).orElse("");
         try (ServletInputStream in = request.getInputStream()) {
             if (ct.contains("json")) {
-                tools.jackson.databind.JsonNode root = MAPPER.readTree(in);
+                com.fasterxml.jackson.databind.JsonNode root = MAPPER.readTree(in);
                 // Accept any of these shapes:
                 //   { "filters": { "@name": ... } }
                 //   { "@name": ... }                      (bare)
                 //   { "filterchain": { "filters":[{...}] } }  (collection with one element)
-                tools.jackson.databind.JsonNode node = root;
+                com.fasterxml.jackson.databind.JsonNode node = root;
                 if (node.has("filters") && node.get("filters").isObject()) {
                     node = node.get("filters");
                 } else if (node.has("filterchain")) {
@@ -608,8 +591,8 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
                 List<String> filters = new ArrayList<>();
                 JsonNode f = node.get("filter");
                 if (f != null) {
-                    if (f.isArray()) f.forEach(n -> filters.add(n.asString()));
-                    else filters.add(f.asString());
+                    if (f.isArray()) f.forEach(n -> filters.add(n.asText()));
+                    else filters.add(f.asText());
                 }
                 dto.setFilters(filters);
                 return dto;
@@ -619,8 +602,9 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
                 configureAliases(xp);
                 // Accept either <filters> ... or <filterchain><filters>...</filters></filterchain> with one item
                 Object o = xp.load(in, Object.class);
-                if (o instanceof AuthFilterChainFilters filters) return filters;
-                if (o instanceof AuthFilterChainCollection col) {
+                if (o instanceof AuthFilterChainFilters) return (AuthFilterChainFilters) o;
+                if (o instanceof AuthFilterChainCollection) {
+                    AuthFilterChainCollection col = (AuthFilterChainCollection) o;
                     List<AuthFilterChainFilters> list =
                             Optional.ofNullable(col.getChains()).orElse(List.of());
                     if (list.size() == 1) return list.get(0);
@@ -629,14 +613,15 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
             }
         } catch (BadRequest e) {
             throw e;
-        } catch (DatabindException e) {
+        } catch (com.fasterxml.jackson.core.JsonParseException
+                | com.fasterxml.jackson.databind.JsonMappingException e) {
             throw new BadRequest("Malformed payload: " + e.getOriginalMessage());
         } catch (IOException e) {
             throw new CannotReadConfig(e);
         }
     }
 
-    private List<String> parseOrderFromRequest(jakarta.servlet.http.HttpServletRequest request) {
+    private List<String> parseOrderFromRequest(javax.servlet.http.HttpServletRequest request) {
         String ct = Optional.ofNullable(request.getContentType()).orElse("");
         try (ServletInputStream in = request.getInputStream()) {
             if (ct.contains("json")) {
@@ -644,20 +629,20 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
                 // Accept:
                 //   { "order":[ ... ] }
                 //   { "filterchain": { "order":[ ... ] } }
-                tools.jackson.databind.JsonNode n = root.has("order")
+                com.fasterxml.jackson.databind.JsonNode n = root.has("order")
                         ? root.get("order")
                         : (root.has("filterchain") ? root.get("filterchain").get("order") : null);
                 if (n == null || !n.isArray()) throw new BadRequest("`order` array required");
                 List<String> out = new ArrayList<>();
-                n.forEach(x -> out.add(x.asString()));
+                n.forEach(x -> out.add(x.asText()));
                 return out;
             } else {
                 // XML: <order><order>name</order>...</order>  OR  <filterchain><order>...</order></filterchain>
                 XStreamPersister xp = new XStreamPersisterFactory().createXMLPersister();
                 configureAliases(xp);
                 Object o = xp.load(in, Object.class);
-                if (o instanceof AuthFilterChainOrder order) {
-                    List<String> list = order.getOrder();
+                if (o instanceof AuthFilterChainOrder) {
+                    List<String> list = ((AuthFilterChainOrder) o).getOrder();
                     if (list == null || list.isEmpty()) throw new BadRequest("`order` array required");
                     return list;
                 }
@@ -670,16 +655,16 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
         }
     }
 
-    private static String getText(tools.jackson.databind.JsonNode node, String... keys) {
+    private static String getText(com.fasterxml.jackson.databind.JsonNode node, String... keys) {
         for (String k : keys) {
             JsonNode v = node.get(k);
-            if (v != null && !v.isNull()) return v.asString();
+            if (v != null && !v.isNull()) return v.asText();
         }
         return null;
     }
 
     private static byte[] readBody(HttpServletRequest req) throws IOException {
-        try (jakarta.servlet.ServletInputStream in = req.getInputStream()) {
+        try (javax.servlet.ServletInputStream in = req.getInputStream()) {
             return in.readAllBytes();
         }
     }
@@ -744,12 +729,6 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
         }
     }
 
-    private static void validateChainName(String name) {
-        if (name == null || !SAFE_CHAIN_NAME.matcher(name).matches()) {
-            throw new IllegalArgumentException("Invalid chain name");
-        }
-    }
-
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public static class NotAuthorised extends RuntimeException {
         public NotAuthorised() {
@@ -781,7 +760,7 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public static class CannotMakeChain extends RuntimeException {
         public CannotMakeChain(String cn, Exception e) {
-            super("Cannot make class", e);
+            super("Cannot make class " + cn, e);
         }
     }
 
@@ -869,10 +848,10 @@ public class AuthenticationFilterChainRestController extends RestBaseController 
 
     private void rethrowIfDomain(Exception e) {
         for (Throwable t = e; t != null; t = t.getCause()) {
-            if (t instanceof DuplicateChainName name) throw name;
-            if (t instanceof NothingToDelete delete) throw delete;
-            if (t instanceof BadRequest request) throw request;
-            if (t instanceof CannotMakeChain chain) throw chain;
+            if (t instanceof DuplicateChainName) throw (DuplicateChainName) t;
+            if (t instanceof NothingToDelete) throw (NothingToDelete) t;
+            if (t instanceof BadRequest) throw (BadRequest) t;
+            if (t instanceof CannotMakeChain) throw (CannotMakeChain) t;
             if (t instanceof IllegalArgumentException) throw new BadRequest(t.getMessage());
         }
     }

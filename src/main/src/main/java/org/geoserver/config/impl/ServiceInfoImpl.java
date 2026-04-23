@@ -432,9 +432,10 @@ public class ServiceInfoImpl implements ServiceInfo {
         if (versions == null) {
             if (other.getVersions() != null) return false;
         } else if (!versions.equals(other.getVersions())) return false;
-        if (disabledVersions == null) {
-            if (other.getDisabledVersions() != null) return false;
-        } else if (!disabledVersions.equals(other.getDisabledVersions())) return false;
+        List<Version> otherDisabledVersions = other.getDisabledVersions();
+        if (disabledVersions == null || disabledVersions.isEmpty()) {
+            if (otherDisabledVersions != null && !otherDisabledVersions.isEmpty()) return false;
+        } else if (!disabledVersions.equals(otherDisabledVersions)) return false;
         if (workspace == null) {
             if (other.getWorkspace() != null) return false;
         } else if (!workspace.equals(other.getWorkspace())) return false;

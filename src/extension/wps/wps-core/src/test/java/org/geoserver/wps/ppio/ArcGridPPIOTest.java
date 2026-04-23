@@ -33,12 +33,12 @@ public class ArcGridPPIOTest {
     GridCoverageReaderResource resource;
 
     WPSResourceManager resources;
-    ArcGridPPIOFactory.ArcGridPPIO ppio;
+    ArcGridPPIO ppio;
 
     @Before
     public void prepare() {
         resources = mock(WPSResourceManager.class);
-        ppio = ArcGridPPIOFactory.create(resources);
+        ppio = new ArcGridPPIO(resources);
     }
 
     @After

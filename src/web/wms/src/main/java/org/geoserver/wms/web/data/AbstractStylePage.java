@@ -5,8 +5,6 @@
  */
 package org.geoserver.wms.web.data;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -69,7 +67,6 @@ import org.geoserver.config.GeoServer;
 import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.platform.resource.Resources;
-import org.geoserver.util.FileTypes;
 import org.geoserver.web.ComponentAuthorizer;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.GeoServerSecuredPage;
@@ -95,8 +92,6 @@ public abstract class AbstractStylePage extends GeoServerSecuredPage {
     static final Pattern HEX_COLOR = Pattern.compile("^#(?:[0-9a-fA-F]{3}){1,2}$");
 
     static class ChooseColorPanel extends Panel {
-
-        private static final boolean isCssEmpty = IsWicketCssFileEmpty(AbstractStylePage.ChooseColorPanel.class);
 
         final TextField<String> chooser;
         final String initialColor;
@@ -145,12 +140,6 @@ public abstract class AbstractStylePage extends GeoServerSecuredPage {
                     + "    }\n"
                     + "});";
             response.render(new OnDomReadyHeaderItem(enableSpectrum));
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
         }
     }
 
@@ -753,13 +742,6 @@ public abstract class AbstractStylePage extends GeoServerSecuredPage {
                     String imageFileName = imagePanel.getChoice();
                     if (Strings.isEmpty(imageFileName)) {
                         FileUpload fu = imagePanel.getFileUpload();
-                        try (InputStream is = fu.getInputStream()) {
-                            FileTypes.assertSimpleImage(is, true);
-                        } catch (Exception e) {
-                            error(e.getMessage());
-                            target.add(imagePanel.getFeedback());
-                            return false;
-                        }
                         imageFileName = fu.getClientFileName();
                         int teller = 0;
                         GeoServerDataDirectory dd =
@@ -769,7 +751,6 @@ public abstract class AbstractStylePage extends GeoServerSecuredPage {
                             imageFileName = getImageFileName(fu, ++teller);
                             res = dd.getStyles(styleModel.getObject().getWorkspace(), imageFileName);
                         }
-
                         try (InputStream is = fu.getInputStream()) {
                             try (OutputStream os = res.out()) {
                                 IOUtils.copy(is, os);
@@ -815,7 +796,7 @@ public abstract class AbstractStylePage extends GeoServerSecuredPage {
             }
             dialog.setTitle(new ParamResourceModel("chooseColor", AbstractStylePage.this.getPage()));
             dialog.setInitialWidth(410);
-            dialog.setInitialHeight(310);
+            dialog.setInitialHeight(270);
 
             dialog.showOkCancel(target, new GeoServerDialog.DialogDelegate() {
 

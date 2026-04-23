@@ -4,32 +4,32 @@
     xmlns:wicket="http://wicket.apache.org/">
 <body>
   <wicket:extend>
-    <div class="gs-unordered-list-class">
-      <div class="gs-list-item-class">
+    <ul>
+      <li>
           <fieldset>
           <legend>
                 <span><wicket:message key="webServiceBodyResponseUserGroupParameters"></wicket:message></span>
                 <a href="#" wicket:id="webServiceBodyResponseUserGroupParametersHelp" class="help-link"></a>
           </legend>
-              <div class="gs-form">
-                  <div class="gs-form-group">
+              <ul>
+                  <li>
                      <label for="searchRoles"><wicket:message key="searchRoles"></wicket:message></label>
-                     <input id="searchRoles" wicket:id="searchRoles" type="text"></input>
-                  </div>
+                     <input id="searchRoles" wicket:id="searchRoles" type="text" class="text"></input>
+                  </li>
                   
-                  <div class="gs-form-group">
+                  <li>
                      <label for="availableGroups"><wicket:message key="availableGroups"></wicket:message></label>
-                     <input id="availableGroups" wicket:id="availableGroups" type="text"></input>
-                  </div>
+                     <input id="availableGroups" wicket:id="availableGroups" type="text" class="text"></input>
+                  </li>
                   
-                  <div class="gs-form-group">
+                  <li>
                     <label ><wicket:message key="roleServiceName"></wicket:message></label>
-                    <select wicket:id="roleServiceName" class="w-md"></select>
-                  </div>
-              </div>
+                    <select wicket:id="roleServiceName"></select>
+                  </li>
+              </ul>       
           </fieldset>
-      </div>
-     </div>
+      </li>
+     </ul>
   </wicket:extend>
 </body>
 </html>

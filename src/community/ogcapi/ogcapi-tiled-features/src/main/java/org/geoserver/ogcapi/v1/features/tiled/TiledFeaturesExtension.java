@@ -118,9 +118,9 @@ public class TiledFeaturesExtension
             copyPathItem(
                     target,
                     tilesAPI,
-                    "/collections/{vectorCollectionId}/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}");
+                    "/collections/{collectionId}/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}");
             // copy over the vector formats
-            copyParameter(target, tilesAPI, "f-vector-tile");
+            copyParameter(target, tilesAPI, "f-vector");
         }
     }
 

@@ -8,23 +8,26 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 import org.geoserver.rest.RestException;
 import org.geoserver.rest.util.MediaTypeExtensions;
-import org.geoserver.wfs.xml.WFSXmlUtils;
 import org.geotools.util.Converters;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONObject;
-import org.kordamp.json.JSONSerializer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
@@ -56,8 +59,16 @@ public class PatchMergeHandler<T> {
     }
 
     private Document toXMLDocument(String xmlString) {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+        DocumentBuilder builder = null;
         try {
-            return WFSXmlUtils.xmlDocument(xmlString);
+            // Create DocumentBuilder with default configuration
+            builder = factory.newDocumentBuilder();
+
+            // Parse the content to Document object
+            Document doc = builder.parse(new InputSource(new StringReader(xmlString)));
+            return doc;
         } catch (ParserConfigurationException | IOException | SAXException e) {
             throw new RestException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

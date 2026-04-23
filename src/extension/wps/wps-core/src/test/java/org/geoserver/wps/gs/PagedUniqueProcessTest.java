@@ -9,12 +9,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Ordering;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.namespace.QName;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.data.test.MockData;
 import org.geoserver.data.test.SystemTestData;
@@ -23,9 +24,6 @@ import org.geotools.api.feature.simple.SimpleFeatureType;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.visitor.UniqueVisitor;
 import org.junit.Test;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONObject;
-import org.kordamp.json.JSONSerializer;
 import org.mockito.Mockito;
 
 public class PagedUniqueProcessTest extends WPSTestSupport {
@@ -190,7 +188,7 @@ public class PagedUniqueProcessTest extends WPSTestSupport {
         int size = json.getInt("size");
         assertEquals(3, size);
         assertEquals(2, values.size());
-        assertTrue(Ordering.natural().reverse().isOrdered(asStringList(values)));
+        assertTrue(Ordering.natural().reverse().isOrdered(values));
         for (Object value : values) {
             assertTrue(((String) value).matches(".*(?i:a)?.*"));
         }
@@ -258,7 +256,7 @@ public class PagedUniqueProcessTest extends WPSTestSupport {
         JSONArray values = json.getJSONArray("values");
         int size = json.getInt("size");
         assertEquals(TOTAL_DISTINCT, size);
-        assertTrue(Ordering.natural().isOrdered(asStringList(values)));
+        assertTrue(Ordering.natural().isOrdered(values));
     }
 
     @Test
@@ -270,15 +268,7 @@ public class PagedUniqueProcessTest extends WPSTestSupport {
         JSONArray values = json.getJSONArray("values");
         int size = json.getInt("size");
         assertEquals(TOTAL_DISTINCT, size);
-        assertTrue(Ordering.natural().reverse().isOrdered(asStringList(values)));
-    }
-
-    private List<String> asStringList(JSONArray values) {
-        List<String> result = new ArrayList<>(values.size());
-        for (Object value : values) {
-            result.add((String) value);
-        }
-        return result;
+        assertTrue(Ordering.natural().reverse().isOrdered(values));
     }
 
     private String buildInputXml(

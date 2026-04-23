@@ -1,6 +1,10 @@
+#
+# Jetty HTTP Connector
+#
 [description]
-Enables a clear-text HTTP connector.
-By default clear-text HTTP/1.1 is enabled, and clear-text HTTP/2 may be added by enabling the "http2c" module.
+Enables an HTTP connector on the server.
+By default HTTP/1 is support, but HTTP2C can
+be added to the connector with the http2c module.
 
 [tags]
 connector
@@ -13,44 +17,46 @@ server
 etc/jetty-http.xml
 
 [ini-template]
-# tag::documentation[]
-### Clear-Text HTTP Connector Configuration
+### HTTP Connector Configuration
 
-## The host/address to bind the connector to.
+## Connector host/address to bind to
 # jetty.http.host=0.0.0.0
 
-## The port the connector listens on.
-# jetty.http.port=8080
+## Connector port to listen on
+jetty.http.port=8080
 
-## The connector idle timeout, in milliseconds.
-# jetty.http.idleTimeout=30000
+## Connector idle timeout in milliseconds
+jetty.http.idleTimeout=30000
 
-## The number of acceptors (-1 picks a default value based on number of cores).
-# jetty.http.acceptors=1
+## Number of acceptors (-1 picks default based on number of cores)
+# jetty.http.acceptors=-1
 
-## The number of selectors (-1 picks a default value based on number of cores).
+## Number of selectors (-1 picks default based on number of cores)
 # jetty.http.selectors=-1
 
-## The ServerSocketChannel accept queue backlog (0 picks the platform default).
+## ServerSocketChannel backlog (0 picks platform default)
 # jetty.http.acceptQueueSize=0
 
-## The thread priority delta to give to acceptor threads.
+## Thread priority delta to give to acceptor threads
 # jetty.http.acceptorPriorityDelta=0
 
-## Whether to enable the SO_REUSEADDR socket option.
+## The requested maximum length of the queue of incoming connections.
+# jetty.http.acceptQueueSize=0
+
+## Enable/disable the SO_REUSEADDR socket option.
 # jetty.http.reuseAddress=true
 
-## Whether to enable the SO_REUSEPORT socket option.
-# jetty.http.reusePort=false
-
-## Whether to enable the TCP_NODELAY socket option on accepted sockets.
+## Enable/disable TCP_NODELAY on accepted sockets.
 # jetty.http.acceptedTcpNoDelay=true
 
-## The SO_RCVBUF socket option to set on accepted sockets.
-## A value of -1 indicates that the platform default is used.
+## The SO_RCVBUF option to set on accepted sockets. A value of -1 indicates that it is left to its default value.
 # jetty.http.acceptedReceiveBufferSize=-1
 
-## The SO_SNDBUF socket option to set on accepted sockets.
-## A value of -1 indicates that the platform default is used.
+## The SO_SNDBUF option to set on accepted sockets. A value of -1 indicates that it is left to its default value.
 # jetty.http.acceptedSendBufferSize=-1
-# end::documentation[]
+
+## Connect Timeout in milliseconds
+# jetty.http.connectTimeout=15000
+
+## HTTP Compliance: RFC7230, RFC7230_LEGACY, RFC2616, RFC2616_LEGACY, LEGACY or CUSTOMn
+# jetty.http.compliance=RFC7230_LEGACY

@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 public class OseoGeoJSONCollectionConverter extends BaseMessageConverter<Object> {
 
     public OseoGeoJSONCollectionConverter() {
-        super(MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
+        super(MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8);
     }
 
     @Override

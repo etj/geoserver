@@ -4,19 +4,19 @@
  */
 package org.geoserver.ogcapi.v1.geovolumes;
 
-import static org.geoserver.ogcapi.SwaggerJSONAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_YAML_VALUE;
+import static org.geoserver.ogcapi.MappingJackson2YAMLMessageConverter.APPLICATION_YAML_VALUE;
+import static org.geoserver.ogcapi.OpenAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.geoserver.config.GeoServer;
 import org.geoserver.ogcapi.APIDispatcher;
 import org.geoserver.ogcapi.APIException;

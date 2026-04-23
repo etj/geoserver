@@ -13,7 +13,7 @@ import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
-import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 
 /**
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class OseoJSONConverter extends BaseMessageConverter<Object> {
 
-    JacksonJsonHttpMessageConverter delegate = new JacksonJsonHttpMessageConverter();
+    MappingJackson2HttpMessageConverter delegate = new MappingJackson2HttpMessageConverter();
 
     public OseoJSONConverter() {
         super(MediaType.APPLICATION_JSON);

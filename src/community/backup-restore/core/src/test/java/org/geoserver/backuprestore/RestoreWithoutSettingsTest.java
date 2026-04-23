@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.config.GeoServer;
 import org.geoserver.data.test.SystemTestData;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.batch.core.BatchStatus;
 
@@ -18,6 +19,7 @@ public class RestoreWithoutSettingsTest extends BackupRestoreTestSupport {
     protected static Backup backupFacade;
 
     @Override
+    @Before
     public void beforeTest() throws InterruptedException {
         backupFacade = (Backup) applicationContext.getBean("backupFacade");
         ensureCleanedQueues();
@@ -82,6 +84,7 @@ public class RestoreWithoutSettingsTest extends BackupRestoreTestSupport {
 
         if (restoreExecution.getStatus() == BatchStatus.COMPLETED) {
             GeoServer geoServer = getGeoServer();
+            assertEquals(null, geoServer.getLogging().getLocation());
 
             assertEquals(
                     "Andrea Aime",

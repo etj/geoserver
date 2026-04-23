@@ -65,16 +65,6 @@ public class GDALStatus implements ModuleStatus {
         return Optional.ofNullable("");
     }
 
-    @Override
-    public Category getCategory() {
-        return Category.EXTENSION;
-    }
-
-    @Override
-    public String getContact() {
-        return "";
-    }
-
     public Optional<String> getGDALWrapperJarVersion() {
         if (isAvailable()) {
             Version v = GeoTools.getVersion(gdal.class);

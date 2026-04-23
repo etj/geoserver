@@ -4,13 +4,11 @@
  */
 package org.geoserver.security.oauth2.common;
 
-import java.io.Serial;
 import org.geoserver.security.validation.FilterConfigException;
 
 public class GeoServerOAuth2FilterConfigException extends FilterConfigException {
 
     /** serialVersionUID */
-    @Serial
     private static final long serialVersionUID = -3686715589371356406L;
 
     public GeoServerOAuth2FilterConfigException(String errorId, Object... args) {
@@ -65,8 +63,4 @@ public class GeoServerOAuth2FilterConfigException extends FilterConfigException 
     public static final String ROLE_SOURCE_USER_INFO_URI_REQUIRED = "ROLE_SOURCE_USER_INFO_URI_REQUIRED";
 
     public static final String OAUTH2_JWK_SET_URI_REQUIRED = "OAUTH2_JWK_SET_URI_REQUIRED";
-
-    public static final String OAUTH2_AUDIENCE_CLAIM_NAME_REQUIRED = "OAUTH2_AUDIENCE_CLAIM_NAME_REQUIRED";
-
-    public static final String OAUTH2_AUDIENCE_CLAIM_VALUE_REQUIRED = "OAUTH2_AUDIENCE_CLAIM_VALUE_REQUIRED";
 }

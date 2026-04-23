@@ -134,8 +134,7 @@ public class LegacyConfigurationImporter {
         LoggingInfo logging = factory.createLogging();
 
         logging.setLevel((String) global.get("log4jConfigFile"));
-        // Log location from legacy config is ignored (GeoServer 3.0+).
-        // Use GEOSERVER_LOG_LOCATION application property instead.
+        logging.setLocation((String) global.get("logLocation"));
 
         if (global.get("suppressStdOutLogging") != null) {
             logging.setStdOutLogging(!get(global, "suppressStdOutLogging", Boolean.class));

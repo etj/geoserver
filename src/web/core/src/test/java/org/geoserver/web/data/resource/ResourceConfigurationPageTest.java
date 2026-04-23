@@ -72,7 +72,6 @@ import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.GeoServerExtensionsHelper;
 import org.geoserver.security.SecureCatalogImpl;
 import org.geoserver.security.TestResourceAccessManager;
-import org.geoserver.test.PostGISTestResource;
 import org.geoserver.test.http.MockHttpClient;
 import org.geoserver.test.http.MockHttpResponse;
 import org.geoserver.util.GeoServerDefaultLocale;
@@ -101,15 +100,11 @@ import org.geotools.referencing.CRS;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.locationtech.jts.io.WKTReader;
 import org.springframework.security.core.Authentication;
 
 public class ResourceConfigurationPageTest extends GeoServerWicketTestSupport {
-
-    @ClassRule
-    public static final PostGISTestResource postgis = new PostGISTestResource();
 
     protected static QName TIMERANGES = new QName(MockData.SF_URI, "timeranges", MockData.SF_PREFIX);
 
@@ -911,7 +906,8 @@ public class ResourceConfigurationPageTest extends GeoServerWicketTestSupport {
         ds.setWorkspace(cat.getDefaultWorkspace());
         ds.setEnabled(true);
         Map<String, Serializable> params = ds.getConnectionParameters();
-        params.putAll(postgis.getConnectionParameters());
+        params.put("dbtype", "h2");
+        params.put("database", getTestData().getDataDirectoryRoot().getAbsolutePath() + "/foo");
         cat.add(ds);
         SimpleFeatureSource fs1 = getFeatureSource(SystemTestData.FORESTS);
         DataStore store = (DataStore) ds.getDataStore(null);
@@ -948,8 +944,7 @@ public class ResourceConfigurationPageTest extends GeoServerWicketTestSupport {
         assertTrue(text.contains("Basic Resource Info"));
         assertTrue(text.contains("Feature Type Details"));
         assertTrue(text.contains("Edit sql view"));
-        assertTrue(text.contains(
-                "Failed to load attribute list, internal error is: ERROR: column &quot;fid&quot; does not exist"));
+        assertTrue(text.contains("Failed to load attribute list, internal error is: Column NAD not found"));
 
         // After updating SQL view correctly error message should not be present
         VirtualTable vt1 = new VirtualTable("test", "SELECT FID,NAME FROM \"Forests\"");

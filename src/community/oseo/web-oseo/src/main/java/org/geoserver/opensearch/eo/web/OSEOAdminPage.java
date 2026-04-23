@@ -21,23 +21,25 @@ import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.validation.AbstractFormValidator;
+import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.DefaultItemReuseStrategy;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.util.convert.IConverter;
 import org.apache.wicket.util.string.Strings;
 import org.apache.wicket.validation.validator.RangeValidator;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.opensearch.eo.OSEOInfo;
 import org.geoserver.opensearch.eo.ProductClass;
+import org.geoserver.web.GeoServerBasePage;
 import org.geoserver.web.data.store.StoreListChoiceRenderer;
 import org.geoserver.web.services.BaseServiceAdminPage;
 import org.geoserver.web.wicket.GeoServerAjaxFormLink;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geoserver.web.wicket.GeoServerTablePanel;
-import org.geoserver.web.wicket.GsIcon;
 import org.geoserver.web.wicket.HelpLink;
 import org.geoserver.web.wicket.LiveCollectionModel;
 import org.geoserver.web.wicket.ParamResourceModel;
@@ -86,16 +88,16 @@ public class OSEOAdminPage extends BaseServiceAdminPage<OSEOInfo> {
 
     @Override
     @SuppressWarnings({"unchecked", "serial"})
-    protected void build(final IModel<OSEOInfo> info, Form form) {
+    protected void build(final IModel info, Form form) {
         this.model = info;
-        OSEOInfo oseo = info.getObject();
+        OSEOInfo oseo = (OSEOInfo) info.getObject();
 
         TextField<String> attribution = new TextField<>("attribution");
         form.add(attribution);
 
         TextArea<List<String>> globalQueryables =
-                new TextArea<>(
-                        "globalQueryables", LiveCollectionModel.list(new PropertyModel<>(info, "globalQueryables"))) {
+                new TextArea<List<String>>(
+                        "globalQueryables", LiveCollectionModel.list(new PropertyModel(info, "globalQueryables"))) {
                     @Override
                     public <C> IConverter<C> getConverter(Class<C> type) {
                         if (type.isAssignableFrom(ArrayList.class)) return (IConverter<C>) new QueryablesConverter();
@@ -111,7 +113,7 @@ public class OSEOAdminPage extends BaseServiceAdminPage<OSEOInfo> {
         }
         DropDownChoice<DataStoreInfo> openSearchAccessReference = new DropDownChoice<>(
                 "openSearchAccessId",
-                new PropertyModel<>(this, "backend"),
+                new PropertyModel<DataStoreInfo>(this, "backend"),
                 new OpenSearchAccessListModel(),
                 new StoreListChoiceRenderer());
         form.add(openSearchAccessReference);
@@ -119,8 +121,9 @@ public class OSEOAdminPage extends BaseServiceAdminPage<OSEOInfo> {
         aggregatesCacheTTL.add(RangeValidator.minimum(0));
         aggregatesCacheTTL.setRequired(true);
         form.add(aggregatesCacheTTL);
-        List<String> units = Arrays.asList(TimeUnit.HOURS.name(), TimeUnit.MINUTES.name(), TimeUnit.SECONDS.name());
-        DropDownChoice<String> aggregatesCacheTTLUnit = new DropDownChoice<>("aggregatesCacheTTLUnit", units);
+        List<String> units =
+                Arrays.asList(new String[] {TimeUnit.HOURS.name(), TimeUnit.MINUTES.name(), TimeUnit.SECONDS.name()});
+        DropDownChoice<String> aggregatesCacheTTLUnit = new DropDownChoice<String>("aggregatesCacheTTLUnit", units);
         aggregatesCacheTTLUnit.setRequired(true);
         form.add(aggregatesCacheTTLUnit);
         final TextField<Integer> recordsPerPage = new TextField<>("recordsPerPage", Integer.class);
@@ -162,26 +165,29 @@ public class OSEOAdminPage extends BaseServiceAdminPage<OSEOInfo> {
             }
         });
 
-        productClasses = new GeoServerTablePanel<>("productClasses", new ProductClassesProvider(info), true) {
+        productClasses =
+                new GeoServerTablePanel<ProductClass>("productClasses", new ProductClassesProvider(info), true) {
 
-            @Override
-            protected Component getComponentForProperty(
-                    String id, IModel<ProductClass> itemModel, GeoServerDataProvider.Property<ProductClass> property) {
-                if (ProductClassesProvider.REMOVE.equals(property)) {
-                    return removeLink(id, itemModel);
-                } else {
-                    Fragment f;
-                    if ("namespace".equals(property.getName())) {
-                        f = new Fragment(id, "longtext", OSEOAdminPage.this);
-                    } else {
-                        f = new Fragment(id, "text", OSEOAdminPage.this);
+                    @Override
+                    protected Component getComponentForProperty(
+                            String id,
+                            IModel<ProductClass> itemModel,
+                            GeoServerDataProvider.Property<ProductClass> property) {
+                        if (ProductClassesProvider.REMOVE.equals(property)) {
+                            return removeLink(id, itemModel);
+                        } else {
+                            Fragment f;
+                            if ("namespace".equals(property.getName())) {
+                                f = new Fragment(id, "longtext", OSEOAdminPage.this);
+                            } else {
+                                f = new Fragment(id, "text", OSEOAdminPage.this);
+                            }
+                            TextField<?> text = new TextField("text", property.getModel(itemModel));
+                            f.add(text);
+                            return f;
+                        }
                     }
-                    TextField<?> text = new TextField<>("text", property.getModel(itemModel));
-                    f.add(text);
-                    return f;
-                }
-            }
-        };
+                };
         productClasses.setFilterVisible(false);
         productClasses.setSortable(false);
         productClasses.setPageable(false);
@@ -211,7 +217,7 @@ public class OSEOAdminPage extends BaseServiceAdminPage<OSEOInfo> {
     }
 
     private Component removeLink(String id, IModel<ProductClass> itemModel) {
-        Fragment f = new Fragment(id, "imageLink", this);
+        Fragment f = new Fragment(id, "imageLink", OSEOAdminPage.this);
         final ProductClass entry = itemModel.getObject();
         GeoServerAjaxFormLink link = new GeoServerAjaxFormLink("link") {
 
@@ -224,17 +230,14 @@ public class OSEOAdminPage extends BaseServiceAdminPage<OSEOInfo> {
             }
         };
         f.add(link);
-        link.add(new GsIcon("image", "gs-icon-delete"));
+        Image image =
+                new Image("image", new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/delete.png"));
+        link.add(image);
         return f;
     }
 
     @Override
     protected String getServiceName() {
-        return "OSEO";
-    }
-
-    @Override
-    protected String getServiceType() {
         return "OSEO";
     }
 

@@ -1,12 +1,6 @@
 package org.geoserver.monitor.kafka;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockConstruction;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import java.nio.charset.StandardCharsets;
@@ -17,20 +11,14 @@ import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.geoserver.monitor.Category;
-import org.geoserver.monitor.MonitorConfig;
-import org.geoserver.monitor.RequestData;
-import org.geoserver.monitor.RequestDataRecord;
-import org.geoserver.monitor.Status;
+import org.geoserver.monitor.*;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockedConstruction;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 
 public class KafkaDAOTest {
 

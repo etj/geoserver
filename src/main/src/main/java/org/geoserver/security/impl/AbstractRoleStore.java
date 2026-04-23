@@ -37,7 +37,7 @@ public abstract class AbstractRoleStore implements GeoServerRoleStore {
     /** logger */
     static Logger LOGGER = org.geotools.util.logging.Logging.getLogger("org.geoserver.security");
 
-    private volatile boolean modified = false;
+    private boolean modified = false;
     protected AbstractRoleService service;
     protected RoleStoreHelper helper;
 

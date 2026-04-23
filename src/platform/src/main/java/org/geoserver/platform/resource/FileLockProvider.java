@@ -10,7 +10,6 @@
 
 package org.geoserver.platform.resource;
 
-import jakarta.servlet.ServletContext;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -18,6 +17,7 @@ import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.ServletContext;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.util.IOUtils;

@@ -7,7 +7,6 @@ package org.geoserver.gwc.web.layer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.geoserver.gwc.GWC.tileLayerName;
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -75,19 +74,6 @@ import org.geowebcache.layer.TileLayer;
  * @see LayerGroupCacheOptionsPanel
  */
 class GeoServerTileLayerEditor extends FormComponentPanel<GeoServerTileLayerInfo> {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(GeoServerTileLayerEditor.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
 
     @Serial
     private static final long serialVersionUID = 7870938096047218989L;
@@ -182,6 +168,8 @@ class GeoServerTileLayerEditor extends FormComponentPanel<GeoServerTileLayerInfo
         confirmRemovalDialog.setInitialWidth(360);
         confirmRemovalDialog.setInitialHeight(180);
 
+        add(new Label("createTileLayerLabel", createTileLayerLabelModel));
+
         // Get the model and check if the Enabled parameter has been defined
         GeoServerTileLayerInfoModel model = ((GeoServerTileLayerInfoModel) tileLayerModel);
 
@@ -200,6 +188,9 @@ class GeoServerTileLayerEditor extends FormComponentPanel<GeoServerTileLayerInfo
         if (undefined) {
             model.setEnabled(doCreateTileLayer);
         }
+        add(createLayer = new CheckBox("createTileLayer", new Model<>(doCreateTileLayer)));
+        createLayer.add(new AttributeModifier("title", new ResourceModel("createTileLayer.title")));
+
         container = new WebMarkupContainer("container");
         container.setOutputMarkupId(true);
         add(container);
@@ -208,11 +199,7 @@ class GeoServerTileLayerEditor extends FormComponentPanel<GeoServerTileLayerInfo
         configs.setOutputMarkupId(true);
         container.add(configs);
 
-        configs.add(new Label("createTileLayerLabel", createTileLayerLabelModel));
-        configs.add(createLayer = new CheckBox("createTileLayer", new Model<>(doCreateTileLayer)));
-        createLayer.add(new AttributeModifier("title", new ResourceModel("createTileLayer.title")));
-
-        enabled = new CheckBox("enabled", new PropertyModel<>(getModel(), "enabled"));
+        add(enabled = new CheckBox("enabled", new PropertyModel<>(getModel(), "enabled")));
         enabled.add(new AttributeModifier("title", new ResourceModel("enabled.title")));
         configs.add(enabled);
 

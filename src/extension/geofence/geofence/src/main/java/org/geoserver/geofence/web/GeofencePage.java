@@ -5,7 +5,6 @@
 package org.geoserver.geofence.web;
 
 import com.google.common.cache.LoadingCache;
-import java.io.IOException;
 import java.io.Serial;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,9 +83,8 @@ public class GeofencePage extends GeoServerSecuredPage {
                     protected void onSubmit(AjaxRequestTarget target) {
                         ((FormComponent<?>) form.get("servicesUrl")).processInput();
                         String servicesUrl = (String) ((FormComponent<?>) form.get("servicesUrl")).getConvertedInput();
-
+                        RuleReaderService ruleReader = getRuleReaderService(servicesUrl);
                         try {
-                            RuleReaderService ruleReader = getRuleReaderService(servicesUrl);
                             ruleReader.getMatchingRules(new RuleFilter());
 
                             info(new StringResourceModel(GeofencePage.class.getSimpleName() + ".connectionSuccessful")
@@ -103,18 +101,16 @@ public class GeofencePage extends GeoServerSecuredPage {
                     // HttpInvokerProxyFactoryBean is deprecated because
                     // Spring no longer supports serialized RMI invocations
                     @SuppressWarnings("deprecation")
-                    private RuleReaderService getRuleReaderService(String servicesUrl) throws IOException {
+                    private RuleReaderService getRuleReaderService(String servicesUrl) {
                         if (config.isInternal()) {
                             return (RuleReaderService) GeoServerExtensions.bean("ruleReaderService");
                         } else {
-                            /*org.springframework.remoting.httpinvoker.HttpInvokerProxyFactoryBean invoker =
+                            org.springframework.remoting.httpinvoker.HttpInvokerProxyFactoryBean invoker =
                                     new org.springframework.remoting.httpinvoker.HttpInvokerProxyFactoryBean();
                             invoker.setServiceUrl(servicesUrl);
                             invoker.setServiceInterface(RuleReaderService.class);
                             invoker.afterPropertiesSet();
-                            return (RuleReaderService) invoker.getObject();*/
-
-                            return (RuleReaderService) null;
+                            return (RuleReaderService) invoker.getObject();
                         }
                     }
                 }.setDefaultFormProcessing(false));

@@ -12,7 +12,7 @@
   <parent>
     <groupId>org.geoserver.community.security</groupId>
     <artifactId>gs-sec-oidc</artifactId>
-    <version>3.0-SNAPSHOT</version>
+    <version>2.28-SNAPSHOT</version>
   </parent>
 
   <artifactId>gs-sec-oidc-core</artifactId>
@@ -57,29 +57,18 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.httpcomponents.client5</groupId>
-      <artifactId>httpclient5</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-jwt</artifactId>
       <version>1.0.11.RELEASE</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>bcpkix-jdk15on</artifactId>
-          <groupId>org.bouncycastle</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
-      <groupId>org.kordamp.json</groupId>
-      <artifactId>json-lib-core</artifactId>
+      <groupId>net.sf.json-lib</groupId>
+      <artifactId>json-lib</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>tools.jackson.core</groupId>
+      <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
     </dependency>
 
@@ -89,7 +78,7 @@
     </dependency>
 
     <dependency>
-      <groupId>tools.jackson.core</groupId>
+      <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
 
@@ -97,10 +86,6 @@
       <groupId>com.nimbusds</groupId>
       <artifactId>nimbus-jose-jwt</artifactId>
       <version>9.37.2</version>
-    </dependency>
-    <dependency>
-      <groupId>jakarta.servlet</groupId>
-      <artifactId>jakarta.servlet-api</artifactId>
     </dependency>
 
     <dependency>
@@ -112,7 +97,7 @@
 
     <dependency>
       <groupId>org.geoserver</groupId>
-      <artifactId>gs-wms-core</artifactId>
+      <artifactId>gs-wms</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -152,17 +137,6 @@
           <systemPropertyVariables>
             <OPENID_TEST_GS_PROXY_BASE>http://localhost/geoserver</OPENID_TEST_GS_PROXY_BASE>
           </systemPropertyVariables>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <configuration>
-          <excludes>
-            <!-- Interface-only classes with no executable code -->
-            <exclude>**/GeoServerOAuth2LoginCustomizers.class</exclude>
-            <exclude>**/GeoServerOAuth2LoginCustomizers$*.class</exclude>
-          </excludes>
         </configuration>
       </plugin>
     </plugins>

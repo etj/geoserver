@@ -10,7 +10,9 @@ import static org.geoserver.ogcapi.v1.processes.InputValue.ComplexJSONInputValue
 import static org.geoserver.ogcapi.v1.processes.InputValueDeserializer.CRS84;
 import static org.geoserver.ogcapi.v1.processes.InputValueDeserializer.CRS84H;
 
-import jakarta.servlet.http.HttpServletRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 import net.opengis.ows11.BoundingBoxType;
 import net.opengis.ows11.Ows11Factory;
 import net.opengis.wps10.ComplexDataType;
@@ -50,9 +53,6 @@ import org.geoserver.wps.ppio.ProcessParameterIO;
 import org.geotools.api.data.Parameter;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 /** Maps an OGC API Processes Execute request to a GeoServer WPS {@link ExecuteType} */
 // TODO: handle content negotiation from the HTTP header too
@@ -499,7 +499,7 @@ public class ExecuteMapper {
             if (node.isArray()) {
                 return node;
             }
-        } catch (JacksonException e) {
+        } catch (JsonProcessingException e) {
             // Not a valid JSON, fine, the purpose is to check if it is a JSON array
         }
         return null;

@@ -27,7 +27,7 @@ import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.config.util.XStreamServiceLoader;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geotools.util.logging.Logging;
-import org.jspecify.annotations.NonNull;
+import org.springframework.lang.NonNull;
 
 /**
  * Provides efficient traversal of the GeoServer data directory structure.

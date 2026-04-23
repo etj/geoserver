@@ -34,16 +34,16 @@ public class UniqueProcessTest extends WPSTestSupport {
     protected void onSetUp(SystemTestData testData) throws Exception {
         super.onSetUp(testData);
 
-        // setup an gpkg datastore for the purpose of checking database delegation
+        // setup an H2 datastore for the purpose of checking database delegation
         Catalog cat = getCatalog();
         DataStoreInfo ds = cat.getFactory().createDataStore();
-        ds.setName("gpkg");
+        ds.setName("h2");
         ds.setWorkspace(cat.getDefaultWorkspace());
         ds.setEnabled(true);
 
         Map<String, Serializable> params = ds.getConnectionParameters();
-        params.put("dbtype", "geopkg");
-        params.put("database", getTestData().getDataDirectoryRoot().getAbsolutePath() + "/unique.gpkg");
+        params.put("dbtype", "h2");
+        params.put("database", getTestData().getDataDirectoryRoot().getAbsolutePath() + "/h2");
         cat.add(ds);
 
         SimpleFeatureSource fs3 = getFeatureSource(SystemTestData.PRIMITIVEGEOFEATURE);
@@ -52,7 +52,7 @@ public class UniqueProcessTest extends WPSTestSupport {
         SimpleFeatureTypeBuilder tb = new SimpleFeatureTypeBuilder();
 
         tb.init(fs3.getSchema());
-        // remove property types not needed for the test
+        // remove the property types H2 has troubles with (including multiple geometries)
         tb.remove("surfaceProperty");
         tb.remove("curveProperty");
         tb.remove("uriProperty");

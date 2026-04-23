@@ -14,8 +14,6 @@ import static org.geoserver.mapml.template.MapMLMapTemplate.MAPML_FEATURE_FTL;
 import static org.geoserver.mapml.template.MapMLMapTemplate.MAPML_FEATURE_HEAD_FTL;
 
 import freemarker.template.TemplateNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
@@ -31,6 +29,8 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.JAXBException;
 import org.geoserver.catalog.CoverageInfo;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerInfo;
@@ -48,7 +48,6 @@ import org.geoserver.mapml.xml.BodyContent;
 import org.geoserver.mapml.xml.Feature;
 import org.geoserver.mapml.xml.HeadContent;
 import org.geoserver.mapml.xml.Link;
-import org.geoserver.mapml.xml.MapMLElement;
 import org.geoserver.mapml.xml.Mapml;
 import org.geoserver.mapml.xml.Meta;
 import org.geoserver.mapml.xml.RelType;
@@ -199,7 +198,7 @@ public class MapMLFeatureUtil {
         // build the body
         BodyContent body = new BodyContent();
         mapml.setBody(body);
-        List<MapMLElement> featuresOrTiles = body.getTilesOrFeatures();
+        List<Object> featuresOrTiles = body.getTilesOrFeatures();
 
         for (LayerSimplfierContext layerSimplfierContext : layerSimplfierContexts) {
             Map<String, MapMLStyle> styles = layerSimplfierContext.getStyles();

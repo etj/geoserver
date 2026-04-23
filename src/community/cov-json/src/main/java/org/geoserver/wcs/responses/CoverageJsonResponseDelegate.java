@@ -4,10 +4,10 @@
  */
 package org.geoserver.wcs.responses;
 
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import org.geoserver.config.GeoServer;
 import org.geoserver.platform.ServiceException;
@@ -30,8 +30,18 @@ public class CoverageJsonResponseDelegate extends BaseCoverageResponseDelegate
         super(
                 geoserver,
                 Arrays.asList(FILE_EXTENSION, MIME_TYPE), // output formats
-                ImmutableMap.of(MIME_TYPE, FILE_EXTENSION, FILE_EXTENSION, FILE_EXTENSION),
-                ImmutableMap.of(MIME_TYPE, MIME_TYPE, FILE_EXTENSION, MIME_TYPE));
+                new HashMap<String, String>() { // file extensions
+                    {
+                        put(MIME_TYPE, FILE_EXTENSION);
+                        put(FILE_EXTENSION, FILE_EXTENSION);
+                    }
+                },
+                new HashMap<String, String>() { // mime types
+                    {
+                        put(MIME_TYPE, MIME_TYPE);
+                        put(FILE_EXTENSION, MIME_TYPE);
+                    }
+                });
     }
 
     @Override
@@ -44,7 +54,9 @@ public class CoverageJsonResponseDelegate extends BaseCoverageResponseDelegate
 
         try {
             CoverageJsonEncoder encoder = new CoverageJsonEncoder(sourceCoverage);
-            encoder.write(output);
+            if (encoder != null) {
+                encoder.write(output);
+            }
 
         } finally {
             sourceCoverage.dispose(true);

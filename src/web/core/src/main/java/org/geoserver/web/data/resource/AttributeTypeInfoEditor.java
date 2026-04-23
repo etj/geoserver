@@ -4,8 +4,6 @@
  */
 package org.geoserver.web.data.resource;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +28,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.util.convert.IConverter;
 import org.geoserver.catalog.AttributeTypeInfo;
 import org.geoserver.catalog.Catalog;
@@ -48,19 +47,6 @@ import org.geotools.util.logging.Logging;
 
 /** Component editing a list of {@link AttributeTypeInfo} */
 class AttributeTypeInfoEditor extends Panel {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(AttributeTypeInfoEditor.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
 
     static final Logger LOGGER = Logging.getLogger(AttributeTypeInfoEditor.class);
 
@@ -202,7 +188,9 @@ class AttributeTypeInfoEditor extends Panel {
                     }
                 });
             } else if (property == EDIT) {
-                return new ImageAjaxLink<>(id, "gs-icon-pencil") {
+                PackageResourceReference icon =
+                        new PackageResourceReference(getClass(), "../../img/icons/silk/pencil.png");
+                return new ImageAjaxLink<>(id, icon) {
                     @Override
                     protected void onClick(AjaxRequestTarget target) {
                         openEditAttributeDialog(target, itemModel);
@@ -210,7 +198,9 @@ class AttributeTypeInfoEditor extends Panel {
                 };
             } else if (property == REMOVE) {
                 final AttributeTypeInfo entry = itemModel.getObject();
-                return new ImageAjaxLink<>(id, "gs-icon-delete") {
+                PackageResourceReference icon =
+                        new PackageResourceReference(getClass(), "../../img/icons/silk/delete.png");
+                return new ImageAjaxLink<>(id, icon) {
 
                     @Override
                     protected void onClick(AjaxRequestTarget target) {

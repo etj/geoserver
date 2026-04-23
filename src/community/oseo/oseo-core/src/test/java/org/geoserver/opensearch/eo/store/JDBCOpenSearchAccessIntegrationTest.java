@@ -5,6 +5,7 @@
 package org.geoserver.opensearch.eo.store;
 
 import static org.geoserver.data.test.CiteTestData.TASMANIA_DEM;
+import static org.geoserver.opensearch.eo.store.GeoServerOpenSearchTestSupport.setupBasicOpenSearch;
 import static org.geoserver.opensearch.eo.store.JDBCOpenSearchAccessTest.getAttribute;
 import static org.geoserver.opensearch.eo.store.OpenSearchAccess.LAYERS;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -55,7 +56,6 @@ import org.geotools.feature.visitor.UniqueVisitor;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 public class JDBCOpenSearchAccessIntegrationTest extends GeoServerSystemTestSupport {
@@ -65,9 +65,6 @@ public class JDBCOpenSearchAccessIntegrationTest extends GeoServerSystemTestSupp
     protected static final String ROLE_NOCLOUD = "ROLE_LOWCLOUD";
 
     private static final FilterFactory FF = CommonFactoryFinder.getFilterFactory();
-
-    @ClassRule
-    public static final OSEOPostGISResource postgis = new OSEOPostGISResource(true);
 
     @Override
     protected void setUpTestData(SystemTestData testData) throws Exception {
@@ -84,7 +81,7 @@ public class JDBCOpenSearchAccessIntegrationTest extends GeoServerSystemTestSupp
         service.setTitle("STAC");
         gs.save(service);
 
-        postgis.setupBasicOpenSearch(getCatalog(), gs);
+        setupBasicOpenSearch(testData, getCatalog(), gs, true);
 
         // Create fake layer matching the collection one
         Catalog catalog = getCatalog();

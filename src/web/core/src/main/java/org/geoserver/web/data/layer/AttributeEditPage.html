@@ -4,31 +4,31 @@
 </head>
 <body>
 <wicket:extend>
-  <form wicket:id="form" class="gs-form">
-    <div class="gs-form-group">
+  <form wicket:id="form">
+    <div class="mb-3">
       <label for="name"><wicket:message key="name">name</wicket:message></label>
-      <input id="name" type="text" wicket:id="name" class="w-md"/>
+      <input id="name" class="text" type="text" wicket:id="name"/>
     </div>
-    <div class="gs-form-group">
+    <div class="mb-3">
       <label for="binding"><wicket:message key="type">type</wicket:message></label>
-      <select id="binding" wicket:id="binding" class="w-fit"></select>
+      <select id="binding" wicket:id="binding"></select>
     </div>
-    <div class="choiceItem">
+    <div class="choiceItem mb-3">
         <input type="checkbox" id="nullable" wicket:id="nullable"/>
         <label for="nullable"><wicket:message key="nullable">nullable</wicket:message></label>
     </div>
-    <div wicket:id="sizeContainer" class="gs-form-group">
+    <div wicket:id="sizeContainer" class="mb-3">
       <label for="size"><wicket:message key="size">size</wicket:message></label>
-      <input id="size" type="text" wicket:id="size" class="w-md"/>
+      <input id="size" class="text" type="text" wicket:id="size"/>
     </div>
-    <div wicket:id="crsContainer" class="gs-form-group">
+    <div wicket:id="crsContainer" class="mb-3">
       <label for="crs"><wicket:message key="crs">cRS</wicket:message></label>
       <span wicket:id="crs"></span>
     </div>
 
     <div class="button-group toolbar-sticky selfclear">
-      <a href="#" class="form-button-save button primary" wicket:id="save"><wicket:message key="save">Save</wicket:message></a>
-      <a href="#" class="form-button-cancel button outline-danger" wicket:id="cancel"><wicket:message key="cancel">Cancel</wicket:message></a>
+      <a href="#" class="form-button-save" wicket:id="save"><wicket:message key="save">Save</wicket:message></a>
+      <a href="#" class="form-button-cancel" wicket:id="cancel"><wicket:message key="cancel">Cancel</wicket:message></a>
     </div>
   </form>
 </wicket:extend>

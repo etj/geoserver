@@ -16,6 +16,7 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -289,7 +290,7 @@ public abstract class BackupRestoreItem<T> {
         }
 
         if (!isBestEffort()) {
-            getCurrentJobExecution().addFailureExceptions(List.of(validationException));
+            getCurrentJobExecution().addFailureExceptions(Arrays.asList(validationException));
         }
         return false;
     }
@@ -299,10 +300,10 @@ public abstract class BackupRestoreItem<T> {
         CatalogException validationException =
                 e != null ? new CatalogException(e) : new CatalogException("Invalid resource: " + resource);
         if (!isBestEffort()) {
-            getCurrentJobExecution().addFailureExceptions(List.of(validationException));
+            getCurrentJobExecution().addFailureExceptions(Arrays.asList(validationException));
             throw validationException;
         } else {
-            getCurrentJobExecution().addWarningExceptions(List.of(validationException));
+            getCurrentJobExecution().addWarningExceptions(Arrays.asList(validationException));
         }
         return false;
     }
@@ -353,8 +354,8 @@ public abstract class BackupRestoreItem<T> {
                         (ParameterizedFieldsHolder) context.get(ENCRYPTED_FIELDS_KEY);
 
                 Map map = (Map) source;
-                for (Object o : map.entrySet()) {
-                    Map.Entry entry = (Map.Entry) o;
+                for (Iterator iterator = map.entrySet().iterator(); iterator.hasNext(); ) {
+                    Map.Entry entry = (Map.Entry) iterator.next();
 
                     if (entry.getValue() == null) {
                         continue;
@@ -478,7 +479,7 @@ public abstract class BackupRestoreItem<T> {
         return info;
     }
 
-    /** @param srcCatalog */
+    /** @param catalog */
     protected void syncTo(Catalog srcCatalog) {
         // do a manual import
 
@@ -518,7 +519,7 @@ public abstract class BackupRestoreItem<T> {
         }
         for (ResourceInfo resource : srcCatalog.getFacade().getResources(FeatureTypeInfo.class)) {
             FeatureTypeInfo targetResource = catalog.getResourceByName(resource.getName(), FeatureTypeInfo.class);
-            if (targetResource == null) {
+            if (resource != null && targetResource == null) {
                 DataStoreInfo targetDataStore =
                         catalog.getDataStoreByName(resource.getStore().getName());
                 NamespaceInfo targetNamespace = resource.getNamespace() != null
@@ -536,7 +537,7 @@ public abstract class BackupRestoreItem<T> {
         // WMSStores
         for (StoreInfo store : srcCatalog.getFacade().getStores(WMSStoreInfo.class)) {
             WMSStoreInfo targetWMSStore = catalog.getWMSStoreByName(store.getName());
-            if (targetWMSStore == null) {
+            if (store != null && targetWMSStore == null) {
                 WorkspaceInfo targetWorkspace = store.getWorkspace() != null
                         ? catalog.getWorkspaceByName(store.getWorkspace().getName())
                         : null;
@@ -552,7 +553,7 @@ public abstract class BackupRestoreItem<T> {
         // WMTSStores
         for (StoreInfo store : srcCatalog.getFacade().getStores(WMTSStoreInfo.class)) {
             WMTSStoreInfo targetWMTSStore = catalog.getWMTSStoreByName(store.getName());
-            if (targetWMTSStore == null) {
+            if (store != null && targetWMTSStore == null) {
                 WorkspaceInfo targetWorkspace = store.getWorkspace() != null
                         ? catalog.getWorkspaceByName(store.getWorkspace().getName())
                         : null;
@@ -568,7 +569,7 @@ public abstract class BackupRestoreItem<T> {
         // CoverageStores
         for (StoreInfo store : srcCatalog.getFacade().getStores(CoverageStoreInfo.class)) {
             CoverageStoreInfo targetCoverageStore = catalog.getCoverageStoreByName(store.getName());
-            if (targetCoverageStore == null) {
+            if (store != null && targetCoverageStore == null) {
                 WorkspaceInfo targetWorkspace = store.getWorkspace() != null
                         ? catalog.getWorkspaceByName(store.getWorkspace().getName())
                         : null;
@@ -582,7 +583,7 @@ public abstract class BackupRestoreItem<T> {
         }
         for (ResourceInfo resource : srcCatalog.getFacade().getResources(CoverageInfo.class)) {
             CoverageInfo targetResource = catalog.getResourceByName(resource.getName(), CoverageInfo.class);
-            if (targetResource == null) {
+            if (resource != null && targetResource == null) {
                 CoverageStoreInfo targetCoverageStore =
                         catalog.getCoverageStoreByName(resource.getStore().getName());
                 NamespaceInfo targetNamespace = resource.getNamespace() != null
@@ -600,7 +601,7 @@ public abstract class BackupRestoreItem<T> {
         // Styles
         for (StyleInfo s : srcCatalog.getFacade().getStyles()) {
             StyleInfo targetStyle = catalog.getStyleByName(s.getName());
-            if (targetStyle == null) {
+            if (s != null && targetStyle == null) {
                 WorkspaceInfo targetWorkspace = s.getWorkspace() != null
                         ? catalog.getWorkspaceByName(s.getWorkspace().getName())
                         : null;
@@ -704,9 +705,10 @@ public abstract class BackupRestoreItem<T> {
             target.setDescription(source.getDescription());
             target.setType(source.getType() != null ? source.getType() : "Shapefile");
 
-            if (source instanceof DataStoreInfoImpl impl) {
+            if (source instanceof DataStoreInfoImpl) {
                 ((DataStoreInfoImpl) target).setDefault(((StoreInfoImpl) source).isDefault());
-                ((DataStoreInfoImpl) target).setConnectionParameters(impl.getConnectionParameters());
+                ((DataStoreInfoImpl) target)
+                        .setConnectionParameters(((DataStoreInfoImpl) source).getConnectionParameters());
                 ((DataStoreInfoImpl) target).setMetadata(((StoreInfoImpl) source).getMetadata());
             }
 

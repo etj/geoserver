@@ -18,6 +18,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import net.sf.json.JSONObject;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.rest.RequestInfo;
 import org.geoserver.rest.ResourceNotFoundException;
@@ -28,7 +29,6 @@ import org.geotools.api.metadata.extent.GeographicBoundingBox;
 import org.geotools.api.referencing.FactoryException;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 import org.geotools.referencing.CRS;
-import org.kordamp.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -53,20 +53,164 @@ public class CRSController extends RestBaseController {
 
     public record BBox(Double minX, Double minY, Double maxX, Double maxY) {}
 
-    private record ExtentEntry(BBox bbox, BBox bboxWGS84) {}
+    private static final class CRSLink {
+        private final String id;
+        private final String href;
 
-    private record CRSLink(String id, String href) {}
+        public CRSLink(String id, String href) {
+            this.id = id;
+            this.href = href;
+        }
 
-    private record PageInfo(int offset, int limit, int returned, int total) {}
+        public String getId() {
+            return id;
+        }
 
-    public record Codes(List<CRSLink> crs, PageInfo page) {}
+        public String getHref() {
+            return href;
+        }
+    }
 
-    public record Authority(String name, String href) {}
+    private static final class ExtentEntry {
+        private final BBox bbox;
+        private final BBox bboxWGS84;
 
-    public record AuthoritiesResponse(List<Authority> authorities) {}
+        public ExtentEntry(BBox bbox, BBox bboxWGS84) {
+            this.bbox = bbox;
+            this.bboxWGS84 = bboxWGS84;
+        }
 
-    public record DefinitionResponse(
-            String id, String format, String name, BBox bbox, BBox bboxWGS84, String definition) {}
+        public BBox bbox() {
+            return bbox;
+        }
+
+        public BBox bboxWGS84() {
+            return bboxWGS84;
+        }
+    }
+
+    private static final class PageInfo {
+        private final int offset;
+        private final int limit;
+        private final int returned;
+        private final int total;
+
+        public PageInfo(int offset, int limit, int returned, int total) {
+            this.offset = offset;
+            this.limit = limit;
+            this.returned = returned;
+            this.total = total;
+        }
+
+        public int getOffset() {
+            return offset;
+        }
+
+        public int getLimit() {
+            return limit;
+        }
+
+        public int getReturned() {
+            return returned;
+        }
+
+        public int getTotal() {
+            return total;
+        }
+    }
+
+    private static class Codes {
+        private final List<CRSLink> crs;
+        private final PageInfo page;
+
+        public Codes(List<CRSLink> crs, PageInfo page) {
+            this.crs = crs;
+            this.page = page;
+        }
+
+        public List<CRSLink> getCrs() {
+            return crs;
+        }
+
+        public PageInfo getPage() {
+            return page;
+        }
+    }
+
+    private static class Authority {
+
+        private final String name;
+        private final String href;
+
+        public Authority(String name, String href) {
+            this.name = name;
+            this.href = href;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getHref() {
+            return href;
+        }
+    }
+
+    private static class AuthoritiesResponse {
+
+        private final List<Authority> authorities;
+
+        public AuthoritiesResponse(List<Authority> authorities) {
+            this.authorities = authorities;
+        }
+
+        public List<Authority> getAuthorities() {
+            return authorities;
+        }
+    }
+
+    private static class DefinitionResponse {
+
+        private final String id;
+        private final String format;
+        private final String name;
+        private final BBox bbox;
+        private final BBox bboxWGS84;
+        private final String definition;
+
+        public DefinitionResponse(String id, String format, String name, BBox bbox, BBox bboxWGS84, String definition) {
+            this.id = id;
+            this.format = format;
+            this.definition = definition;
+            this.bbox = bbox;
+            this.bboxWGS84 = bboxWGS84;
+            this.name = name;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getFormat() {
+            return format;
+        }
+
+        public String getDefinition() {
+            return definition;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public BBox getBbox() {
+            return bbox;
+        }
+
+        public BBox getBboxWGS84() {
+            return bboxWGS84;
+        }
+    }
 
     private volatile Map<String, ExtentEntry> loadedExtents;
 
@@ -99,7 +243,7 @@ public class CRSController extends RestBaseController {
         return new Codes(items, new PageInfo(offset, limit, items.size(), total));
     }
 
-    @GetMapping("/authorities")
+    @GetMapping(path = "/authorities", produces = MediaType.APPLICATION_JSON_VALUE)
     public AuthoritiesResponse listAuthorities() {
         List<String> authorities = getAuthorities(null);
         String urlPrefix = Objects.requireNonNull(RequestInfo.get()).servletURI("crs?authority=");

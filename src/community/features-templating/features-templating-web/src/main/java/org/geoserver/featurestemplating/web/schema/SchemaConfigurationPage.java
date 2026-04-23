@@ -7,7 +7,6 @@ package org.geoserver.featurestemplating.web.schema;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.Serial;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -121,7 +120,7 @@ public class SchemaConfigurationPage extends GeoServerSecuredPage {
     }
 
     public void setRawSchema(Reader in) throws IOException {
-        try (BufferedReader bin = in instanceof BufferedReader br ? br : new BufferedReader(in)) {
+        try (BufferedReader bin = in instanceof BufferedReader ? (BufferedReader) in : new BufferedReader(in)) {
             StringBuilder builder = new StringBuilder();
             String line = null;
             while ((line = bin.readLine()) != null) {
@@ -208,7 +207,6 @@ public class SchemaConfigurationPage extends GeoServerSecuredPage {
 
                 AjaxSubmitLink link = new AjaxSubmitLink(linkId) {
 
-                    @Serial
                     private static final long serialVersionUID = 4599409150448651749L;
 
                     @Override

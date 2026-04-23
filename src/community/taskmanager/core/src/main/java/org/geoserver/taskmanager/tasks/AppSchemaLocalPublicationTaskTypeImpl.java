@@ -4,7 +4,6 @@
  */
 package org.geoserver.taskmanager.tasks;
 
-import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import javax.annotation.PostConstruct;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.catalog.DataStoreInfo;

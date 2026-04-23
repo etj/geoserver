@@ -5,9 +5,9 @@
  */
 package org.geoserver.test;
 
-import jakarta.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
+import javax.servlet.ServletContext;
 import org.apache.commons.io.FileUtils;
 import org.geoserver.util.IOUtils;
 import org.springframework.beans.BeansException;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.xml.DefaultBeanDefinitionDocumentReader
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.beans.factory.xml.XmlReaderContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.ui.context.Theme;
 import org.springframework.web.context.ServletConfigAware;
 import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.context.WebApplicationContext;
@@ -30,7 +31,6 @@ import org.w3c.dom.Element;
  *
  * @author Justin Deoliveira, The Open Planning Project, jdeolive@openplans.org
  */
-@SuppressWarnings({"deprecation", "removal"})
 public class GeoServerTestApplicationContext extends ClassPathXmlApplicationContext implements WebApplicationContext {
     ServletContext servletContext;
 
@@ -53,6 +53,10 @@ public class GeoServerTestApplicationContext extends ClassPathXmlApplicationCont
     @Override
     public ServletContext getServletContext() {
         return servletContext;
+    }
+
+    public Theme getTheme(String themeName) {
+        return null;
     }
 
     public void setUseLegacyGeoServerLoader(boolean useLegacyGeoServerLoader) {

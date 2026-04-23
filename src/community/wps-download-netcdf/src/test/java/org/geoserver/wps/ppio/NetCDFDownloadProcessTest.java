@@ -74,7 +74,7 @@ public class NetCDFDownloadProcessTest extends WPSTestSupport {
         }
 
         public AutoDisposableGridCoverage2D read() throws IOException {
-            GridCoverage2D gc = super.read();
+            GridCoverage2D gc = super.read(null);
             assertNotNull(gc);
             return new AutoDisposableGridCoverage2D("", gc);
         }

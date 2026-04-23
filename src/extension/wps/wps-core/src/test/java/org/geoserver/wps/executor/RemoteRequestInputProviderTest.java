@@ -7,16 +7,18 @@ package org.geoserver.wps.executor;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.forbidden;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.opengis.wps10.MethodType.GET_LITERAL;
 import static net.opengis.wps10.MethodType.POST_LITERAL;
-import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
-import static org.apache.hc.core5.http.HttpHeaders.CONTENT_LENGTH;
-import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.http.HttpHeaders.AUTHORIZATION;
+import static org.apache.http.HttpHeaders.CONTENT_LENGTH;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
@@ -26,8 +28,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.http.ssl.SSLContextBuilder;
+import com.github.tomakehurst.wiremock.http.ssl.TrustEverythingStrategy;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import java.io.IOException;
@@ -45,18 +48,21 @@ import net.opengis.wps10.InputType;
 import net.opengis.wps10.MethodType;
 import net.opengis.wps10.Wps10Factory;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.geoserver.ows.Ows11Util;
-import org.geoserver.test.GeoServerSystemTestSupport;
 import org.geoserver.wps.ProcessDismissedException;
 import org.geoserver.wps.WPSException;
 import org.geoserver.wps.ppio.ComplexPPIO;
 import org.geotools.api.util.ProgressListener;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class RemoteRequestInputProviderTest extends GeoServerSystemTestSupport {
+public class RemoteRequestInputProviderTest {
 
     @ClassRule
     public static WireMockClassRule classRule =
@@ -67,10 +73,24 @@ public class RemoteRequestInputProviderTest extends GeoServerSystemTestSupport {
 
     private ProgressListener listener;
 
+    @BeforeClass
+    public static void setSocketFactory() throws Exception {
+        // create a socket factory that trusts all certificates
+        RemoteRequestInputProvider.setSocketFactory(new SSLConnectionSocketFactory(
+                SSLContextBuilder.create()
+                        .loadTrustMaterial(null, new TrustEverythingStrategy())
+                        .build(),
+                NoopHostnameVerifier.INSTANCE));
+    }
+
     @Before
     public void setListener() {
         listener = mock(ProgressListener.class);
-        System.setProperty("geoserver.wps.remoteInput.insecureHostname", "true");
+    }
+
+    @AfterClass
+    public static void clearSocketFactory() {
+        RemoteRequestInputProvider.setSocketFactory(null);
     }
 
     @Test
@@ -785,7 +805,7 @@ public class RemoteRequestInputProviderTest extends GeoServerSystemTestSupport {
         assertNull(e.getCause());
         // verify that the hidden exception was of the proper type if one was expected
         // or that no hidden exception was thrown if none was expected
-        // verify(listener).exceptionOccurred(any(firstNonNull(hidden, Exception.class)));
+        verify(listener).exceptionOccurred(any(firstNonNull(hidden, Exception.class)));
         verify(listener).exceptionOccurred(any(WPSException.class));
         Arrays.stream(requests).filter(Objects::nonNull).forEach(service::verify);
     }
@@ -804,7 +824,7 @@ public class RemoteRequestInputProviderTest extends GeoServerSystemTestSupport {
 
     private Object getValue(InputType input, ComplexPPIO ppio, int timeout, long maxSize) throws Exception {
         Map<String, InputProvider> map = new HashMap<>();
-        map.put("testInput", new RemoteRequestInputProvider(input, ppio, timeout, maxSize, true));
+        map.put("testInput", new RemoteRequestInputProvider(input, ppio, timeout, maxSize));
         LazyInputMap inputs = new LazyInputMap(map);
         inputs.setListener(listener);
         return inputs.get("testInput");
@@ -832,7 +852,7 @@ public class RemoteRequestInputProviderTest extends GeoServerSystemTestSupport {
         service.stubFor(any(urlEqualTo("/test")).willReturn(response));
         if (bodyUrl != null && bodyUrl.getProtocol().startsWith("http")) {
             // stub for the body reference HTTP(S) URL
-            service.stubFor(WireMock.get(urlEqualTo("/foo")).willReturn(bodyResponse));
+            service.stubFor(get(urlEqualTo("/foo")).willReturn(bodyResponse));
         }
     }
 

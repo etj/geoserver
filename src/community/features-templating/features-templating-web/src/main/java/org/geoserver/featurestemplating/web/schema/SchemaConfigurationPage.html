@@ -5,28 +5,24 @@
 <body>
 <wicket:extend>
 <form name="schemaForm" wicket:id="schemaForm" id="schemaForm">
-    <div class="gs-unordered-list-class">
-        <div class="gs-list-item-class">
+    <ul>
+        <li>
             <fieldset>
-                <div class="gs-unordered-list-class">
-                    <div class="gs-list-item-class">
+                <ul>
+                    <li>
                         <div wicket:id="schemaPanel"  id="schema-info-tabbed-panel" class="bottom-padding-0pt5em"></div>
-                    </div>
-                    <div class="gs-list-item-class">
-                        <fieldset>
-                            <legend>
-                                <wicket:message key="schemaEditor"></wicket:message>
-                            </legend>
-                            <div class="field" wicket:id="schemaEditor" id="schemaEditor"> </div>
-                        </fieldset>
-                    </div>
-                </div>
+                    </li>
+                    <li>
+                        <label for="schemaEditor"><wicket:message key="schemaEditor"></wicket:message></label>
+                        <div class="field" wicket:id="schemaEditor" id="schemaEditor"> </div>
+                    </li>
+                </ul>
             </fieldset>
-        </div>
-    </div>
+        </li>
+    </ul>
     <div class="button-group toolbar-sticky selfclear">
-        <a href="#" class="form-button-save button primary" wicket:id="save"><wicket:message key="save">Save</wicket:message></a>
-        <a href="#" class="form-button-cancel button outline-danger" wicket:id="cancel"><wicket:message key="cancel">Cancel</wicket:message></a>
+        <a href="#" class="form-button-save" wicket:id="save"><wicket:message key="save">Save</wicket:message></a>
+        <a href="#" class="form-button-cancel" wicket:id="cancel"><wicket:message key="cancel">Cancel</wicket:message></a>
     </div>
 </form>
 </wicket:extend>

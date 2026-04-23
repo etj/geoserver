@@ -1,5 +1,5 @@
 {
-    "$schema":"https://json-schema.org/draft/2020-12/schema",
+    "$schema":"http://json-schema.org/draft-03/schema#",
 
     "title":"multi point",
     "type":"object",
@@ -9,6 +9,7 @@
     "properties":{
         "points":{
             "title":"points",
+             "required":true,
             "type":"array",
             "items":{
                 "title":"direct position [x,y]",
@@ -21,6 +22,5 @@
          },
         "spatialReference":{
             "$ref" : "spatialreference.json"}
-    },
-    "required":["points"]
+    }
 }

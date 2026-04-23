@@ -1,5 +1,5 @@
 {
-   "$schema":"https://json-schema.org/draft/2020-12/schema",
+   "$schema":"http://json-schema.org/draft-03/schema#",
 
     "title":"class breaks renderer",
     "extends":{
@@ -9,11 +9,13 @@
         "type":{
             "title":"renderer type",
             "type":"string",
+            "required":true,
             "enum":["classBreaks"]
         },
         "field":{
             "title":"name of field",
-            "type":"string"
+            "type":"string",
+            "required":true
         },
         "minValue":{
             "title":"minimum value",
@@ -39,6 +41,5 @@
                 }
             }
         }
-    },
-    "required":["type","field"]
+    }
 }

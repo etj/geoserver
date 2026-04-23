@@ -46,11 +46,11 @@ public class ImportTransformTest extends ImporterTestSupport {
         store = cat.getFactory().createDataStore();
         store.setWorkspace(cat.getDefaultWorkspace());
         store.setName("spearfish");
-        store.setType("GeoPackage");
+        store.setType("H2");
 
         Map<String, Serializable> params = new HashMap<>();
-        params.put("database", getTestData().getDataDirectoryRoot().getPath() + "/spearfish.gpkg");
-        params.put("dbtype", "geopkg");
+        params.put("database", getTestData().getDataDirectoryRoot().getPath() + "/spearfish");
+        params.put("dbtype", "h2");
         store.getConnectionParameters().putAll(params);
         store.setEnabled(true);
         cat.add(store);

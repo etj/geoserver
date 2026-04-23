@@ -44,7 +44,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class ImportTransformController extends ImportBaseController {
 
     @Autowired
-    public ImportTransformController(Importer importer) {
+    protected ImportTransformController(Importer importer) {
         super(importer);
     }
 

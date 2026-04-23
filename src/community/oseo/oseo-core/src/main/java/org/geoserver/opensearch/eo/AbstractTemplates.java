@@ -33,7 +33,7 @@ public abstract class AbstractTemplates {
         this.dd = dd;
     }
 
-    public static NamespaceSupport getNamespaces(FeatureSource<FeatureType, Feature> fs) {
+    static NamespaceSupport getNamespaces(FeatureSource<FeatureType, Feature> fs) {
         // collect properties from all namespaces
         FeatureType schema = fs.getSchema();
         NamespaceSupport namespaces = new NamespaceSupport();

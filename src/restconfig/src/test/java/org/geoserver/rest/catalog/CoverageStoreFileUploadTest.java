@@ -15,7 +15,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -23,14 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.io.FileUtils;
@@ -84,11 +78,11 @@ public class CoverageStoreFileUploadTest extends CatalogRESTTestSupport {
         super.onSetUp(testData);
 
         CatalogBuilder cb = new CatalogBuilder(getCatalog());
-        DataStoreInfo store = cb.buildDataStore("gpkg_test");
-        store.getConnectionParameters().put("dbtype", "geopkg");
+        DataStoreInfo store = cb.buildDataStore("h2test");
+        store.getConnectionParameters().put("dbtype", "h2");
         store.getConnectionParameters()
                 .put("database", new File(getDataDirectory().findOrCreateDir("data"), "h2_test").getAbsolutePath());
-        store.getConnectionParameters().put("read_only", false);
+        store.getConnectionParameters().put("MVCC", true);
         catalog.save(store);
     }
 
@@ -112,34 +106,6 @@ public class CoverageStoreFileUploadTest extends CatalogRESTTestSupport {
         assertNotNull(cs);
         CoverageInfo ci = getCatalog().getCoverageByName("sf", "usa");
         assertNotNull(ci);
-    }
-
-    /** uploads a file with an invalid file type (ELF). Should throw. */
-    @Test
-    public void testInvalidFileUpload() throws Exception {
-        assertThrows(Throwable.class, () -> {
-            uploadWorldImage("test-data/elf-signature-file.elf", "image/png");
-        });
-    }
-
-    /** uploads a zip file with an invalid file type (ELF). Should throw. */
-    @Test
-    public void testInvalidFileUploadZip() throws Exception {
-        assertThrows(Throwable.class, () -> {
-            uploadWorldImage("test-data/elf-signature-file.zip", "application/zip");
-        });
-    }
-
-    /**
-     * uploads a zip file with a valid world dataset PLUS an invalid file type (ELF). Should throw.
-     *
-     * <p>This is a zip file with a valid worldImage, but an extra ELF file.
-     */
-    @Test
-    public void testInvalidFileUploadZip2() throws Exception {
-        assertThrows(Throwable.class, () -> {
-            uploadWorldImage("test-data/elf-signature-file-world.zip", "application/zip");
-        });
     }
 
     @Test
@@ -212,7 +178,7 @@ public class CoverageStoreFileUploadTest extends CatalogRESTTestSupport {
         assertEquals(storeInfo, ci.getStore());
 
         // check harvesting happened as expected
-        DataStore ds = (DataStore) getCatalog().getDataStoreByName("gpkg_test").getDataStore(null);
+        DataStore ds = (DataStore) getCatalog().getDataStoreByName("h2test").getDataStore(null);
         assertNotNull(ds);
         SimpleFeatureSource fs = ds.getFeatureSource("watertemp-repo");
         assertNotNull(fs);
@@ -421,8 +387,7 @@ public class CoverageStoreFileUploadTest extends CatalogRESTTestSupport {
             assertNotNull(metadataNames);
             assertEquals("true", reader2.getMetadataValue("HAS_TIME_DOMAIN"));
             assertEquals(
-                    adjustExpectedForCurrentTimezone(
-                            "2008-10-31T00:00:00.000Z,2008-11-01T00:00:00.000Z,2008-11-02T00:00:00.000Z"),
+                    "2008-10-31T00:00:00.000Z,2008-11-01T00:00:00.000Z,2008-11-02T00:00:00.000Z",
                     reader2.getMetadataValue(metadataNames[0]));
             // Removal of all the data associated to the mosaic
             reader2.delete(true);
@@ -532,7 +497,7 @@ public class CoverageStoreFileUploadTest extends CatalogRESTTestSupport {
             CoverageStoreInfo storeInfo, byte[] bytes, String filename) throws Exception {
         // Create the POST request
         MockHttpServletRequest request = createRequest(RestBaseController.ROOT_PATH
-                + "/workspaces/gs/coveragestores/watertemp5/file.geotiff?filename="
+                + "/workspaces/gs/coveragestores/watertemp5/file.imagemosaic?filename="
                 + filename);
         request.setMethod("POST");
         request.setContentType("image/tiff");
@@ -547,34 +512,10 @@ public class CoverageStoreFileUploadTest extends CatalogRESTTestSupport {
         String[] metadataNames = reader2.getMetadataNames();
         assertNotNull(metadataNames);
         assertEquals("true", reader2.getMetadataValue("HAS_TIME_DOMAIN"));
-        String expectedNormalized = adjustExpectedForCurrentTimezone(
-                "2008-10-31T00:00:00.000Z,2008-11-01T00:00:00.000Z,2008-11-02T00:00:00.000Z");
-        assertEquals(expectedNormalized, reader2.getMetadataValue(metadataNames[0]));
-
+        assertEquals(
+                "2008-10-31T00:00:00.000Z,2008-11-01T00:00:00.000Z,2008-11-02T00:00:00.000Z",
+                reader2.getMetadataValue(metadataNames[0]));
         return reader2;
-    }
-
-    /**
-     * Once sqlite is initialized (geopackage) changing the jvm timezone does nothing, this adapts the expected value to
-     * the current timezone instead of GMT. GeoPackage converts to GMT using GeoTools DateTimeParser based on
-     * java.util.Date, resulting in different offsets then using Instand and ZonedDateTime. See GEOT-7870.
-     */
-    private String adjustExpectedForCurrentTimezone(String expectedGMT) {
-        return Arrays.stream(expectedGMT.split(","))
-                .map(String::trim)
-                .map(ts -> {
-                    Instant instant = Instant.parse(ts);
-                    String dateText = ts.substring(0, ts.indexOf("T")) + "T00:00:00";
-                    ZonedDateTime dateTime = LocalDateTime.parse(dateText)
-                            .atZone(Clock.systemDefaultZone().getZone());
-                    int offset = dateTime.getOffset().getTotalSeconds();
-
-                    // Adjust by the offset
-                    Instant adjusted = instant.minusSeconds(offset);
-
-                    return adjusted.toString().replace("Z", ".000Z");
-                })
-                .collect(Collectors.joining(","));
     }
 
     private Resource readMosaic() throws FactoryException, IOException {
@@ -870,29 +811,6 @@ public class CoverageStoreFileUploadTest extends CatalogRESTTestSupport {
             System.clearProperty(GEOSERVER_DATA_SANDBOX);
             fam.reload();
         }
-    }
-
-    /**
-     * Upload a world image file.
-     *
-     * <p>see {link uploadUSAWorldImage}
-     *
-     * @param fname where to get the data from
-     * @param contentType what to mark this file's contentType as
-     * @throws Exception something went from with the upload (including validating return)
-     */
-    private void uploadWorldImage(String fname, String contentType) throws Exception {
-        URL file = getClass().getResource(fname);
-        byte[] bytes = FileUtils.readFileToByteArray(URLs.urlToFile(file));
-
-        MockHttpServletResponse response = putAsServletResponse(
-                RestBaseController.ROOT_PATH + "/workspaces/sf/coveragestores/usa/file.worldimage", bytes, contentType);
-        assertEquals(201, response.getStatus());
-        assertEquals(MediaType.APPLICATION_XML_VALUE, response.getContentType());
-
-        String content = response.getContentAsString();
-        Document d = dom(new ByteArrayInputStream(content.getBytes()));
-        assertEquals("coverageStore", d.getDocumentElement().getNodeName());
     }
 
     private void uploadUSAWorldImage() throws Exception {

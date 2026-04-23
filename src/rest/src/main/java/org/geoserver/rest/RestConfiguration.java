@@ -4,15 +4,12 @@
  */
 package org.geoserver.rest;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.SLDHandler;
 import org.geoserver.catalog.StyleHandler;
@@ -28,23 +25,18 @@ import org.geoserver.rest.converters.XStreamCatalogListConverter;
 import org.geoserver.rest.converters.XStreamJSONMessageConverter;
 import org.geoserver.rest.converters.XStreamXMLMessageConverter;
 import org.geotools.util.Version;
-import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.format.FormatterRegistry;
-import org.springframework.format.support.FormattingConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.HttpMessageConverters;
 import org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
-import org.springframework.web.accept.ApiVersionStrategy;
 import org.springframework.web.accept.ContentNegotiationManager;
 import org.springframework.web.accept.ContentNegotiationStrategy;
-import org.springframework.web.accept.HeaderContentNegotiationStrategy;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
@@ -52,8 +44,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-import org.springframework.web.servlet.resource.ResourceUrlProvider;
 import org.springframework.web.util.UrlPathHelper;
 import org.xml.sax.EntityResolver;
 
@@ -113,7 +103,7 @@ public class RestConfiguration extends DelegatingWebMvcConfiguration {
     }
 
     @Override
-    protected void configureMessageConverters(HttpMessageConverters.ServerBuilder builder) {
+    protected void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         Catalog catalog = (Catalog) applicationContext.getBean("catalog");
 
         List<BaseMessageConverter> gsConverters = GeoServerExtensions.extensions(BaseMessageConverter.class);
@@ -134,27 +124,27 @@ public class RestConfiguration extends DelegatingWebMvcConfiguration {
                 gsConverters.add(new StyleWriterConverter(sh.mimeType(ver), ver, sh));
             }
         }
-
-        // Sort the converters based on ExtensionPriority
-        gsConverters.sort(Comparator.comparingInt(BaseMessageConverter::getPriority));
-
-        // make sure that Jaxb2RootElementHttpMessageConverter is the first one, otherwise Jackson
-        // will override and ignore Jaxb annotations
-        builder.addCustomConverter(new Jaxb2RootElementHttpMessageConverter());
-
         // Add GWC REST converter (add it first, since it has stricter constraints than the defalt
         // GS XML converters)
         if (applicationContext.containsBean("gwcConverter")) {
-            builder.addCustomConverter((HttpMessageConverter<?>) applicationContext.getBean("gwcConverter"));
+            converters.add((HttpMessageConverter<?>) applicationContext.getBean("gwcConverter"));
         }
 
-        // add the geoserver ones
+        // Sort the converters based on ExtensionPriority
+        gsConverters.sort(Comparator.comparingInt(BaseMessageConverter::getPriority));
         for (BaseMessageConverter converter : gsConverters) {
-            builder.addCustomConverter(converter);
+            converters.add(converter);
         }
 
-        // the builder will also add the default ones after the custom ones registered above
-        builder.registerDefaults();
+        // make sure that Jaxb2RootElementHttpMessageConverter is the first one, otherwise Jackson
+        // will override and ignore Jaxb annotations
+        converters.removeIf(Jaxb2RootElementHttpMessageConverter.class::isInstance);
+        converters.add(0, new Jaxb2RootElementHttpMessageConverter());
+
+        // use the default ones as lowest priority
+        super.addDefaultHttpMessageConverters(converters);
+        // finally, allow any other WebMvcConfigurer in the application context to do its thing
+        super.configureMessageConverters(converters);
     }
 
     @Override
@@ -175,57 +165,58 @@ public class RestConfiguration extends DelegatingWebMvcConfiguration {
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
         // scan and register media types for style handlers
         List<StyleHandler> styleHandlers = GeoServerExtensions.extensions(StyleHandler.class);
-        Map<String, MediaType> mediaTypes = new LinkedHashMap<>();
         for (StyleHandler handler : styleHandlers) {
             if (handler.getVersions() != null && !handler.getVersions().isEmpty()) {
                 // Spring configuration allows associating a single mime to extensions, pick the
                 // latest
                 List<Version> versions = handler.getVersions();
                 final Version firstVersion = versions.get(versions.size() - 1);
-                mediaTypes.put(handler.getFormat(), MediaType.valueOf(handler.mimeType(firstVersion)));
+                configurer.mediaType(handler.getFormat(), MediaType.valueOf(handler.mimeType(firstVersion)));
             }
         }
         // manually force SLD to v10 for backwards compatibility
-        mediaTypes.put("sld", MediaType.valueOf(SLDHandler.MIMETYPE_10));
+        configurer.mediaType("sld", MediaType.valueOf(SLDHandler.MIMETYPE_10));
 
         // other common media types
-        mediaTypes.put("html", MediaType.TEXT_HTML);
-        mediaTypes.put("xml", MediaType.APPLICATION_XML);
-        mediaTypes.put("json", MediaType.APPLICATION_JSON);
-        mediaTypes.put("xslt", MediaType.valueOf("application/xslt+xml"));
-        mediaTypes.put("ftl", MediaType.TEXT_PLAIN);
-        mediaTypes.put("xml", MediaType.APPLICATION_XML);
-        configurer.mediaTypes(mediaTypes);
-        configurer.favorParameter(true);
+        configurer.mediaType("html", MediaType.TEXT_HTML);
+        configurer.mediaType("xml", MediaType.APPLICATION_XML);
+        configurer.mediaType("json", MediaType.APPLICATION_JSON);
+        configurer.mediaType("xslt", MediaType.valueOf("application/xslt+xml"));
+        configurer.mediaType("ftl", MediaType.TEXT_PLAIN);
+        configurer.mediaType("xml", MediaType.APPLICATION_XML);
+        configurer.favorParameter(true).favorPathExtension(true);
 
         // allow extension point configuration of media types
         List<MediaTypeCallback> callbacks = GeoServerExtensions.extensions(MediaTypeCallback.class);
         for (MediaTypeCallback callback : callbacks) {
-            callback.configure(mediaTypes);
+            callback.configure(configurer);
         }
 
-        // register the extensions in the suffix strip filter
-        Optional.ofNullable(GeoServerExtensions.bean(SuffixStripFilter.class, applicationContext))
-                .ifPresent(f -> mediaTypes.keySet().forEach(f::addExtension));
-
-        // Use explicit strategies – this replaces the old favorPathExtension + favorParameter combo
-        List<ContentNegotiationStrategy> strategies = new ArrayList<>();
-        strategies.add(new SuffixContentNegotiationStrategy(mediaTypes)); // .sld, .xml, etc.
-        strategies.add(new HeaderContentNegotiationStrategy()); // Accept: header
-        configurer.strategies(strategies);
+        //        configurer.favorPathExtension(true);
+        // todo properties files are only supported for test cases. should try to find a way to
+        // support them without polluting prod code with handling
+        //        configurer.mediaType("properties", MediaType.valueOf("application/prs.gs.psl"));
 
         // finally, allow any other WebMvcConfigurer in the application context to do its thing
         super.configureContentNegotiation(configurer);
     }
-
-    @SuppressWarnings("removal")
+    // PathMatchConfigurer.setUseSuffixPatternMatch is deprecated because Spring wants to
+    // discourage extensions in paths
+    @SuppressWarnings("deprecation")
     @Override
     public void configurePathMatch(PathMatchConfigurer configurer) {
-        // we should be using PathPatternParser, but most test fail when enabled, cause unknown
-        // delaying this upgrade until Spring 8 (when UrlPathHelper is removed)
+        // Force MVC to use /restng endpoint. If we need something more advanced, we should make a
+        // custom PathHelper
+
         GeoServerUrlPathHelper helper = new GeoServerUrlPathHelper();
         helper.setAlwaysUseFullPath(true);
         configurer.setUrlPathHelper(helper);
+        configurer.setUseSuffixPatternMatch(true);
+        configurer.setUseTrailingSlashMatch(Optional.ofNullable(geoServer)
+                .map(g -> g.getGlobal())
+                .map(g -> g.isTrailingSlashMatch())
+                .orElse(true));
+        // finally, allow any other WebMvcConfigurer in the application context to do its thing
         super.configurePathMatch(configurer);
     }
 
@@ -237,21 +228,6 @@ public class RestConfiguration extends DelegatingWebMvcConfiguration {
         }
         // finally, allow any other WebMvcConfigurer in the application context to do its thing
         super.addFormatters(registry);
-    }
-
-    @Override
-    protected RequestMappingHandlerMapping createRequestMappingHandlerMapping() {
-        return new SuffixAwareHandlerMapping();
-    }
-
-    @Override
-    public RequestMappingHandlerMapping requestMappingHandlerMapping(
-            ContentNegotiationManager contentNegotiationManager,
-            @Nullable ApiVersionStrategy apiVersionStrategy,
-            FormattingConversionService conversionService,
-            ResourceUrlProvider resourceUrlProvider) {
-        return super.requestMappingHandlerMapping(
-                contentNegotiationManager, apiVersionStrategy, conversionService, resourceUrlProvider);
     }
 
     static class GeoServerUrlPathHelper extends UrlPathHelper {

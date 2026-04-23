@@ -5,8 +5,6 @@
 
 package org.geoserver.elasticsearch;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.io.IOException;
 import java.io.Serial;
 import java.util.List;
@@ -48,19 +46,6 @@ import org.geotools.data.elasticsearch.ElasticLayerConfiguration;
 @SuppressWarnings("WeakerAccess")
 public class ElasticConfigurationPanel extends ResourceConfigurationPanel {
 
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(ElasticConfigurationPanel.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
-
     @Serial
     private static final long serialVersionUID = 3382530429105288433L;
 
@@ -78,8 +63,7 @@ public class ElasticConfigurationPanel extends ResourceConfigurationPanel {
         final FeatureTypeInfo fti = (FeatureTypeInfo) model.getObject();
 
         final GSModalWindow modal = new GSModalWindow("modal");
-        modal.setInitialWidth(850);
-        modal.setInitialHeight(550);
+        modal.setInitialWidth(800);
         modal.setTitle(new ParamResourceModel("modalTitle", this));
 
         if (fti.getMetadata().get(ElasticLayerConfiguration.KEY) == null) {
@@ -177,7 +161,7 @@ public class ElasticConfigurationPanel extends ResourceConfigurationPanel {
     /*
      * Open modal dialog on window load
      */
-    private static class OpenWindowOnLoadBehavior extends AbstractDefaultAjaxBehavior {
+    private class OpenWindowOnLoadBehavior extends AbstractDefaultAjaxBehavior {
         @Override
         protected void respond(AjaxRequestTarget target) {
             GSModalWindow window = (GSModalWindow) getComponent();

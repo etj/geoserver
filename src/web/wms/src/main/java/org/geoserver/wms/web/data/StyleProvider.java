@@ -89,10 +89,7 @@ public class StyleProvider extends GeoServerDataProvider<StyleInfo> {
 
     @Override
     public int fullSize() {
-        Filter filter = getContextFilter();
-        if (filter == null) {
-            filter = Predicates.acceptAll();
-        }
+        Filter filter = Predicates.acceptAll();
         int count = getCatalog().count(StyleInfo.class, filter);
         return count;
     }

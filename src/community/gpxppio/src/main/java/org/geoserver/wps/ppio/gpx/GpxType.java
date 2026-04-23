@@ -90,7 +90,7 @@ public class GpxType {
      */
     public List<WptType> getWpt() {
         if (wpt == null) {
-            wpt = new ArrayList<>();
+            wpt = new ArrayList<WptType>();
         }
 
         return this.wpt;
@@ -113,7 +113,7 @@ public class GpxType {
      */
     public List<RteType> getRte() {
         if (rte == null) {
-            rte = new ArrayList<>();
+            rte = new ArrayList<RteType>();
         }
 
         return this.rte;
@@ -136,7 +136,7 @@ public class GpxType {
      */
     public List<TrkType> getTrk() {
         if (trk == null) {
-            trk = new ArrayList<>();
+            trk = new ArrayList<TrkType>();
         }
 
         return this.trk;

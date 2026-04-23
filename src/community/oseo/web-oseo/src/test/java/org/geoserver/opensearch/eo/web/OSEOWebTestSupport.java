@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.List;
 import org.geoserver.data.test.SystemTestData;
 import org.geoserver.opensearch.eo.OSEOInfo;
-import org.geoserver.opensearch.eo.store.OSEOPostGISResource;
+import org.geoserver.opensearch.eo.store.GeoServerOpenSearchTestSupport;
 import org.geoserver.security.GeoServerRoleService;
 import org.geoserver.security.GeoServerRoleStore;
 import org.geoserver.security.GeoServerSecurityManager;
@@ -26,8 +26,6 @@ public abstract class OSEOWebTestSupport extends GeoServerWicketTestSupport {
     protected List<String> collectionNames;
     protected String openSearchAccessStoreId;
 
-    protected abstract OSEOPostGISResource getOSEOPostGIS();
-
     @Override
     protected void setUpTestData(SystemTestData testData) throws Exception {
         // no data to setup
@@ -37,7 +35,7 @@ public abstract class OSEOWebTestSupport extends GeoServerWicketTestSupport {
     protected void onSetUp(SystemTestData testData) throws Exception {
         super.onSetUp(testData);
 
-        getOSEOPostGIS().setupBasicOpenSearch(getCatalog(), getGeoServer());
+        GeoServerOpenSearchTestSupport.setupBasicOpenSearch(testData, getCatalog(), getGeoServer(), true);
         OSEOInfo service = getGeoServer().getService(OSEOInfo.class);
         openSearchAccessStoreId = service.getOpenSearchAccessStoreId();
     }

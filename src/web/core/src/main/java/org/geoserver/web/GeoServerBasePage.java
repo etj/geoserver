@@ -5,18 +5,17 @@
  */
 package org.geoserver.web;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
@@ -29,19 +28,16 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.head.PriorityHeaderItem;
-import org.apache.wicket.markup.html.WebComponent;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.image.ContextImage;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
@@ -51,7 +47,6 @@ import org.apache.wicket.request.mapper.parameter.INamedParameters.Type;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.resource.JQueryResourceReference;
-import org.apache.wicket.util.string.Strings;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.config.GeoServer;
 import org.geoserver.ows.URLMangler;
@@ -63,7 +58,6 @@ import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.web.spring.security.GeoServerSession;
 import org.geoserver.web.util.LocalizationsFinder;
 import org.geoserver.web.wicket.GeoServerTablePanel;
-import org.geoserver.web.wicket.GsIcon;
 import org.geoserver.web.wicket.LoggedInUserLabel;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geotools.util.logging.Logging;
@@ -102,9 +96,6 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
     /** page class for this page to return to when the page is finished, could be null. */
     protected Class<? extends Page> returnPageClass;
 
-    /** optional page parameters to use when navigating to {@link #returnPageClass}. */
-    protected PageParameters returnPageParams;
-
     public static final String VERSION_3 = "jquery/jquery-3.5.1.js";
 
     protected GeoServerBasePage(final PageParameters parameters) {
@@ -141,7 +132,13 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
         add(new ExternalLink("faviconLink", faviconUrl, null));
 
         // page title
-        add(new Label("pageTitle", LambdaModel.of(this::getPageTitle)));
+        add(new Label("pageTitle", new LoadableDetachableModel<String>() {
+
+            @Override
+            protected String load() {
+                return getPageTitle();
+            }
+        }));
 
         // login / logout stuff
         GeoServerSecurityManager securityManager = getGeoServerApplication().getSecurityManager();
@@ -188,30 +185,28 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
                     }
                 };
 
-                WebComponent image = resolveLoginIcon(info);
+                Image image;
+                if (info.getIcon() != null) {
+                    image = new Image(
+                            "link.icon", new PackageResourceReference(info.getComponentClass(), info.getIcon()));
+                } else {
+                    image = new Image(
+                            "link.icon",
+                            new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/door-in.png"));
+                }
 
                 loginForm.add(image);
                 if (info.getTitleKey() != null && !info.getTitleKey().isEmpty()) {
                     loginForm.add(new Label("link.label", new StringResourceModel(info.getTitleKey(), null, null)));
+                    image.add(AttributeModifier.replace("alt", new ParamResourceModel(info.getTitleKey(), null)));
                 } else {
                     loginForm.add(new Label("link.label", ""));
                 }
 
-                String redirectUrl = null;
-                if (org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationFilter.class
-                        .getName()
-                        .equals(info.getFilterClass().getName())) {
-                    String ws = getPageParameters().get("workspace").toOptionalString();
-                    if (ws != null && !ws.isEmpty()) {
-                        redirectUrl = "/web/?workspace=" + ws;
-                    }
-                }
                 LoginFormHTMLInclude include;
                 if (info.getInclude() != null) {
                     include = new LoginFormHTMLInclude(
-                            "login.include",
-                            new PackageResourceReference(info.getComponentClass(), info.getInclude()),
-                            redirectUrl);
+                            "login.include", new PackageResourceReference(info.getComponentClass(), info.getInclude()));
                 } else {
                     include = new LoginFormHTMLInclude("login.include", null);
                 }
@@ -243,11 +238,20 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
                     }
                 };
 
-                WebComponent image = resolveLoginIcon(info);
+                Image image;
+                if (info.getIcon() != null) {
+                    image = new Image(
+                            "link.icon", new PackageResourceReference(info.getComponentClass(), info.getIcon()));
+                } else {
+                    image = new Image(
+                            "link.icon",
+                            new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/door-in.png"));
+                }
 
                 loginForm.add(image);
                 if (info.getTitleKey() != null && !info.getTitleKey().isEmpty()) {
                     loginForm.add(new Label("link.label", new StringResourceModel(info.getTitleKey(), null, null)));
+                    image.add(AttributeModifier.replace("alt", new ParamResourceModel(info.getTitleKey(), null)));
                 } else {
                     loginForm.add(new Label("link.label", ""));
                 }
@@ -280,10 +284,12 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
         };
         add(logoutForm);
 
-        WebComponent image = new GsIcon("link.icon", "gs-icon-door-out");
+        Image image = new Image(
+                "link.icon", new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/door-out.png"));
 
         logoutForm.add(image);
         logoutForm.add(new Label("link.label", new StringResourceModel("logout", null, null)));
+        image.add(AttributeModifier.replace("alt", new ParamResourceModel("logout", null)));
         logoutForm.setVisible(!anonymous);
 
         // home page link
@@ -319,24 +325,11 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
             @Override
             public void populateItem(ListItem<MenuPageInfo<GeoServerBasePage>> item) {
                 MenuPageInfo<GeoServerBasePage> info = item.getModelObject();
-                final Map<String, String> ctxParams = collectContextParams(info);
-                PageParameters linkParams = new PageParameters();
-                ctxParams.forEach(linkParams::add);
                 BookmarkablePageLink<GeoServerBasePage> link =
-                        new BookmarkablePageLink<>("link", info.getComponentClass(), linkParams);
+                        new BookmarkablePageLink<>("link", info.getComponentClass());
                 link.add(AttributeModifier.replace(
                         "title", new StringResourceModel(info.getDescriptionKey(), null, null)));
-                final StringResourceModel baseTitle = new StringResourceModel(info.getTitleKey(), null, null);
-                link.add(new Label("link.label", baseTitle));
-                WebMarkupContainer ctxIndicator = new WebMarkupContainer("link.ctxIndicator");
-                String ctxTitle = buildContextTitle(ctxParams);
-                if (!ctxTitle.isEmpty()) {
-                    ctxIndicator.add(AttributeModifier.replace("title", ctxTitle));
-                    ctxIndicator.add(AttributeModifier.append("class", buildContextIndicatorClass(ctxParams)));
-                } else {
-                    ctxIndicator.setVisible(false);
-                }
-                link.add(ctxIndicator);
+                link.add(new Label("link.label", new StringResourceModel(info.getTitleKey(), null, null)));
                 item.add(link);
             }
         });
@@ -346,10 +339,20 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
         add(bottomFeedbackPanel = new FeedbackPanel("bottomFeedback"));
         bottomFeedbackPanel.setOutputMarkupId(true);
 
+        // ajax feedback image
+        add(new Image(
+                "ajaxFeedbackImage", new PackageResourceReference(GeoServerBasePage.class, "img/ajax-loader.gif")));
+
         add(new WebMarkupContainer(HEADER_PANEL));
 
         // allow the subclasses to initialize before getTitle/getDescription are called
-        add(new Label("gbpTitle", LambdaModel.of(this::getTitle)));
+        add(new Label("gbpTitle", new LoadableDetachableModel<String>() {
+
+            @Override
+            protected String load() {
+                return getTitle();
+            }
+        }));
         Label gbpDescription = new Label("gbpDescription", new LoadableDetachableModel<String>() {
 
             @Override
@@ -374,16 +377,6 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
 
         // locale switcher
         add(localeSwitcher());
-
-        // sidebar
-        boolean legacyHome = (this instanceof GeoServerHomePage) && GeoServerHomePage.isLegacyHomepageSelectorEnabled();
-        NavigationTreePanel sidebar = new NavigationTreePanel("sidebar");
-        sidebar.setOutputMarkupId(true);
-        sidebar.setVisible(!legacyHome);
-        add(sidebar);
-        BreadcrumbNavigationPanel breadcrumb = new BreadcrumbNavigationPanel("breadcrumbPanel");
-        breadcrumb.setVisible(!legacyHome);
-        add(breadcrumb);
     }
 
     private Component localeSwitcher() {
@@ -444,40 +437,6 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
                 .orElse(Locale.ENGLISH);
     }
 
-    /**
-     * Collects the context page parameters (workspace, layer, group, name) that the given {@link ComponentInfo} wants
-     * forwarded in its navigation link, based on its {@code contextParams} setting.
-     */
-    private Map<String, String> collectContextParams(ComponentInfo<?> info) {
-        PageParameters currentParams = getPageParameters();
-        Map<String, String> result = new LinkedHashMap<>();
-        for (String paramName : List.of("workspace", "layer", "group", "name")) {
-            if (info.includesContextParam(paramName)) {
-                String value = currentParams.get(paramName).toOptionalString();
-                if (!Strings.isEmpty(value)) {
-                    result.put(paramName, value);
-                }
-            }
-        }
-        return result;
-    }
-
-    /** Builds a display title from context params, joining values with " > " (e.g. "ws > layerName"). */
-    private String buildContextTitle(Map<String, String> ctxParams) {
-        return String.join(" > ", ctxParams.values());
-    }
-
-    /**
-     * Returns the CSS modifier class for the context indicator based on the most specific param that the link will
-     * actually forward (as captured in {@code ctxParams}), so the icon matches the link's navigation destination scope.
-     */
-    private String buildContextIndicatorClass(Map<String, String> ctxParams) {
-        if (ctxParams.containsKey("group")) return "gs-ctx-indicator--group";
-        if (ctxParams.containsKey("layer") || ctxParams.containsKey("name")) return "gs-ctx-indicator--layer";
-        if (ctxParams.containsKey("workspace")) return "gs-ctx-indicator--workspace";
-        return "";
-    }
-
     private void createCategoryComponent(
             ListItem<Category> item, Category category, Map<Category, List<MenuPageInfo<GeoServerBasePage>>> links) {
         item.add(new Label("category.header", new StringResourceModel(category.getNameKey(), null, null)));
@@ -491,75 +450,28 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
 
     private void createMenuComponent(ListItem<MenuPageInfo<GeoServerBasePage>> item) {
         MenuPageInfo<GeoServerBasePage> info = item.getModelObject();
-        final Map<String, String> ctxParams = collectContextParams(info);
-        PageParameters linkParams = new PageParameters();
-        linkParams.add(GeoServerTablePanel.FILTER_PARAM, false, Type.PATH);
-        ctxParams.forEach(linkParams::add);
-        BookmarkablePageLink<Page> link = new BookmarkablePageLink<>("link", info.getComponentClass(), linkParams);
+        BookmarkablePageLink<Page> link = new BookmarkablePageLink<>("link", info.getComponentClass()) {
+
+            @Override
+            public PageParameters getPageParameters() {
+                PageParameters pageParams = super.getPageParameters();
+                pageParams.add(GeoServerTablePanel.FILTER_PARAM, false, Type.PATH);
+                return pageParams;
+            }
+        };
 
         link.add(AttributeModifier.replace("title", new StringResourceModel(info.getDescriptionKey(), null, null)));
-        final StringResourceModel baseTitle = new StringResourceModel(info.getTitleKey(), null, null);
-        link.add(new Label("link.label", baseTitle));
-        WebMarkupContainer ctxIndicator = new WebMarkupContainer("link.ctxIndicator");
-        String ctxTitle = buildContextTitle(ctxParams);
-        if (!ctxTitle.isEmpty()) {
-            ctxIndicator.add(AttributeModifier.replace("title", ctxTitle));
-            ctxIndicator.add(AttributeModifier.append("class", buildContextIndicatorClass(ctxParams)));
+        link.add(new Label("link.label", new StringResourceModel(info.getTitleKey(), null, null)));
+        Image image;
+        if (info.getIcon() != null) {
+            image = new Image("link.icon", new PackageResourceReference(info.getComponentClass(), info.getIcon()));
         } else {
-            ctxIndicator.setVisible(false);
+            image = new Image(
+                    "link.icon", new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/wrench.png"));
         }
-        link.add(ctxIndicator);
-        WebComponent image = getComponentIcon(info);
         image.add(AttributeModifier.replace("alt", new ParamResourceModel(info.getTitleKey(), null)));
         link.add(image);
         item.add(link);
-    }
-
-    private WebComponent getComponentIcon(MenuPageInfo info) {
-        return resolveIcon("link.icon", info.getIcon(), info.getComponentClass(), "gs-icon-wrench");
-    }
-
-    private WebComponent resolveLoginIcon(LoginFormInfo info) {
-        return resolveIcon("link.icon", info.getIcon(), info.getComponentClass(), "gs-icon-door-in");
-    }
-
-    /**
-     * Resolves an icon value to a WebComponent. Supports three formats:
-     *
-     * <ul>
-     *   <li>{@code gs-icon-*} CSS class → {@link GsIcon}
-     *   <li>{@code /path} context-relative path → {@link ContextImage}
-     *   <li>bare filename → {@link Image} loaded from {@code componentClass} package resources
-     * </ul>
-     *
-     * Falls back to {@code defaultCssClass} when {@code iconValue} is null or empty.
-     */
-    private WebComponent resolveIcon(
-            String wicketId, String iconValue, Class<?> componentClass, String defaultCssClass) {
-        if (iconValue != null && !iconValue.isEmpty()) {
-            if (iconValue.startsWith("gs-icon")) {
-                return new GsIcon(wicketId, iconValue);
-            }
-
-            if (iconValue.startsWith("/")) {
-                return new ContextImage(wicketId, iconValue.substring(1)) {
-                    @Override
-                    protected void onComponentTag(org.apache.wicket.markup.ComponentTag tag) {
-                        tag.setName("img");
-                        super.onComponentTag(tag);
-                    }
-                };
-            }
-
-            return new Image(wicketId, new PackageResourceReference(componentClass, iconValue)) {
-                @Override
-                protected void onComponentTag(org.apache.wicket.markup.ComponentTag tag) {
-                    tag.setName("img");
-                    super.onComponentTag(tag);
-                }
-            };
-        }
-        return new GsIcon(wicketId, defaultCssClass);
     }
 
     private String getResourcePath(String path) {
@@ -571,22 +483,27 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
     @Override
     public void renderHead(IHeaderResponse response) {
 
-        // includes jquery, required by the placeholder plugin (wicket only include jquery if needed)
+        // includes jquery, required by the placeholder plugin (wicket only include jquery if he
+        // need it)
         response.render(new PriorityHeaderItem(JavaScriptHeaderItem.forReference(JQueryResourceReference.INSTANCE_3)));
-        // Grab the application once — versioned() is a trivial cache lookup after first call
-        GeoServerApplication app = getGeoServerApplication();
+        response.render(CssReferenceHeaderItem.forReference(
+                new PackageResourceReference(GeoServerBasePage.class, "css/blueprint/screen.css"),
+                "screen, projection"));
+        response.render(CssReferenceHeaderItem.forReference(
+                new PackageResourceReference(GeoServerBasePage.class, "css/blueprint/print.css"), "print"));
+        response.render(CssReferenceHeaderItem.forReference(
+                new PackageResourceReference(GeoServerBasePage.class, "css/bootstrap-utilities.min.css"), "all"));
+        response.render(CssReferenceHeaderItem.forReference(
+                new PackageResourceReference(GeoServerBasePage.class, "css/geoserver.css"), "screen, projection"));
+        response.render(JavaScriptHeaderItem.forReference(
+                new PackageResourceReference(GeoServerBasePage.class, "js/jquery.placeholder.js")));
+        response.render(JavaScriptHeaderItem.forReference(
+                new PackageResourceReference(GeoServerBasePage.class, "js/jquery.fullscreen.js")));
 
-        // CSS — each file gets its own hash, so changing one doesn't bust the others
-        response.render(CssReferenceHeaderItem.forUrl(app.versioned("css/blueprint/print.css"), "print"));
-        response.render(CssReferenceHeaderItem.forUrl(app.versioned("css/geoserver.css"), "screen, projection"));
+        response.render(JavaScriptHeaderItem.forReference(
+                new PackageResourceReference(GeoServerBasePage.class, "js/jquery.hide.ajaxFeedback.js")));
 
-        // JavaScript
-        response.render(JavaScriptHeaderItem.forUrl(app.versioned("js/geoserver.js")));
-        response.render(JavaScriptHeaderItem.forUrl(app.versioned("js/jquery.placeholder.js")));
-        response.render(JavaScriptHeaderItem.forUrl(app.versioned("js/jquery.fullscreen.js")));
-        response.render(JavaScriptHeaderItem.forUrl(app.versioned("js/jquery.hide.ajaxFeedback.js")));
-
-        // Due to CSPontent-security-policy, JS must be rendered by Wicket.  This inits the textboxes
+        // due to Content-security-policy, JS must be rendered by Wicket.  This inits the textboxes
         // for placeholders.
         response.render(OnDomReadyHeaderItem.forScript("$('input, textarea').placeholder();"));
 
@@ -627,11 +544,6 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
         return NODE_INFO;
     }
 
-    /**
-     * Get title displayed at the top of the page in {@code page-header} h1.
-     *
-     * @return title displayed at the top of the page.
-     */
     protected String getTitle() {
         return new ParamResourceModel("title", this).getString();
     }
@@ -640,10 +552,7 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
         return new ParamResourceModel("description", this).getString();
     }
 
-    /**
-     * Gets the page title as included in page header, from the PageName.title resource, falling back on "GeoServer" if
-     * not found
-     */
+    /** Gets the page title from the PageName.title resource, falling back on "GeoServer" if not found */
     String getPageTitle() {
         try {
             return "GeoServer: " + getTitle();
@@ -752,17 +661,6 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
     }
 
     /**
-     * Sets the return page class and parameters to navigate to when this page is done its task.
-     *
-     * @see #doReturn()
-     */
-    public GeoServerBasePage setReturnPage(Class<? extends Page> returnPageClass, PageParameters returnPageParams) {
-        this.returnPageClass = returnPageClass;
-        this.returnPageParams = returnPageParams;
-        return this;
-    }
-
-    /**
      * Returns from the page by navigating to one of {@link #returnPage} or {@link #returnPageClass}, processed in that
      * order.
      *
@@ -786,21 +684,17 @@ public class GeoServerBasePage extends WebPage implements IAjaxIndicatorAware {
      * then {@link GeoServerHomePage} is used.
      */
     protected void doReturn(Class<? extends Page> defaultPageClass) {
-        String ws = getPageParameters().get("workspace").toOptionalString();
-        PageParameters currentParams = (ws != null && !ws.isEmpty()) ? new PageParameters().add("workspace", ws) : null;
-
         if (returnPage != null) {
             setResponsePage(returnPage);
             return;
         }
         if (returnPageClass != null) {
-            PageParameters params = returnPageParams != null ? returnPageParams : currentParams;
-            setResponsePage(returnPageClass, params);
+            setResponsePage(returnPageClass);
             return;
         }
 
         defaultPageClass = defaultPageClass != null ? defaultPageClass : GeoServerHomePage.class;
-        setResponsePage(defaultPageClass, currentParams);
+        setResponsePage(defaultPageClass);
     }
 
     public void addFeedbackPanels(AjaxRequestTarget target) {

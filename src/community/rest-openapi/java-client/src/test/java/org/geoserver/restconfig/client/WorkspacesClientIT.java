@@ -14,22 +14,15 @@ import org.geoserver.openapi.model.catalog.WorkspaceInfo;
 import org.geoserver.openapi.v1.model.WorkspaceSummary;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
 import org.junit.rules.TestName;
 import org.mockito.internal.util.collections.Sets;
 
 /** Integration test suite for {@link WorkspacesClient} */
 public class WorkspacesClientIT {
 
-    private static GeoServerContainer geoserverContainer = new GeoServerContainer();
-
-    private static IntegrationTestSupport support = new IntegrationTestSupport(geoserverContainer);
-
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(geoserverContainer).around(support);
+    public @Rule IntegrationTestSupport support = new IntegrationTestSupport();
 
     private WorkspacesClient client;
 

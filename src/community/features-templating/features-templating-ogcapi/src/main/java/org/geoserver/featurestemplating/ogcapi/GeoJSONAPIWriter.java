@@ -6,6 +6,7 @@ package org.geoserver.featurestemplating.ogcapi;
 
 import static org.geoserver.featurestemplating.builders.EncodingHints.isSingleFeatureRequest;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,7 +20,6 @@ import org.geoserver.ogcapi.v1.features.FeaturesResponse;
 import org.geoserver.ows.URLMangler;
 import org.geoserver.ows.util.ResponseUtils;
 import org.springframework.http.MediaType;
-import tools.jackson.core.JsonGenerator;
 
 public class GeoJSONAPIWriter extends GeoJSONWriter {
 

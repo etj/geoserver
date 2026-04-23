@@ -4,14 +4,13 @@
  */
 package org.geoserver.security;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 import org.geoserver.config.impl.GeoServerLifecycleHandler;
 import org.geoserver.security.config.BruteForcePreventionConfig;
 import org.geotools.util.logging.Logging;
@@ -31,8 +30,6 @@ public class BruteForceListener implements ApplicationListener<AbstractAuthentic
 
     static final Logger LOGGER = Logging.getLogger(BruteForceListener.class);
 
-    private static final ThreadLocal<Boolean> THROTTLING_DISABLED = new ThreadLocal<>();
-
     /**
      * Simple single node delayed login tracker. Should be made pluggable to allow by some sort of network service for a
      * clustered installation
@@ -43,42 +40,6 @@ public class BruteForceListener implements ApplicationListener<AbstractAuthentic
 
     public BruteForceListener(GeoServerSecurityManager securityManager) {
         this.securityManager = securityManager;
-    }
-
-    /**
-     * Executes a task with authentication throttling disabled for the current thread.
-     *
-     * @param task the task to execute
-     * @param <V> the return type of the task
-     * @return the result of the task
-     * @throws Exception if the task fails
-     */
-    public static <V> V withThrottlingDisabled(Callable<V> task) throws Exception {
-        Boolean previous = THROTTLING_DISABLED.get();
-        try {
-            setThrottlingDisabled(true);
-            return task.call();
-        } finally {
-            if (Boolean.TRUE.equals(previous)) {
-                THROTTLING_DISABLED.set(Boolean.TRUE);
-            } else {
-                THROTTLING_DISABLED.remove();
-            }
-        }
-    }
-
-    /**
-     * Disables the authentication delay for the current thread. This is useful for internal geoserver checks that don't
-     * want to wait for the brute force delay
-     *
-     * @param disabled true to disable, false to enable
-     */
-    private static void setThrottlingDisabled(boolean disabled) {
-        if (disabled) {
-            THROTTLING_DISABLED.set(Boolean.TRUE);
-        } else {
-            THROTTLING_DISABLED.remove();
-        }
     }
 
     private BruteForcePreventionConfig getConfig() {
@@ -92,10 +53,6 @@ public class BruteForceListener implements ApplicationListener<AbstractAuthentic
 
     @Override
     public void onApplicationEvent(AbstractAuthenticationEvent event) {
-        if (Boolean.TRUE.equals(THROTTLING_DISABLED.get())) {
-            return;
-        }
-
         // is it enabled?
         BruteForcePreventionConfig config = getConfig();
         if (!config.isEnabled()) {
@@ -115,7 +72,6 @@ public class BruteForceListener implements ApplicationListener<AbstractAuthentic
             LOGGER.warning("Brute force attack prevention enabled, but Spring Authentication "
                     + "does not provide a user name, skipping: "
                     + authentication);
-            return;
         }
 
         // do we have a delayed login in flight already? If so, kill this login attempt
@@ -162,8 +118,7 @@ public class BruteForceListener implements ApplicationListener<AbstractAuthentic
         return config.getWhitelistAddressMatchers().stream().anyMatch(matcher -> matcher.matches(request));
     }
 
-    @com.google.common.annotations.VisibleForTesting
-    long computeDelay(BruteForcePreventionConfig config) {
+    private long computeDelay(BruteForcePreventionConfig config) {
         long min = config.getMinDelaySeconds() * 1000;
         long max = config.getMaxDelaySeconds() * 1000;
         return min + (long) ((max - min) * ThreadLocalRandom.current().nextDouble());

@@ -6,11 +6,11 @@ package org.geoserver.vectormosaic.rest;
 
 import static org.geotools.data.util.PropertiesTransformer.paramsStringToProperties;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.platform.GeoServerExtensions;
@@ -161,7 +161,7 @@ public class VectorMosaicStoreController extends AbstractStoreUploadController {
             // Prepare the directory for file upload or external upload of a zip file
             directory = RESTUtils.createUploadRoot(catalog, workspaceName, storeName, postRequest);
         }
-        return handleFileUpload(storeName, workspaceName, null, method, format, directory, request, null);
+        return handleFileUpload(storeName, workspaceName, null, method, format, directory, request);
     }
 
     /** Return the remote URL provided in the request. */

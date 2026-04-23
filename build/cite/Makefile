@@ -51,12 +51,8 @@ ifndef suite
 	@echo "Error: suite is not specified. Please specify the suite to build the GeoServer Docker image for."
 	@exit 1
 endif
-ifndef java-version
-	@echo "Error: java-version is not specified. Please specify the Java version to build the GeoServer Docker image for."
-	@exit 1
-endif
-	@echo Building the GeoServer Docker Image for the $(suite) test suite with Java $(java-version)
-	@JAVA_VERSION=$(java-version) docker compose -f compose.yml -f ./$(suite)/compose.override.yml \
+	@echo Building the GeoServer Docker Image for the $(suite) test suite
+	@docker compose -f compose.yml -f ./$(suite)/compose.override.yml \
 	  build --no-cache --build-arg SOURCE_FILE=${war_url} geoserver
 
 # If there's a $suite/build-ets.sh file calls it, otherwise exists silently
@@ -271,14 +267,9 @@ pull: $(suite)
 
 .PHONY: build-war
 build-war:
-	# a single mvn package -pl :gs-web-app -am should work but it seems it doesn't take into account test dependencies
-	# so it fails when the version number changes (e.g. 2.28-SNAPSHOT -> 3.0-SNAPSHOT)
-	@mvn clean install -f ../../src/pom.xml \
-	-Pogcapi-features,ogcapi-tiles,geopkg-output,app-schema,wcs10,wcs11 \
-	-DskipTests  -B -ntp -U -T1C
-	@mvn package -f ../../src/pom.xml \
-	-Pogcapi-features,ogcapi-tiles,geopkg-output,wcs10,wcs11 \
-	-DskipTests -B -nsu -ntp -T1C -pl :gs-web-app -am
+	@mvn -Pogcapi-features,ogcapi-tiles,geopkg-output \
+	clean package -f ../../src/pom.xml \
+	-DskipTests  -B -ntp -U -T1C -fae -pl :gs-web-app -am
 
 .PHONY: copy-war
 copy-war:

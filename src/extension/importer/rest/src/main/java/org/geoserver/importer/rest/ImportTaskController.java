@@ -4,9 +4,6 @@
  */
 package org.geoserver.importer.rest;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -16,10 +13,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.fileupload2.core.DiskFileItem;
-import org.apache.commons.fileupload2.core.DiskFileItemFactory;
-import org.apache.commons.fileupload2.core.FileUploadException;
-import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogBuilder;
@@ -51,8 +53,6 @@ import org.geotools.api.referencing.NoSuchAuthorityCodeException;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 import org.geotools.referencing.CRS;
 import org.geotools.util.logging.Logging;
-import org.kordamp.json.JSONException;
-import org.kordamp.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -68,6 +68,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
 
 @RestController
 @RequestMapping(
@@ -78,7 +79,7 @@ public class ImportTaskController extends ImportBaseController {
     static final Logger LOGGER = Logging.getLogger(ImportTaskController.class);
 
     @Autowired
-    public ImportTaskController(Importer importer) {
+    protected ImportTaskController(Importer importer) {
         super(importer);
     }
 
@@ -198,7 +199,7 @@ public class ImportTaskController extends ImportBaseController {
         @Bean
         PutIgnoringExtensionContentNegotiationStrategy importTaskPutContentNegotiationStrategy() {
             return new PutIgnoringExtensionContentNegotiationStrategy(
-                    List.of("/imports/{id}/tasks/{taskId:.+}"),
+                    new PatternsRequestCondition(RestBaseController.ROOT_PATH + "/imports/{id}/tasks/{taskId:.+}"),
                     Arrays.asList(MediaType.APPLICATION_JSON, MediaType.TEXT_HTML));
         }
     }
@@ -334,9 +335,12 @@ public class ImportTaskController extends ImportBaseController {
     }
 
     public ImportData handleMultiPartFormUpload(HttpServletRequest request, ImportContext context) {
-        JakartaServletFileUpload<DiskFileItem, DiskFileItemFactory> upload =
-                new JakartaServletFileUpload<>(DiskFileItemFactory.builder().get());
-        List<DiskFileItem> items = null;
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        // @revisit - this appears to be causing OOME
+        // factory.setSizeThreshold(102400000);
+
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        List<FileItem> items = null;
         try {
             items = upload.parseRequest(request);
         } catch (FileUploadException e) {
@@ -347,7 +351,7 @@ public class ImportTaskController extends ImportBaseController {
         Directory directory = findOrCreateDirectory(context);
 
         // unpack all the files
-        for (DiskFileItem item : items) {
+        for (FileItem item : items) {
             if (item.getName() == null) {
                 continue;
             }
@@ -375,12 +379,12 @@ public class ImportTaskController extends ImportBaseController {
             // ImportContextJSONConverterReader(importer,request.getInputStream()).task();
         } catch (ValidationException | IOException ve) {
             LOGGER.log(Level.WARNING, null, ve);
-            throw ImportJSONWriter.badRequest(ve);
+            throw converter.badRequest(ve);
         }
 
         boolean change = false;
         if (task.getStore() != null) {
-            // JD: moved to TaskTargetResource, but handle here for backward compatibility
+            // JD: moved to TaskTargetResource, but handle here for backward compatability
             updateStoreInfo(orig, task.getStore(), importer);
             change = true;
         }
@@ -396,7 +400,7 @@ public class ImportTaskController extends ImportBaseController {
 
         if (task.getLayer() != null) {
             change = true;
-            // now handled by LayerResource, but handle here for backwards compatibility
+            // now handled by LayerResource, but handle here for backwards compatability
             updateLayer(orig, task.getLayer(), importer, converter);
         }
 
@@ -502,7 +506,7 @@ public class ImportTaskController extends ImportBaseController {
             } catch (NoSuchAuthorityCodeException ex) {
                 String msg = "Invalid SRS " + srs;
                 LOGGER.warning(msg + " in PUT request");
-                throw ImportJSONWriter.badRequest(msg);
+                throw converter.badRequest(msg);
             } catch (FactoryException ex) {
                 LOGGER.log(Level.SEVERE, "Error with referencing, message is: " + ex.getMessage(), ex);
                 throw new RestException("Error with referencing", HttpStatus.INTERNAL_SERVER_ERROR, ex);

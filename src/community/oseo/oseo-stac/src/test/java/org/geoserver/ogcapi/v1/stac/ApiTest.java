@@ -12,6 +12,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-import org.geoserver.ogcapi.SwaggerJSONAPIMessageConverter;
+import org.geoserver.ogcapi.OpenAPIMessageConverter;
 import org.geoserver.opensearch.eo.OSEOInfo;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
@@ -43,12 +44,12 @@ public class ApiTest extends STACTestSupport {
     public void testApiJson() throws Exception {
         MockHttpServletResponse response = getAsMockHttpServletResponse("ogc/stac/v1/openapi", 200);
         assertThat(
-                response.getContentType(),
-                CoreMatchers.startsWith(SwaggerJSONAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE));
+                response.getContentType(), CoreMatchers.startsWith(OpenAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE));
         String json = response.getContentAsString();
         LOGGER.log(Level.INFO, json);
 
-        OpenAPI api = Json.mapper().readValue(json, OpenAPI.class);
+        ObjectMapper mapper = Json.mapper();
+        OpenAPI api = mapper.readValue(json, OpenAPI.class);
         validateApi(api);
     }
 
@@ -86,7 +87,8 @@ public class ApiTest extends STACTestSupport {
         String yaml = getAsString("ogc/stac/v1/openapi?f=application/yaml");
         LOGGER.log(Level.INFO, yaml);
 
-        OpenAPI api = Yaml.mapper().readValue(yaml, OpenAPI.class);
+        ObjectMapper mapper = Yaml.mapper();
+        OpenAPI api = mapper.readValue(yaml, OpenAPI.class);
         validateApi(api);
     }
 
@@ -102,7 +104,8 @@ public class ApiTest extends STACTestSupport {
         String yaml =
                 string(new ByteArrayInputStream(response.getContentAsString().getBytes()));
 
-        OpenAPI api = Yaml.mapper().readValue(yaml, OpenAPI.class);
+        ObjectMapper mapper = Yaml.mapper();
+        OpenAPI api = mapper.readValue(yaml, OpenAPI.class);
         validateApi(api);
     }
 
@@ -168,7 +171,6 @@ public class ApiTest extends STACTestSupport {
         // check collectionId parameter
         Map<String, Parameter> params = api.getComponents().getParameters();
         Parameter collectionId = params.get("collectionId");
-        @SuppressWarnings("unchecked")
         List<String> collectionIdValues = collectionId.getSchema().getEnum();
         List<String> expectedCollectionIds =
                 Arrays.asList("ATMTEST", "ATMTEST2", "GS_TEST", "LANDSAT8", "SENTINEL1", "SENTINEL2");

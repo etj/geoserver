@@ -5,21 +5,21 @@
  */
 package org.geoserver.security.filter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy;
@@ -92,10 +92,8 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
         filter.setAllowSessionCreation(false);
         // filter.setFilterProcessesUrl(URL_FOR_LOGIN);
 
-        SavedRequestAwareAuthenticationSuccessHandler successHandler =
-                new SavedRequestAwareAuthenticationSuccessHandler();
+        SimpleUrlAuthenticationSuccessHandler successHandler = new SimpleUrlAuthenticationSuccessHandler();
         successHandler.setDefaultTargetUrl(URL_LOGIN_SUCCCESS);
-        successHandler.setTargetUrlParameter("spring-security-redirect");
         filter.setAuthenticationSuccessHandler(successHandler);
 
         SimpleUrlAuthenticationFailureHandler failureHandler = new SimpleUrlAuthenticationFailureHandler();

@@ -6,8 +6,6 @@
 
 package org.geoserver.gwc.web.layer;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.io.Serial;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -49,7 +47,7 @@ import org.geoserver.gwc.GWC;
 import org.geoserver.gwc.layer.StyleParameterFilter;
 import org.geoserver.gwc.web.GWCIconFactory;
 import org.geoserver.web.wicket.GeoServerAjaxFormLink;
-import org.geoserver.web.wicket.GsIcon;
+import org.geoserver.web.wicket.Icon;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geotools.util.logging.Logging;
 import org.geowebcache.filter.parameters.FloatParameterFilter;
@@ -60,19 +58,6 @@ import org.geowebcache.filter.parameters.StringParameterFilter;
 
 // TODO WICKET8 - Verify this page works OK
 class ParameterFilterEditor extends FormComponentPanel<Set<ParameterFilter>> {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(ParameterFilterEditor.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
 
     private static final Logger LOGGER = Logging.getLogger(ParameterFilterEditor.class);
 
@@ -224,7 +209,7 @@ class ParameterFilterEditor extends FormComponentPanel<Set<ParameterFilter>> {
                         target.add(container);
                     }
                 };
-                removeLink.add(new GsIcon("removeIcon", GWCIconFactory.DELETE_ICON));
+                removeLink.add(new Icon("removeIcon", GWCIconFactory.DELETE_ICON));
                 removeLink.setDefaultModel(item.getModel());
                 removeLink.add(new AttributeModifier("title", new ResourceModel("ParameterFilterEditor.removeLink")));
                 item.add(removeLink);
@@ -261,7 +246,7 @@ class ParameterFilterEditor extends FormComponentPanel<Set<ParameterFilter>> {
                 target.add(container);
             }
         };
-        addStyleFilterLink.add(new GsIcon("addIcon", GWCIconFactory.ADD_ICON));
+        addStyleFilterLink.add(new Icon("addIcon", GWCIconFactory.ADD_ICON));
         add(addStyleFilterLink);
 
         // FIXME: make this extensible so new kinds of filter can be supported by
@@ -347,7 +332,7 @@ class ParameterFilterEditor extends FormComponentPanel<Set<ParameterFilter>> {
                 target.add(container);
             }
         };
-        addFilterLink.add(new GsIcon("addIcon", GWCIconFactory.ADD_ICON));
+        addFilterLink.add(new Icon("addIcon", GWCIconFactory.ADD_ICON));
         add(addFilterLink);
     }
 

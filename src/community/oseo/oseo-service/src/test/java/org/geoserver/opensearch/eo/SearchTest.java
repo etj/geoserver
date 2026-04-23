@@ -20,12 +20,12 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
+import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.data.test.SystemTestData;
 import org.geoserver.opensearch.eo.response.AtomSearchResponse;
 import org.geoserver.opensearch.eo.response.DescriptionResponse;
-import org.geoserver.opensearch.eo.store.OSEOPostGISResource;
 import org.geoserver.ows.util.ResponseUtils;
 import org.geoserver.platform.resource.Resource;
 import org.geotools.api.data.DataStore;
@@ -33,18 +33,13 @@ import org.geotools.api.data.SimpleFeatureStore;
 import org.geotools.filter.text.cql2.CQL;
 import org.hamcrest.Matchers;
 import org.jsoup.Jsoup;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.kordamp.json.JSONObject;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.w3c.dom.Document;
 
 public class SearchTest extends OSEOTestSupport {
 
     private static final String ENCODED_ATOM_MIME = ResponseUtils.urlEncode(AtomSearchResponse.MIME);
-
-    @ClassRule
-    public static final OSEOPostGISResource postgis = new OSEOPostGISResource(false);
 
     @Override
     protected void onSetUp(SystemTestData testData) throws Exception {
@@ -61,11 +56,6 @@ public class SearchTest extends OSEOTestSupport {
         File nestedFile = dd.getResourceLoader().createFile("/workspaces/readAndEvalNestedDir.json");
         dd.getResourceLoader().copyFromClassPath("readAndEval.json", file, getClass());
         dd.getResourceLoader().copyFromClassPath("readAndEvalNestedDir.json", nestedFile, getClass());
-    }
-
-    @Override
-    protected OSEOPostGISResource getOSEOPostGIS() {
-        return postgis;
     }
 
     @Test
@@ -1030,6 +1020,7 @@ public class SearchTest extends OSEOTestSupport {
         assertThat(dom, hasXPath("/at:feed/at:entry[1]/dc:identifier", equalTo(uid)));
 
         // checking HTML bits, should have a customized title
+        String oseo = "http://localhost:8080/geoserver/oseo/";
         assertThat(
                 dom,
                 hasXPath("/at:feed/at:entry[1]/at:summary", containsString("<h1>This is a LANDSAT product!</h1>")));

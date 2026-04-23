@@ -12,7 +12,7 @@ import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * General GeoServer password encoding interface
+ * General Geoserver password encoding interface
  *
  * @author christian
  */

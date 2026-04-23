@@ -76,16 +76,7 @@ public class DisabledVersionsPanel extends FormComponentPanel<List<Version>> {
 
             @Override
             public void setObject(Collection<Version> object) {
-                // get the underlying list and modify it in-place
-                List<Version> list = model.getObject();
-                if (list == null) {
-                    model.setObject(object != null ? new ArrayList<>(object) : new ArrayList<>());
-                } else {
-                    list.clear();
-                    if (object != null) {
-                        list.addAll(object);
-                    }
-                }
+                model.setObject(object != null ? new ArrayList<>(object) : new ArrayList<>());
             }
 
             @Override
@@ -181,15 +172,7 @@ public class DisabledVersionsPanel extends FormComponentPanel<List<Version>> {
     @Override
     public void updateModel() {
         List<Version> newSelection = getConvertedInput();
-        List<Version> modelList = getModelObject();
-        if (modelList == null) {
-            getModel().setObject(newSelection);
-        } else {
-            modelList.clear();
-            if (newSelection != null) {
-                modelList.addAll(newSelection);
-            }
-        }
+        getModel().setObject(newSelection != null ? new ArrayList<>(newSelection) : new ArrayList<>());
     }
 
     /** Version palette for selected service. */

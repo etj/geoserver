@@ -63,7 +63,7 @@ public class MonitorConfig implements GeoServerPluginConfigurator, ApplicationCo
     protected Properties props;
     PropertyFileWatcher fw;
     ApplicationContext context;
-    volatile boolean enabled = true;
+    boolean enabled = true;
     Exception error;
     private GeoServerResourceLoader loader;
 

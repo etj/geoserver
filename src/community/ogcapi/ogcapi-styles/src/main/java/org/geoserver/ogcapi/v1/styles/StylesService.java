@@ -4,14 +4,12 @@
  */
 package org.geoserver.ogcapi.v1.styles;
 
-import static org.geoserver.ogcapi.SwaggerJSONAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE;
+import static org.geoserver.ogcapi.MappingJackson2YAMLMessageConverter.APPLICATION_YAML_VALUE;
+import static org.geoserver.ogcapi.OpenAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE;
 import static org.geoserver.ogcapi.v1.styles.StylesService.ValidationMode.only;
 import static org.geoserver.ogcapi.v1.styles.StylesService.ValidationMode.yes;
-import static org.springframework.http.MediaType.APPLICATION_YAML_VALUE;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -24,6 +22,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.SLDHandler;
@@ -54,6 +54,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.ServletServerHttpResponse;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.accept.ContentNegotiationStrategy;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -332,7 +333,7 @@ public class StylesService {
             // write out the style body
             catalog.getResourcePool().writeStyle(styleInfo, new ByteArrayInputStream(rawData));
 
-            HttpHeaders headers = new HttpHeaders();
+            MultiValueMap<String, String> headers = new HttpHeaders();
             String href = ResponseUtils.buildURL(
                     APIRequestInfo.get().getBaseURL(),
                     "ogc/styles/v1/styles/" + styleId,

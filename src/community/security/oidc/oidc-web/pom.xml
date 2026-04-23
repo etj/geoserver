@@ -12,7 +12,7 @@
   <parent>
     <groupId>org.geoserver.community.security</groupId>
     <artifactId>gs-sec-oidc</artifactId>
-    <version>3.0-SNAPSHOT</version>
+    <version>2.28-SNAPSHOT</version>
   </parent>
 
   <artifactId>gs-sec-oidc-web</artifactId>
@@ -20,10 +20,6 @@
   <name>GeoServer OpenID Connect Security Module - Web</name>
 
   <dependencies>
-    <dependency>
-      <groupId>jakarta.servlet</groupId>
-      <artifactId>jakarta.servlet-api</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.geoserver.web</groupId>
@@ -65,13 +61,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Testcontainers 1.21.4 with Docker API 1.44 support for Docker 29+ -->
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>testcontainers</artifactId>
-      <version>1.21.4</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>com.github.dasniko</groupId>
       <artifactId>testcontainers-keycloak</artifactId>
@@ -86,35 +75,12 @@
           <artifactId>quarkus-junit4-mock</artifactId>
           <groupId>io.quarkus</groupId>
         </exclusion>
+
         <exclusion>
           <artifactId>keycloak-admin-client</artifactId>
           <groupId>org.keycloak</groupId>
         </exclusion>
-        <!-- Exclude old testcontainers to use our explicit version -->
-        <exclusion>
-          <artifactId>testcontainers</artifactId>
-          <groupId>org.testcontainers</groupId>
-        </exclusion>
       </exclusions>
-    </dependency>
-
-    <!-- Explicit docker-java dependencies for newer Docker API support (1.44+) -->
-    <dependency>
-      <groupId>com.github.docker-java</groupId>
-      <artifactId>docker-java-api</artifactId>
-      <version>3.4.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.github.docker-java</groupId>
-      <artifactId>docker-java-transport-zerodep</artifactId>
-      <version>3.4.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-tester</artifactId>
-      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -132,12 +98,7 @@
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.geoserver.community.security</groupId>
-      <artifactId>gs-sec-oidc-core</artifactId>
-      <version>${project.version}</version>
-      <scope>compile</scope>
-    </dependency>
+
   </dependencies>
   <build>
     <plugins>

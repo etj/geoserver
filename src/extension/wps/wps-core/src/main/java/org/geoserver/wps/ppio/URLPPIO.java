@@ -14,7 +14,7 @@ import java.net.URL;
  */
 public class URLPPIO extends LiteralPPIO {
 
-    public URLPPIO() {
+    protected URLPPIO() {
         super(URL.class);
     }
 

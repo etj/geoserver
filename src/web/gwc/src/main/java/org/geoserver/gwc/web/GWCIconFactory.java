@@ -8,13 +8,13 @@ package org.geoserver.gwc.web;
 import java.io.Serializable;
 import java.util.List;
 import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.PublishedInfo;
 import org.geoserver.catalog.PublishedType;
 import org.geoserver.gwc.layer.GeoServerTileLayer;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.web.CatalogIconFactory;
+import org.geoserver.web.GeoServerBasePage;
 import org.geowebcache.layer.TileLayer;
 import org.geowebcache.layer.wms.WMSLayer;
 
@@ -22,19 +22,25 @@ import org.geowebcache.layer.wms.WMSLayer;
 @SuppressWarnings("serial")
 public class GWCIconFactory implements Serializable {
 
-    public static final String UNKNOWN_ICON = "gs-icon-error";
+    public static final PackageResourceReference UNKNOWN_ICON =
+            new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/error.png");
 
-    public static final String DISABLED_ICON = "gs-icon-error";
+    public static final PackageResourceReference DISABLED_ICON =
+            new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/error.png");
 
-    public static final String ENABLED_ICON = "gs-icon-tick";
+    public static final PackageResourceReference ENABLED_ICON =
+            new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/tick.png");
 
-    public static final String ADD_ICON = "gs-icon-add";
+    public static final PackageResourceReference ADD_ICON =
+            new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/add.png");
 
-    public static final String DELETE_ICON = "gs-icon-delete";
+    public static final PackageResourceReference DELETE_ICON =
+            new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/delete.png");
 
-    public static final ResourceReference GRIDSET = new PackageResourceReference(GWCSettingsPage.class, "gridset.png");
+    public static final PackageResourceReference GRIDSET =
+            new PackageResourceReference(GWCSettingsPage.class, "gridset.png");
 
-    public static final ResourceReference GWC =
+    public static final PackageResourceReference GWC =
             new PackageResourceReference(GWCSettingsPage.class, "geowebcache-16.png");
 
     /**
@@ -95,7 +101,7 @@ public class GWCIconFactory implements Serializable {
     }
 
     /** Returns the appropriate icon for the specified layer type. */
-    public static String getSpecificLayerIcon(final TileLayer layer) {
+    public static PackageResourceReference getSpecificLayerIcon(final TileLayer layer) {
         if (layer instanceof GeoServerTileLayer gsTileLayer) {
             PublishedInfo published = gsTileLayer.getPublishedInfo();
             if (published instanceof LayerInfo info) {
@@ -104,7 +110,7 @@ public class GWCIconFactory implements Serializable {
             return CatalogIconFactory.GROUP_ICON;
         }
         if (layer instanceof WMSLayer) {
-            return "gs-icon-map";
+            return GWC;
         }
 
         List<GWCTileLayerIconCustomizer> iconCustomizers =
@@ -112,8 +118,8 @@ public class GWCIconFactory implements Serializable {
         for (GWCTileLayerIconCustomizer iconCustomizer : iconCustomizers) {
             // Stop scanning through the registered customizers as soon as the
             // suggested icon is not the UNKNOWN_ICON
-            String ref = iconCustomizer.getLayerIcon(layer);
-            if (ref != null && !UNKNOWN_ICON.equals(ref)) {
+            PackageResourceReference ref = iconCustomizer.getLayerIcon(layer);
+            if (ref != null && ref != UNKNOWN_ICON) {
                 return ref;
             }
         }
@@ -122,16 +128,16 @@ public class GWCIconFactory implements Serializable {
     }
 
     /** Returns a reference to a general purpose icon to indicate an enabled/properly configured resource */
-    public static String getEnabledIcon() {
+    public static PackageResourceReference getEnabledIcon() {
         return ENABLED_ICON;
     }
 
     /** Returns a reference to a general purpose icon to indicate a disabled/misconfigured/unreachable resource */
-    public static String getDisabledIcon() {
+    public static PackageResourceReference getDisabledIcon() {
         return DISABLED_ICON;
     }
 
-    public static String getErrorIcon() {
+    public static PackageResourceReference getErrorIcon() {
         return UNKNOWN_ICON;
     }
 }

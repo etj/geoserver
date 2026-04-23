@@ -3,10 +3,6 @@ name: Windows GitHub CI
 on:
   pull_request:
     paths-ignore:
-      - 'doc/**'
-      - 'mkdocs.yml'
-      - 'requirements.txt'
-      - '.github/workflows/docs.yml'
       - '**/src/main/resources/GeoServerApplication_*.properties'
       - '!**/src/main/resources/GeoServerApplication_fr.properties'
 
@@ -42,7 +38,7 @@ jobs:
           gs-${{ runner.os }}-maven-
     - name: Build with Maven
       run: |
-        mvn --% -B -ntp -U -T1C -Dall -Prelease,pending,windows-github-build -f src/pom.xml clean install
+        mvn --% -B -ntp -U -T2 -Dall -Prelease,windows-github-build -f src/pom.xml clean install
     - name: Remove SNAPSHOT jars from repository
       if: always()
       run: |

@@ -231,11 +231,11 @@ public class SchemaInfoDAOImpl implements SchemaInfoDAO {
         @Override
         public void handleRemoveEvent(CatalogRemoveEvent event) throws CatalogException {
             CatalogInfo source = event.getSource();
-            if (source instanceof FeatureTypeInfo info1) {
-                removeFtTemplates(info1);
+            if (source instanceof FeatureTypeInfo) {
+                removeFtTemplates((FeatureTypeInfo) source);
 
-            } else if (source instanceof WorkspaceInfo info) {
-                removeWSTemplates(info);
+            } else if (source instanceof WorkspaceInfo) {
+                removeWSTemplates((WorkspaceInfo) source);
             }
         }
 
@@ -258,11 +258,11 @@ public class SchemaInfoDAOImpl implements SchemaInfoDAO {
         @Override
         public void handleModifyEvent(CatalogModifyEvent event) throws CatalogException {
             final CatalogInfo source = event.getSource();
-            if (source instanceof FeatureTypeInfo info) {
+            if (source instanceof FeatureTypeInfo) {
                 int nameIdx = event.getPropertyNames().indexOf("name");
                 if (nameIdx != -1) {
                     String newName = (String) event.getNewValues().get(nameIdx);
-                    updateSchemaInfoLayerName(info, newName);
+                    updateSchemaInfoLayerName((FeatureTypeInfo) source, newName);
                 }
             } else if (source instanceof WorkspaceInfo) {
                 int nameIdx = event.getPropertyNames().indexOf("name");
@@ -304,7 +304,8 @@ public class SchemaInfoDAOImpl implements SchemaInfoDAO {
         @Override
         public void handlePostModifyEvent(CatalogPostModifyEvent event) throws CatalogException {
             CatalogInfo source = event.getSource();
-            if (source instanceof FeatureTypeInfo info) {
+            if (source instanceof FeatureTypeInfo) {
+                FeatureTypeInfo info = (FeatureTypeInfo) source;
                 int wsIdx = event.getPropertyNames().indexOf("workspace");
                 if (wsIdx != -1) {
                     WorkspaceInfo newWorkspace =

@@ -69,9 +69,4 @@ public class TurboJpegStatus implements ModuleStatus {
             return "unavailable";
         }
     }
-
-    @Override
-    public Category getCategory() {
-        return Category.EXTENSION;
-    }
 }

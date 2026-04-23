@@ -890,7 +890,7 @@ public class JDBCOpenSearchAccess implements org.geoserver.opensearch.eo.store.O
     public SimpleFeatureSource getCollectionGranulesSource(String typeName) throws IOException {
         int idx = typeName.lastIndexOf(OpenSearchAccess.BAND_LAYER_SEPARATOR);
         String collection, band;
-        // the two parts must be non-empty in order to have a valid combination
+        // the two parts must be non empty in order to have a valid combination
         if (idx > 1 && idx < (typeName.length() - 3)) {
             collection = typeName.substring(0, idx);
             band = typeName.substring(idx + OpenSearchAccess.BAND_LAYER_SEPARATOR.length());

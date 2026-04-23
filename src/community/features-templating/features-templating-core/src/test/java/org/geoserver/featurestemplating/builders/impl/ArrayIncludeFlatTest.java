@@ -7,14 +7,19 @@ package org.geoserver.featurestemplating.builders.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.geoserver.featurestemplating.builders.TemplateBuilder;
 import org.geoserver.featurestemplating.configuration.TemplateIdentifier;
 import org.geoserver.featurestemplating.readers.JSONTemplateReader;
@@ -30,14 +35,6 @@ import org.geotools.jdbc.JDBCDataStore;
 import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.helpers.NamespaceSupport;
-import tools.jackson.core.JsonEncoding;
-import tools.jackson.core.ObjectWriteContext;
-import tools.jackson.core.json.JsonFactory;
-import tools.jackson.core.json.JsonReadFeature;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.node.ArrayNode;
 
 public class ArrayIncludeFlatTest {
 
@@ -71,10 +68,7 @@ public class ArrayIncludeFlatTest {
     public void testArrayIncludeFlat() throws Exception {
         List<String> validArrayFields =
                 Arrays.asList("one", "two", "three", "four", "1", "2", "3", "4", "someStaticValue");
-        JsonNode node = JsonMapper.builder()
-                .enable(JsonReadFeature.ALLOW_JAVA_COMMENTS)
-                .build()
-                .readTree(BASE);
+        JsonNode node = new ObjectMapper(new JsonFactory().enable(JsonParser.Feature.ALLOW_COMMENTS)).readTree(BASE);
         TemplateReaderConfiguration configuration = new TemplateReaderConfiguration(new NamespaceSupport());
         JSONTemplateReader templateReader = templateReader(node, configuration);
         CompositeBuilder builder = new CompositeBuilder(null, new NamespaceSupport(), false);
@@ -82,18 +76,18 @@ public class ArrayIncludeFlatTest {
         JsonNode result = writeOutput(builder, jsonFieldSimpleFeature);
         ArrayNode array = (ArrayNode) result.get("array");
         assertEquals(9, array.size());
-        for (JsonNode el : array.elements()) {
-            assertTrue(validArrayFields.contains(el.asString()));
+        Iterator<JsonNode> elements = array.elements();
+        while (elements.hasNext()) {
+            JsonNode el = elements.next();
+            assertTrue(validArrayFields.contains(el.asText()));
         }
     }
 
     @Test
     public void testArrayIncludeFlatWithNull() throws Exception {
-        Set<String> validArrayFields = Set.of("null", "someStaticValue");
-        JsonNode node = JsonMapper.builder()
-                .enable(JsonReadFeature.ALLOW_JAVA_COMMENTS)
-                .build()
-                .readTree(BASE_WITH_NULL);
+        List<String> validArrayFields = Arrays.asList("null", "someStaticValue");
+        JsonNode node =
+                new ObjectMapper(new JsonFactory().enable(JsonParser.Feature.ALLOW_COMMENTS)).readTree(BASE_WITH_NULL);
         TemplateReaderConfiguration configuration = new TemplateReaderConfiguration(new NamespaceSupport());
         JSONTemplateReader templateReader = templateReader(node, configuration);
         CompositeBuilder builder = new CompositeBuilder(null, new NamespaceSupport(), false);
@@ -101,9 +95,11 @@ public class ArrayIncludeFlatTest {
         JsonNode result = writeOutput(builder, jsonFieldSimpleFeature);
         ArrayNode array = (ArrayNode) result.get("array");
         assertEquals(2, array.size());
-        Set<String> actualValues =
-                array.valueStream().map(n -> n.isNull() ? "null" : n.asString()).collect(Collectors.toSet());
-        assertEquals(validArrayFields, actualValues);
+        Iterator<JsonNode> elements = array.elements();
+        while (elements.hasNext()) {
+            JsonNode el = elements.next();
+            assertTrue(validArrayFields.contains(el.asText()));
+        }
     }
 
     private JsonNode writeOutput(TemplateBuilder builder, Feature f) throws Exception {
@@ -120,8 +116,8 @@ public class ArrayIncludeFlatTest {
     }
 
     private TemplateOutputWriter writer(OutputStream stream) throws IOException {
-        return new GeoJSONWriter(
-                JsonFactory.builder().build().createGenerator(ObjectWriteContext.empty(), stream, JsonEncoding.UTF8),
-                TemplateIdentifier.JSON);
+        GeoJSONWriter writer = new GeoJSONWriter(
+                new JsonFactory().createGenerator(stream, JsonEncoding.UTF8), TemplateIdentifier.JSON);
+        return writer;
     }
 }

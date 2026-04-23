@@ -51,6 +51,7 @@ abstract class Sampler {
             return randomIter.getSampleFloat(x, y, b);
         }
     }
+    ;
 
     static class IntSampler extends Sampler {
         public IntSampler(RandomIter iter) {
@@ -62,6 +63,7 @@ abstract class Sampler {
             return randomIter.getSample(x, y, b);
         }
     }
+    ;
 
     static class DoubleSampler extends Sampler {
         public DoubleSampler(RandomIter iter) {
@@ -73,4 +75,5 @@ abstract class Sampler {
             return randomIter.getSampleDouble(x, y, b);
         }
     }
+    ;
 }

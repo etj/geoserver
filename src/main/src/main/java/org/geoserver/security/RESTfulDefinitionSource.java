@@ -5,7 +5,6 @@
  */
 package org.geoserver.security;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -16,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 import org.geoserver.security.impl.RESTAccessRuleDAO;
 import org.geotools.util.logging.Logging;
 import org.springframework.security.access.ConfigAttribute;
@@ -25,7 +25,6 @@ import org.springframework.security.web.util.UrlUtils;
 import org.springframework.util.StringUtils;
 
 /** @author Chris Berry http://opensource.atlassian.com/projects/spring/browse/SEC-531 */
-@SuppressWarnings({"deprecation", "removal"})
 public class RESTfulDefinitionSource implements FilterInvocationSecurityMetadataSource {
 
     private static Logger log = Logging.getLogger(RESTfulDefinitionSource.class);

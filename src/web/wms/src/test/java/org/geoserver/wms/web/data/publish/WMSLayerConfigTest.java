@@ -42,9 +42,8 @@ import org.geoserver.test.http.MockHttpResponse;
 import org.geoserver.web.ComponentBuilder;
 import org.geoserver.web.FormTestPage;
 import org.geoserver.web.GeoServerWicketTestSupport;
-import org.geoserver.wms.web.publish.CartographyConfigPanel;
 import org.geoserver.wms.web.publish.StylesModel;
-import org.geoserver.wms.web.publish.WMSRemoteLayerConfig;
+import org.geoserver.wms.web.publish.WMSLayerConfig;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -61,8 +60,7 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
     @Test
     public void testExisting() {
         final LayerInfo layer = getCatalog().getLayerByName(MockData.PONDS.getLocalPart());
-        FormTestPage page =
-                new FormTestPage((ComponentBuilder) id -> new CartographyConfigPanel(id, new Model<>(layer)));
+        FormTestPage page = new FormTestPage((ComponentBuilder) id -> new WMSLayerConfig(id, new Model<>(layer)));
         tester.startPage(page);
         tester.assertRenderedPage(FormTestPage.class);
         tester.assertComponent("form", Form.class);
@@ -74,14 +72,14 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
         ft.select("panel:styles:defaultStyle", 0);
         ft.submit();
         tester.assertModelValue("form:panel:styles:defaultStyle", target);
+        assertFalse(cascadedControlsVisible(tester));
     }
 
     @Test
     public void testNew() {
         final LayerInfo layer = getCatalog().getFactory().createLayer();
         layer.setResource(getCatalog().getFactory().createFeatureType());
-        FormTestPage page =
-                new FormTestPage((ComponentBuilder) id -> new CartographyConfigPanel(id, new Model<>(layer)));
+        FormTestPage page = new FormTestPage((ComponentBuilder) id -> new WMSLayerConfig(id, new Model<>(layer)));
         Component layerConfig = page.get("form:panel:styles:defaultStyle");
 
         tester.startPage(page);
@@ -100,6 +98,7 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
         ft.select("panel:styles:defaultStyle", 0);
         ft.submit();
         assertFalse(layerConfig.getFeedbackMessages().hasMessage(FeedbackMessage.ERROR));
+        assertFalse(cascadedControlsVisible(tester));
     }
 
     @Test
@@ -112,8 +111,7 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
         catalog.save(style);
 
         final LayerInfo layer = getCatalog().getLayerByName(MockData.PONDS.getLocalPart());
-        FormTestPage page =
-                new FormTestPage((ComponentBuilder) id -> new CartographyConfigPanel(id, new Model<>(layer)));
+        FormTestPage page = new FormTestPage((ComponentBuilder) id -> new WMSLayerConfig(id, new Model<>(layer)));
         tester.startPage(page);
         tester.assertRenderedPage(FormTestPage.class);
         tester.debugComponentTrees();
@@ -126,6 +124,7 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
         AttributeModifier mod = (AttributeModifier) img.getBehaviors().get(0);
         assertTrue(mod.toString().contains("cite/wms?REQUEST=GetLegendGraphic"));
         assertTrue(mod.toString().contains("style=cite:Ponds"));
+        assertFalse(cascadedControlsVisible(tester));
 
         // restore style
         style.setWorkspace(null);
@@ -135,8 +134,7 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
     @Test
     public void testLegendGraphicURLNoWorkspace() throws Exception {
         final LayerInfo layer = getCatalog().getLayerByName(MockData.PONDS.getLocalPart());
-        FormTestPage page =
-                new FormTestPage((ComponentBuilder) id -> new CartographyConfigPanel(id, new Model<>(layer)));
+        FormTestPage page = new FormTestPage((ComponentBuilder) id -> new WMSLayerConfig(id, new Model<>(layer)));
         tester.startPage(page);
         tester.assertRenderedPage(FormTestPage.class);
         tester.debugComponentTrees();
@@ -150,6 +148,7 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
         assertFalse(mod.toString().contains("cite/wms?REQUEST=GetLegendGraphic"));
         assertTrue(mod.toString().contains("wms?REQUEST=GetLegendGraphic"));
         assertTrue(mod.toString().contains("style=Ponds"));
+        assertFalse(cascadedControlsVisible(tester));
     }
 
     @Test
@@ -157,7 +156,7 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
         final LayerInfo layer = getCatalog().getLayerByName(MockData.PONDS.getLocalPart());
         final Model<LayerInfo> layerModel = new Model<>(layer);
 
-        FormTestPage page = new FormTestPage((ComponentBuilder) id -> new CartographyConfigPanel(id, layerModel));
+        FormTestPage page = new FormTestPage((ComponentBuilder) id -> new WMSLayerConfig(id, layerModel));
 
         tester.startPage(page);
         tester.assertRenderedPage(FormTestPage.class);
@@ -176,6 +175,7 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
         ft.submit();
 
         tester.assertModelValue("form:panel:defaultInterpolationMethod", WMSInterpolation.Bicubic);
+        assertFalse(cascadedControlsVisible(tester));
     }
 
     @Test
@@ -206,7 +206,7 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
 
         final Model<LayerInfo> layerModel = new Model<>(gsLayer);
 
-        FormTestPage page = new FormTestPage((ComponentBuilder) id -> new WMSRemoteLayerConfig(id, layerModel));
+        FormTestPage page = new FormTestPage((ComponentBuilder) id -> new WMSLayerConfig(id, layerModel));
 
         tester.startPage(page);
         tester.assertRenderedPage(FormTestPage.class);
@@ -333,7 +333,7 @@ public class WMSLayerConfigTest extends GeoServerWicketTestSupport {
 
         final Model<LayerInfo> layerModel = new Model<>(gsLayer);
 
-        FormTestPage page = new FormTestPage((ComponentBuilder) id -> new WMSRemoteLayerConfig(id, layerModel));
+        FormTestPage page = new FormTestPage((ComponentBuilder) id -> new WMSLayerConfig(id, layerModel));
 
         tester.startPage(page);
         tester.assertRenderedPage(FormTestPage.class);

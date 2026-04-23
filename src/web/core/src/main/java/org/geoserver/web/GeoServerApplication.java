@@ -7,8 +7,6 @@ package org.geoserver.web;
 
 import static org.apache.wicket.RuntimeConfigurationType.DEPLOYMENT;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
@@ -19,6 +17,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.wicket.Application;
 import org.apache.wicket.Component;
 import org.apache.wicket.ConverterLocator;
@@ -31,9 +31,7 @@ import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.core.request.handler.PageProvider;
 import org.apache.wicket.csp.CSPDirective;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.protocol.http.FetchMetadataResourceIsolationPolicy;
-import org.apache.wicket.protocol.http.OriginResourceIsolationPolicy;
-import org.apache.wicket.protocol.http.ResourceIsolationRequestCycleListener;
+import org.apache.wicket.protocol.http.CsrfPreventionRequestCycleListener;
 import org.apache.wicket.protocol.http.WebApplication;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
@@ -213,23 +211,10 @@ public class GeoServerApplication extends WebApplication
         return GeoServerExtensions.extensions(type, getApplicationContext());
     }
 
-    /**
-     * Returns a versioned (cache-busted) URL for the given servlet-context-relative asset path. The version token is a
-     * deployment/build identifier derived from manifest metadata and cached for the application lifetime (until
-     * {@link #clearWicketCaches()} is called).
-     *
-     * @param path e.g. {@code "css/geoserver.css"}
-     * @return e.g. {@code "css/geoserver.css?v=20260326"}
-     */
-    public String versioned(String path) {
-        return AssetVersionManager.versioned(path, getServletContext());
-    }
-
     /** Clears all the wicket caches so that resources and localization files will be re-read */
     public void clearWicketCaches() {
         getResourceSettings().getPropertiesFactory().clearCache();
         getResourceSettings().getLocalizer().clearCache();
-        AssetVersionManager.clearCache();
     }
 
     /**
@@ -295,23 +280,21 @@ public class GeoServerApplication extends WebApplication
         // Don't add a new lister each time init() is called
         List<IRequestCycleListener> csrfListenersToRemove = new ArrayList<>();
         for (IRequestCycleListener listener : getRequestCycleListeners()) {
-            if (listener instanceof ResourceIsolationRequestCycleListener) {
+            if (listener instanceof CsrfPreventionRequestCycleListener) {
                 csrfListenersToRemove.add(listener);
             }
         }
         for (IRequestCycleListener listener : csrfListenersToRemove) {
             getRequestCycleListeners().remove(listener);
         }
+        CsrfPreventionRequestCycleListener csrfListener = new CsrfPreventionRequestCycleListener();
         if (!geoserverCsrfDisabled) {
-            OriginResourceIsolationPolicy csrfListener = new OriginResourceIsolationPolicy();
             if (geoserverCsrfWhitelist != null && !"".equals(geoserverCsrfWhitelist.trim())) {
                 for (String origin : geoserverCsrfWhitelist.split(",")) {
                     csrfListener.addAcceptedOrigin(origin.trim());
                 }
             }
-            ResourceIsolationRequestCycleListener isolationListener =
-                    new ResourceIsolationRequestCycleListener(new FetchMetadataResourceIsolationPolicy(), csrfListener);
-            getRequestCycleListeners().add(isolationListener);
+            getRequestCycleListeners().add(csrfListener);
         }
 
         getRequestCycleListeners().add(new FeedbackPanelAjaxListener());
@@ -332,9 +315,6 @@ public class GeoServerApplication extends WebApplication
                         .setRenderStrategy(
                                 defaultIsRedirect ? RenderStrategy.REDIRECT_TO_BUFFER : RenderStrategy.ONE_PASS_RENDER);
         }
-
-        // Allow extension points to customize the GeoServerApplication initialization phase
-        getBeansOfType(GeoServerApplicationInitializer.class).forEach(initializer -> initializer.init(this));
     }
 
     @Override

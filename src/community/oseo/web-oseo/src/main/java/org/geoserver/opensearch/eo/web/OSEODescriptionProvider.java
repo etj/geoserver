@@ -14,13 +14,12 @@ import org.geoserver.web.CapabilitiesHomePagePanel.CapsInfo;
 import org.geotools.util.Version;
 
 /** Contributes a link to the OSEO OSDD document */
-@SuppressWarnings("deprecation")
 public class OSEODescriptionProvider implements CapabilitiesHomePageLinkProvider {
 
     /** @see org.geoserver.web.CapabilitiesHomePageLinkProvider#getCapabilitiesComponent */
     @Override
     public Component getCapabilitiesComponent(final String id) {
-        List<CapsInfo> serviceInfoLinks = new ArrayList<>();
+        List<CapsInfo> serviceInfoLinks = new ArrayList<CapabilitiesHomePagePanel.CapsInfo>();
         String capsLink = "../oseo/description";
         CapsInfo ci = new CapsInfo("oseo", new Version("1.0"), capsLink);
         serviceInfoLinks.add(ci);

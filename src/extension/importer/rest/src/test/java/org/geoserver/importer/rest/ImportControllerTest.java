@@ -15,20 +15,19 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.importer.Database;
 import org.geoserver.importer.Directory;
 import org.geoserver.importer.ImportContext;
 import org.geoserver.importer.ImporterTestSupport;
-import org.geoserver.importer.ImporterTestUtils;
 import org.geoserver.importer.SpatialFile;
 import org.geoserver.rest.RestBaseController;
-import org.geotools.geopkg.GeoPkgDataStoreFactory;
+import org.geotools.data.h2.H2DataStoreFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -183,11 +182,11 @@ public class ImportControllerTest extends ImporterTestSupport {
 
     @Test
     public void testGetImportDatabase() throws Exception {
-        File cookbook = ImporterTestUtils.file("gpkg/cookbook.gpkg");
+        File dir = unpack("h2/cookbook.zip");
 
         Map<String, Serializable> params = new HashMap<>();
-        params.put(GeoPkgDataStoreFactory.DBTYPE.key, "geopkg");
-        params.put(GeoPkgDataStoreFactory.DATABASE.key, cookbook.getAbsolutePath());
+        params.put(H2DataStoreFactory.DBTYPE.key, "h2");
+        params.put(H2DataStoreFactory.DATABASE.key, new File(dir, "cookbook").getAbsolutePath());
         importer.createContext(new Database(params));
 
         JSONObject json = (JSONObject) getAsJSON(RestBaseController.ROOT_PATH + "/imports/" + lastId() + "?expand=2");
@@ -196,7 +195,7 @@ public class ImportControllerTest extends ImporterTestSupport {
 
         JSONObject source = json.getJSONObject("import").getJSONObject("data");
         assertEquals("database", source.getString("type"));
-        assertEquals("GeoPackage", source.getString("format"));
+        assertEquals("H2", source.getString("format"));
 
         JSONArray tables = source.getJSONArray("tables");
         assertTrue(tables.contains("point"));
@@ -272,7 +271,7 @@ public class ImportControllerTest extends ImporterTestSupport {
 
     @Test
     public void testPostWithTarget() throws Exception {
-        creatGeopkgDataStore("sf", "skunkworks");
+        createH2DataStore("sf", "skunkworks");
 
         String json = "{"
                 + "\"import\": { "
@@ -378,10 +377,10 @@ public class ImportControllerTest extends ImporterTestSupport {
 
     @Test
     public void testPostTargetWithSameStoreNameTwoWs() throws Exception {
-        creatGeopkgDataStore("sf", "skunkworks");
+        createH2DataStore("sf", "skunkworks");
         // same store name in different ws, to check later that workspace is
         // properly checked
-        creatGeopkgDataStore("gs", "skunkworks");
+        createH2DataStore("gs", "skunkworks");
 
         String json = "{"
                 + "\"import\": { "

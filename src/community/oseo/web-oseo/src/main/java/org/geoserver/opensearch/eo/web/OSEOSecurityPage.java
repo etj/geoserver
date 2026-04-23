@@ -20,6 +20,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.config.GeoServer;
 import org.geoserver.opensearch.eo.OSEOInfo;
 import org.geoserver.opensearch.eo.security.EOAccessLimitInfo;
@@ -29,6 +30,7 @@ import org.geoserver.opensearch.eo.security.EOProductAccessLimitInfo;
 import org.geoserver.opensearch.eo.security.EOProductAccessLimitInfoImpl;
 import org.geoserver.security.web.AbstractSecurityPage;
 import org.geoserver.web.GeoServerApplication;
+import org.geoserver.web.GeoServerHomePage;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geoserver.web.wicket.GeoServerDataProvider.BeanProperty;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
@@ -248,7 +250,9 @@ public class OSEOSecurityPage extends AbstractSecurityPage {
                 String rolesLabel = String.join(", ", roles);
                 return new Label(id, rolesLabel);
             } else if ("edit".equals(property.getName())) {
-                return new ImageAjaxLink<>(id, "gs-icon-pencil") {
+                PackageResourceReference icon =
+                        new PackageResourceReference(GeoServerHomePage.class, "/img/icons/silk/pencil.png");
+                return new ImageAjaxLink<>(id, icon) {
                     @Override
                     protected void onClick(AjaxRequestTarget target) {
                         openEditDialog(target, itemModel);
@@ -256,7 +260,9 @@ public class OSEOSecurityPage extends AbstractSecurityPage {
                 };
             } else if ("remove".equals(property.getName())) {
                 final T entry = itemModel.getObject();
-                return new ImageAjaxLink<>(id, "gs-icon-delete") {
+                PackageResourceReference icon =
+                        new PackageResourceReference(GeoServerHomePage.class, "/img/icons/silk/delete.png");
+                return new ImageAjaxLink<>(id, icon) {
 
                     @Override
                     protected void onClick(AjaxRequestTarget target) {

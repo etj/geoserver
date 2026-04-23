@@ -6,12 +6,11 @@
 
 package org.geoserver.ogcapi;
 
+import static org.geoserver.ogcapi.MappingJackson2YAMLMessageConverter.APPLICATION_YAML_VALUE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.springframework.http.MediaType.APPLICATION_YAML_VALUE;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
@@ -19,6 +18,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletResponse;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.geoserver.catalog.util.CloseableIterator;
 import org.geoserver.ows.Request;
 import org.geoserver.ows.Response;
@@ -29,8 +31,6 @@ import org.geoserver.test.CodeExpectingHttpServletResponse;
 import org.geoserver.test.GeoServerSystemTestSupport;
 import org.junit.Before;
 import org.junit.Test;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -430,7 +430,7 @@ public class HelloServiceTest extends GeoServerSystemTestSupport {
         // - resource link generation
         String expected =
                 """
-                <html xmlns:wicket="http://wicket.apache.org/">
+                <html>
                 <head>
                     <script src="http://localhost:8080/geoserver/webresources/ogcapi/hello.js"></script>
                 </head>

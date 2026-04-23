@@ -5,8 +5,6 @@
 
 package org.geoserver.ogcapi;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
@@ -14,13 +12,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.geoserver.ows.Dispatcher;
 import org.geoserver.ows.DispatcherCallback;
 import org.geoserver.ows.Request;
 import org.geoserver.ows.Response;
 import org.geoserver.platform.Operation;
 import org.geoserver.platform.ServiceException;
-import org.jspecify.annotations.Nullable;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
@@ -33,7 +32,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpResponse;
-import org.springframework.util.MimeTypeUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.accept.ContentNegotiationManager;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -206,7 +205,7 @@ public class APIBodyMethodProcessor extends RequestResponseBodyMethodProcessor {
 
             // otherwise find something compatible
             if (selectedMediaType == null) {
-                MimeTypeUtils.sortBySpecificity(mediaTypesToUse);
+                MediaType.sortBySpecificityAndQuality(mediaTypesToUse);
 
                 for (MediaType mediaType : mediaTypesToUse) {
                     if (mediaType.isConcrete()) {
@@ -271,7 +270,9 @@ public class APIBodyMethodProcessor extends RequestResponseBodyMethodProcessor {
 
     private MediaType getMostSpecificMediaType(MediaType acceptType, MediaType produceType) {
         MediaType produceTypeToUse = produceType.copyQualityValue(acceptType);
-        return (acceptType.isLessSpecific(produceTypeToUse) ? produceTypeToUse : acceptType);
+        return (MediaType.SPECIFICITY_COMPARATOR.compare(acceptType, produceTypeToUse) <= 0
+                ? acceptType
+                : produceTypeToUse);
     }
 
     /** Return the generic type of the {@code returnType} (or of the nested type if it is an {@link HttpEntity}). */
@@ -311,12 +312,13 @@ public class APIBodyMethodProcessor extends RequestResponseBodyMethodProcessor {
         if (selectedMediaType != null) {
             selectedMediaType = selectedMediaType.removeQualityValue();
             for (HttpMessageConverter<?> converter : this.messageConverters) {
-                if (converter instanceof ResponseMessageConverter messageConverter
-                        && messageConverter.canWrite(value, selectedMediaType)) {
+                if (converter instanceof ResponseMessageConverter
+                        && ((ResponseMessageConverter) converter).canWrite(value, selectedMediaType)) {
                     return (HttpMessageConverter<T>) converter;
                 }
-                if (converter instanceof GenericHttpMessageConverter messageConverter
-                        && messageConverter.canWrite(targetType, valueType, selectedMediaType)) {
+                if (converter instanceof GenericHttpMessageConverter
+                        && ((GenericHttpMessageConverter) converter)
+                                .canWrite(targetType, valueType, selectedMediaType)) {
                     return (HttpMessageConverter<T>) converter;
                 } else if (converter.canWrite(valueType, selectedMediaType)) {
                     return (HttpMessageConverter<T>) converter;

@@ -5,11 +5,12 @@
  */
 package org.geoserver.wcs2_0.response;
 
-import jakarta.activation.ActivationDataFlavor;
-import jakarta.activation.DataContentHandler;
-import jakarta.activation.DataSource;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.io.OutputStream;
+import javax.activation.DataContentHandler;
+import javax.activation.DataSource;
 import javax.xml.transform.TransformerException;
 import org.geoserver.wcs2_0.util.EnvelopeAxesLabelsMapper;
 import org.geotools.coverage.grid.GridCoverage2D;
@@ -29,12 +30,12 @@ public class GMLCovHandler implements DataContentHandler {
     }
 
     @Override
-    public Object getTransferData(ActivationDataFlavor flavor, DataSource source) throws IOException {
+    public Object getTransferData(DataFlavor flavor, DataSource source) throws UnsupportedFlavorException, IOException {
         throw new UnsupportedOperationException("This handler is not able to work on the parsing side");
     }
 
     @Override
-    public ActivationDataFlavor[] getTransferDataFlavors() {
+    public DataFlavor[] getTransferDataFlavors() {
         return null;
     }
 

@@ -13,6 +13,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -27,7 +28,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.geoserver.catalog.StyleInfo;
-import org.geoserver.ogcapi.SwaggerJSONAPIMessageConverter;
+import org.geoserver.ogcapi.OpenAPIMessageConverter;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.springframework.http.HttpHeaders;
@@ -40,12 +41,12 @@ public class ApiTest extends StylesTestSupport {
     public void testApiJson() throws Exception {
         MockHttpServletResponse response = getAsMockHttpServletResponse("ogc/styles/v1/openapi", 200);
         assertThat(
-                response.getContentType(),
-                CoreMatchers.startsWith(SwaggerJSONAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE));
+                response.getContentType(), CoreMatchers.startsWith(OpenAPIMessageConverter.OPEN_API_MEDIA_TYPE_VALUE));
         String json = response.getContentAsString();
         LOGGER.log(Level.INFO, json);
 
-        OpenAPI api = Json.mapper().readValue(json, OpenAPI.class);
+        ObjectMapper mapper = Json.mapper();
+        OpenAPI api = mapper.readValue(json, OpenAPI.class);
         validateApi(api);
     }
 
@@ -59,14 +60,12 @@ public class ApiTest extends StylesTestSupport {
         // check template expansion worked properly
         assertThat(
                 html,
-                containsString("<link rel=\"icon\" type=\"image/png\""
-                        + " href=\"http://localhost:8080/geoserver/swagger-ui/favicon-32x32.png\" sizes=\"32x32\""
-                        + " />"));
+                containsString(
+                        "<link rel=\"icon\" type=\"image/png\" href=\"http://localhost:8080/geoserver/swagger-ui/favicon-32x32.png\" sizes=\"32x32\" />"));
         assertThat(
                 html,
-                containsString("<link rel=\"icon\" type=\"image/png\""
-                        + " href=\"http://localhost:8080/geoserver/swagger-ui/favicon-16x16.png\" sizes=\"16x16\""
-                        + " />"));
+                containsString(
+                        "<link rel=\"icon\" type=\"image/png\" href=\"http://localhost:8080/geoserver/swagger-ui/favicon-16x16.png\" sizes=\"16x16\" />"));
         assertThat(
                 html,
                 containsString("<script src=\"http://localhost:8080/geoserver/swagger-ui/swagger-ui-bundle.js\">"));
@@ -88,7 +87,8 @@ public class ApiTest extends StylesTestSupport {
         String yaml = getAsString("ogc/styles/v1/openapi?f=application/yaml");
         LOGGER.log(Level.INFO, yaml);
 
-        OpenAPI api = Yaml.mapper().readValue(yaml, OpenAPI.class);
+        ObjectMapper mapper = Yaml.mapper();
+        OpenAPI api = mapper.readValue(yaml, OpenAPI.class);
         validateApi(api);
     }
 
@@ -104,7 +104,8 @@ public class ApiTest extends StylesTestSupport {
         String yaml =
                 string(new ByteArrayInputStream(response.getContentAsString().getBytes()));
 
-        OpenAPI api = Yaml.mapper().readValue(yaml, OpenAPI.class);
+        ObjectMapper mapper = Yaml.mapper();
+        OpenAPI api = mapper.readValue(yaml, OpenAPI.class);
         validateApi(api);
     }
 
@@ -183,7 +184,7 @@ public class ApiTest extends StylesTestSupport {
         // assertThat(styleIdValues, Matchers.containsInAnyOrder(expectedStyleIds));
         Collections.sort(styleIdValues);
         Collections.sort(expectedStyleIds);
-        assertEquals(expectedStyleIds, styleIdValues);
+        assertEquals(styleIdValues, expectedStyleIds);
     }
 
     @Test
@@ -212,6 +213,7 @@ public class ApiTest extends StylesTestSupport {
         String yaml =
                 string(new ByteArrayInputStream(response.getContentAsString().getBytes()));
 
-        return Yaml.mapper().readValue(yaml, OpenAPI.class);
+        ObjectMapper mapper = Yaml.mapper();
+        return mapper.readValue(yaml, OpenAPI.class);
     }
 }

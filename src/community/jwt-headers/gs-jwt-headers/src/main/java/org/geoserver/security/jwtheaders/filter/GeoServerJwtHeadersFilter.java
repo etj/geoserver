@@ -5,16 +5,16 @@
 
 package org.geoserver.security.jwtheaders.filter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.filter.GeoServerPreAuthenticatedUserNameFilter;
 import org.geoserver.security.impl.GeoServerRole;
@@ -173,7 +173,7 @@ public class GeoServerJwtHeadersFilter extends GeoServerPreAuthenticatedUserName
     }
 
     /**
-     * extracts the roles from the request (cf JwtHeadersRolesExtractor). It uses the standard GeoServer infrastructure
+     * extracts the roles from the request (cf JwtHeadersRolesExtractor). It uses the standard Geoserver infrastructure
      * (superclass) for getting the "standard" roles (i.e. Header, UserGroupService, RoleService)
      */
     @Override

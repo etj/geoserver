@@ -6,15 +6,14 @@
 package org.geoserver.wcs2_0.eo.kvp;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
+import net.opengis.ows11.SectionsType;
 import net.opengis.wcs20.DescribeEOCoverageSetType;
 import net.opengis.wcs20.Section;
 import net.opengis.wcs20.Sections;
 import net.opengis.wcs20.Wcs20Factory;
 import org.geoserver.ows.kvp.EMFKvpRequestReader;
-import org.geoserver.ows.util.KvpUtils;
-import org.geoserver.platform.OWS20Exception;
+import org.geoserver.platform.OWS20Exception.OWSExceptionCode;
 import org.geoserver.wcs2_0.exception.WCS20Exception;
 
 /**
@@ -30,12 +29,11 @@ public class WCS20DescribeEOCoverageSetRequestReader extends EMFKvpRequestReader
 
     @Override
     public Object read(Object request, Map<String, Object> kvp, Map<String, Object> rawKvp) throws Exception {
-        String value = (String) rawKvp.get("sections");
-        if (value != null) {
-            LOGGER.info("Sections: " + value);
+        SectionsType owsSections = (SectionsType) kvp.get("sections");
+        if (owsSections != null) {
             Sections sections = Wcs20Factory.eINSTANCE.createSections();
-            List<String> sectionNames = KvpUtils.readFlat(value, KvpUtils.INNER_DELIMETER);
-            for (String sectionName : sectionNames) {
+            for (Object o : owsSections.getSection()) {
+                String sectionName = (String) o;
                 Section section = Section.get(sectionName);
                 if (section == null) {
                     throw new WCS20Exception(
@@ -43,7 +41,7 @@ public class WCS20DescribeEOCoverageSetRequestReader extends EMFKvpRequestReader
                                     + sectionName
                                     + ", supported values are "
                                     + Arrays.asList(Section.values()),
-                            OWS20Exception.OWSExceptionCode.InvalidParameterValue,
+                            OWSExceptionCode.InvalidParameterValue,
                             "sections");
                 }
                 sections.getSection().add(section);

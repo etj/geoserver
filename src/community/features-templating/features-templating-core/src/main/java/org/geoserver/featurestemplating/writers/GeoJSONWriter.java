@@ -5,17 +5,18 @@
 
 package org.geoserver.featurestemplating.writers;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 import org.geoserver.featurestemplating.builders.EncodingHints;
 import org.geoserver.featurestemplating.configuration.TemplateIdentifier;
 import org.geoserver.util.ISO8601Formatter;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
-import tools.jackson.core.JsonGenerator;
-import tools.jackson.databind.JsonNode;
 
 /** Implements its superclass methods to write a valid GeoJSON output */
 public class GeoJSONWriter extends CommonJSONWriter {
@@ -47,22 +48,22 @@ public class GeoJSONWriter extends CommonJSONWriter {
         if (href != null) {
             writeStartObject();
             if (title != null) {
-                generator.writeName("title");
+                generator.writeFieldName("title");
                 writeValue(title);
             }
             if (mimeType != null) {
-                generator.writeName("type");
+                generator.writeFieldName("type");
                 writeValue(mimeType);
             }
             if (rel != null) {
-                generator.writeName("rel");
+                generator.writeFieldName("rel");
                 writeValue(rel);
             }
             if (method != null) {
-                generator.writeName("method");
+                generator.writeFieldName("method");
                 writeValue(method);
             }
-            generator.writeName("href");
+            generator.writeFieldName("href");
             writeValue(href);
             writeEndObject();
         }
@@ -70,7 +71,7 @@ public class GeoJSONWriter extends CommonJSONWriter {
 
     public void writePagingLinks(String mimeType, String previous, String next) throws IOException {
 
-        generator.writeName("links");
+        generator.writeFieldName("links");
         writeStartArray();
         writeLink(previous, "previous", mimeType, "previous page", null);
         writeLink(next, "next", mimeType, "next page", null);
@@ -80,37 +81,37 @@ public class GeoJSONWriter extends CommonJSONWriter {
     public void writeCollectionCounts(BigInteger featureCount) throws IOException {
         // counts
         if (featureCount != null && featureCount.longValue() > 0) {
-            generator.writeName("totalFeatures");
+            generator.writeFieldName("totalFeatures");
             writeValue(featureCount);
-            generator.writeName("numberMatched");
+            generator.writeFieldName("numberMatched");
             writeValue(featureCount);
         } else {
-            generator.writeName("totalFeatures");
+            generator.writeFieldName("totalFeatures");
             writeValue("unknown");
         }
         writeNumberReturned();
     }
 
     public void writeNumberReturned() throws IOException {
-        generator.writeName("numberReturned");
+        generator.writeFieldName("numberReturned");
         writeValue(numberReturned);
     }
 
     public void writeTimeStamp() throws IOException {
-        generator.writeName("timeStamp");
+        generator.writeFieldName("timeStamp");
         writeValue(new ISO8601Formatter().format(new Date()));
     }
 
     public void writeCrs() throws IOException {
-        generator.writeName("crs");
+        generator.writeFieldName("crs");
         if (crs != null) {
             String identifier = getCRSIdentifier(crs);
             writeStartObject();
-            generator.writeName("type");
+            generator.writeFieldName("type");
             writeValue("name");
-            generator.writeName("properties");
+            generator.writeFieldName("properties");
             writeStartObject();
-            generator.writeName("name");
+            generator.writeFieldName("name");
             writeValue(identifier);
             writeEndObject(); // end properties
             writeEndObject(); // end crs
@@ -120,7 +121,7 @@ public class GeoJSONWriter extends CommonJSONWriter {
     }
 
     public void writeCollectionBounds(ReferencedEnvelope env) throws IOException {
-        generator.writeName("bbox");
+        generator.writeFieldName("bbox");
         writeStartArray();
         if (axisOrder == CRS.AxisOrder.NORTH_EAST) {
             writeValue(env.getMinY());
@@ -151,8 +152,10 @@ public class GeoJSONWriter extends CommonJSONWriter {
     }
 
     private void writeArrayNodeFlat(String nodeName, JsonNode arNode, String separator) throws IOException {
+        Iterator<JsonNode> arrayIterator = arNode.elements();
         int i = 1;
-        for (JsonNode node : arNode.values()) {
+        while (arrayIterator.hasNext()) {
+            JsonNode node = arrayIterator.next();
             String arrayNodeName = nodeName + "_" + i;
             if (node.isValueNode()) {
                 writeValueNode(arrayNodeName, node);
@@ -166,15 +169,17 @@ public class GeoJSONWriter extends CommonJSONWriter {
     }
 
     private void writeObjectNodeFlat(String superNodeName, JsonNode node, String separator) throws IOException {
-        for (Map.Entry<String, JsonNode> nodeEntry : node.properties()) {
-            String entryName = nodeEntry.getKey();
+        Iterator<Map.Entry<String, JsonNode>> iterator = node.fields();
+        while (iterator.hasNext()) {
+            Map.Entry<String, JsonNode> nodEntry = iterator.next();
+            String entryName = nodEntry.getKey();
             String newEntryName;
             if (entryName != null) {
                 newEntryName = superNodeName + separator + entryName;
             } else {
                 newEntryName = null;
             }
-            JsonNode childNode = nodeEntry.getValue();
+            JsonNode childNode = nodEntry.getValue();
             if (childNode.isObject()) {
                 writeObjectNodeFlat(newEntryName, childNode, separator);
             } else if (childNode.isValueNode()) {

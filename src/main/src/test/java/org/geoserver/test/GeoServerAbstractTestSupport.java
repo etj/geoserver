@@ -8,14 +8,6 @@ package org.geoserver.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import jakarta.servlet.Filter;
-import jakarta.servlet.ReadListener;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -33,6 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.Filter;
+import javax.servlet.ReadListener;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
@@ -46,6 +46,8 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
+import net.sf.json.JSON;
+import net.sf.json.JSONSerializer;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -58,7 +60,6 @@ import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.config.GeoServerLoader;
 import org.geoserver.config.GeoServerLoaderProxy;
 import org.geoserver.data.test.TestData;
-import org.geoserver.filters.SpringDelegatingFilter;
 import org.geoserver.logging.LoggingUtils;
 import org.geoserver.ows.util.KvpUtils;
 import org.geoserver.ows.util.ResponseUtils;
@@ -74,8 +75,6 @@ import org.geotools.util.factory.Hints;
 import org.geotools.util.logging.Log4JLoggerFactory;
 import org.geotools.util.logging.Logging;
 import org.geotools.xsd.XSD;
-import org.kordamp.json.JSON;
-import org.kordamp.json.JSONSerializer;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -1112,16 +1111,10 @@ public abstract class GeoServerAbstractTestSupport extends OneTimeSetupTest {
 
     /**
      * Subclasses needed to do integration tests with servlet filters can override this method and return the list of
-     * filters to be used during mocked requests. By default it returns a list with a single SpringDelegatingFilter
+     * filters to be used during mocked requests
      */
     protected List<Filter> getFilters() {
-        try {
-            SpringDelegatingFilter filter = new SpringDelegatingFilter();
-            filter.init(null);
-            return List.of(filter);
-        } catch (ServletException e) {
-            throw new RuntimeException(e);
-        }
+        return null;
     }
 
     /**

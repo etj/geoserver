@@ -38,20 +38,19 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.util.string.StringValue;
 import org.geoserver.gwc.GWC;
 import org.geoserver.gwc.layer.GeoServerTileLayer;
 import org.geoserver.gwc.web.GWCIconFactory;
 import org.geoserver.ows.URLMangler.URLType;
 import org.geoserver.ows.util.ResponseUtils;
-import org.geoserver.web.CatalogIconFactory;
 import org.geoserver.web.GeoServerSecuredPage;
+import org.geoserver.web.wicket.CachingImage;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geoserver.web.wicket.GeoServerDialog;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;
+import org.geoserver.web.wicket.SimpleAjaxLink;
 import org.geotools.image.io.ImageIOExt;
 import org.geotools.util.logging.Logging;
 import org.geowebcache.diskquota.storage.Quota;
@@ -73,29 +72,7 @@ public class CachedLayersPage extends GeoServerSecuredPage {
     private static final PackageResourceReference JS_FILE =
             new PackageResourceReference(CachedLayersPage.class, "CachedLayersPage.js");
 
-    private String targetWorkspaceStr = null;
-
-    private CachedLayerProvider provider = new CachedLayerProvider() {
-        @Override
-        protected List<TileLayer> getItems() {
-            List<TileLayer> base = super.getItems();
-            if (targetWorkspaceStr == null || targetWorkspaceStr.isEmpty()) {
-                return base;
-            }
-            List<TileLayer> filtered = new ArrayList<>();
-            for (TileLayer layer : base) {
-                String name = layer.getName();
-                int idx = name.indexOf(':');
-                if (idx > 0) {
-                    String wsPrefix = name.substring(0, idx);
-                    if (targetWorkspaceStr.equals(wsPrefix)) {
-                        filtered.add(layer);
-                    }
-                }
-            }
-            return filtered;
-        }
-    };
+    private CachedLayerProvider provider = new CachedLayerProvider();
 
     private GeoServerTablePanel<TileLayer> table;
 
@@ -103,11 +80,8 @@ public class CachedLayersPage extends GeoServerSecuredPage {
 
     private CachedLayerSelectionRemovalLink removal;
 
-    public CachedLayersPage(PageParameters parameters) {
-        StringValue wsParam = parameters.get("workspace");
-        if (!wsParam.isEmpty()) {
-            this.targetWorkspaceStr = wsParam.toString();
-        }
+    public CachedLayersPage() {
+
         table = new GeoServerTablePanel<>("table", provider, true) {
             @Serial
             private static final long serialVersionUID = 1L;
@@ -120,8 +94,8 @@ public class CachedLayersPage extends GeoServerSecuredPage {
                 if (property == TYPE) {
                     Fragment f = new Fragment(id, "iconFragment", CachedLayersPage.this);
                     TileLayer layer = itemModel.getObject();
-                    String layerIcon = GWCIconFactory.getSpecificLayerIcon(layer);
-                    f.add(CatalogIconFactory.get().getIcon("layerIcon", layerIcon));
+                    PackageResourceReference layerIcon = GWCIconFactory.getSpecificLayerIcon(layer);
+                    f.add(new CachingImage("layerIcon", layerIcon));
                     return f;
                 } else if (property == NAME) {
                     return nameLink(id, itemModel);
@@ -134,14 +108,14 @@ public class CachedLayersPage extends GeoServerSecuredPage {
                 } else if (property == ENABLED) {
                     TileLayer layerInfo = itemModel.getObject();
                     boolean enabled = layerInfo.isEnabled();
-                    String iconReference;
+                    PackageResourceReference icon;
                     if (enabled) {
-                        iconReference = GWCIconFactory.getEnabledIcon();
+                        icon = GWCIconFactory.getEnabledIcon();
                     } else {
-                        iconReference = GWCIconFactory.getDisabledIcon();
+                        icon = GWCIconFactory.getDisabledIcon();
                     }
                     Fragment f = new Fragment(id, "iconFragment", CachedLayersPage.this);
-                    f.add(CatalogIconFactory.get().getIcon("layerIcon", iconReference));
+                    f.add(new CachingImage("layerIcon", icon));
                     return f;
                 } else if (property == PREVIEW_LINKS) {
                     return previewLinks(id, itemModel);
@@ -174,10 +148,6 @@ public class CachedLayersPage extends GeoServerSecuredPage {
             String warningMsg = new ResourceModel("GWC.ImageIOFileCachingThresholdUnsetWarning").getObject();
             super.warn(warningMsg);
         }
-    }
-
-    public CachedLayersPage() {
-        this(new PageParameters());
     }
 
     @Override
@@ -222,27 +192,23 @@ public class CachedLayersPage extends GeoServerSecuredPage {
 
         // openlayers preview
         Fragment f = new Fragment(id, "actionsFragment", this);
-        String seedLabel = new ResourceModel("CachedLayersPage.seed").getObject();
-        ExternalLink seedLink = new ExternalLink("seedLink", href);
-        seedLink.setBody(Model.of("<i class=\"gs-icon gs-icon-add\"></i> " + seedLabel));
-        seedLink.setEscapeModelStrings(false);
-        f.add(seedLink);
+        f.add(new ExternalLink("seedLink", href, new ResourceModel("CachedLayersPage.seed").getObject()));
         f.add(truncateLink("truncateLink", tileLayerNameModel));
         return f;
     }
 
-    private AjaxLink<String> truncateLink(final String id, IModel<TileLayer> tileLayerNameModel) {
+    private SimpleAjaxLink<String> truncateLink(final String id, IModel<TileLayer> tileLayerNameModel) {
 
         String layerName = tileLayerNameModel.getObject().getName();
         IModel<String> model = new Model<>(layerName);
-        IModel<String> labelModel = new ResourceModel("CachedLayersPage.truncate");
+        IModel<String> labelModel = new ResourceModel("truncate");
 
-        AjaxLink<String> link = new AjaxLink<>(id, model) {
+        SimpleAjaxLink<String> link = new SimpleAjaxLink<>(id, model, labelModel) {
             @Serial
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void onClick(AjaxRequestTarget target) {
+            protected void onClick(AjaxRequestTarget target) {
 
                 dialog.setTitle(new ParamResourceModel("confirmTruncateTitle", CachedLayersPage.this));
                 dialog.setDefaultModel(getDefaultModel());
@@ -289,9 +255,6 @@ public class CachedLayersPage extends GeoServerSecuredPage {
                 });
             }
         };
-        String truncateLabel = labelModel.getObject();
-        link.setBody(Model.of("<i class=\"gs-icon gs-icon-clear-cache\"></i> " + truncateLabel));
-        link.setEscapeModelStrings(false);
 
         return link;
     }

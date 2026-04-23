@@ -6,6 +6,7 @@ package org.geoserver.featurestemplating.builders;
 
 import static org.geoserver.featurestemplating.readers.TemplateReader.FILTERKEY;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.geoserver.featurestemplating.builders.flat.FlatCompositeBuilder;
 import org.geoserver.featurestemplating.builders.flat.FlatDynamicBuilder;
 import org.geoserver.featurestemplating.builders.flat.FlatIteratingBuilder;
@@ -20,7 +21,6 @@ import org.geoserver.featurestemplating.builders.impl.RootBuilder;
 import org.geoserver.featurestemplating.builders.impl.StaticBuilder;
 import org.geoserver.featurestemplating.readers.TemplateReader;
 import org.xml.sax.helpers.NamespaceSupport;
-import tools.jackson.databind.JsonNode;
 
 /** A builder of TemplateBuilder. */
 public class TemplateBuilderMaker {
@@ -374,12 +374,12 @@ public class TemplateBuilderMaker {
         boolean overlayExpression = true;
         String expression;
         JsonNode node;
-        if (baseNode.isString()) {
-            expression = baseNode.asString();
+        if (baseNode.isTextual()) {
+            expression = baseNode.textValue();
             overlayExpression = false;
             node = overlayNode;
         } else {
-            expression = overlayNode.asString();
+            expression = overlayNode.textValue();
             node = baseNode;
         }
         DynamicMergeBuilder dynamicMergeBuilder =

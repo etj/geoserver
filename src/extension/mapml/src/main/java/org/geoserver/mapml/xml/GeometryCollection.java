@@ -8,14 +8,13 @@
 
 package org.geoserver.mapml.xml;
 
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlElements;
-import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlType;
 
 /**
  * Java class for anonymous complex type.
@@ -43,7 +42,6 @@ import java.util.List;
 @XmlType(
         name = "",
         propOrder = {"pointOrLineStringOrPolygon"})
-@XmlRootElement(name = "map-geometrycollection", namespace = "http://www.w3.org/1999/xhtml")
 public class GeometryCollection {
 
     @XmlElements({
@@ -58,7 +56,7 @@ public class GeometryCollection {
         @XmlElement(name = "map-multipolygon", type = MultiPolygon.class, namespace = "http://www.w3.org/1999/xhtml"),
         @XmlElement(name = "map-a", type = A.class, namespace = "http://www.w3.org/1999/xhtml")
     })
-    protected List<MapMLElement> pointOrLineStringOrPolygon;
+    protected List<Object> pointOrLineStringOrPolygon;
 
     /**
      * Gets the value of the pointOrLineStringOrPolygon property.
@@ -76,7 +74,7 @@ public class GeometryCollection {
      * <p>Objects of the following type(s) are allowed in the list {@link Point } {@link LineString } {@link Polygon }
      * {@link MultiPoint } {@link MultiLineString } {@link MultiPolygon }
      */
-    public List<MapMLElement> getPointOrLineStringOrPolygon() {
+    public List<Object> getPointOrLineStringOrPolygon() {
         if (pointOrLineStringOrPolygon == null) {
             pointOrLineStringOrPolygon = new ArrayList<>();
         }

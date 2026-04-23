@@ -5,8 +5,6 @@
  */
 package org.geoserver.web.admin;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.TextArea;
@@ -21,28 +19,15 @@ import org.geoserver.web.StringAndInternationalStringPanel;
 
 public class ContactPanel extends Panel {
 
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(ContactPanel.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
-
     public ContactPanel(String id, final IModel<ContactInfo> model) {
         super(id, model);
+        add(new StringAndInternationalStringPanel("contactOrganization", model, this));
+        add(new StringAndInternationalStringPanel("onlineResource", model, this));
 
-        // WELCOME
-
-        add(new StringAndInternationalStringPanel("title", model, "welcomeTitle", "title", "internationalTitle", this));
-        // setup the "welcome" text as either a textarea (non-international) or as a set of textareas (international).
+        // setup the "welcome" text as either a textarea (non-international)
+        // or as a set of textareas (international).
         WebMarkupContainer abstractLabelContainer = new WebMarkupContainer("welcomeLabel");
-        abstractLabelContainer.add(new Label("welcomeLabel", new StringResourceModel("welcomeDescription", this)));
+        abstractLabelContainer.add(new Label("welcomeLabel", new StringResourceModel("welcome", this)));
         add(abstractLabelContainer);
         TextArea<String> area = new TextArea<>("welcome", new PropertyModel<>(model, "welcome"));
         add(area);
@@ -59,9 +44,6 @@ public class ContactPanel extends Panel {
                 };
         add(internationalStringPanelAbstract);
 
-        // CONTACT
-        add(new StringAndInternationalStringPanel("contactOrganization", model, this));
-        add(new StringAndInternationalStringPanel("onlineResource", model, this));
         add(new StringAndInternationalStringPanel("contactPerson", model, this));
         add(new StringAndInternationalStringPanel("contactPosition", model, this));
         add(new StringAndInternationalStringPanel("addressType", model, this));

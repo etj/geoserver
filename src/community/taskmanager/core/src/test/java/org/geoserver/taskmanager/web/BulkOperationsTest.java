@@ -64,44 +64,44 @@ public class BulkOperationsTest extends AbstractWicketTaskManagerTest {
 
         tester.startPage(BulkOperationsPage.class);
 
-        tester.assertComponent("tabs:panel:form:workspace", TextField.class);
+        tester.assertComponent("form:tabs:panel:workspace", TextField.class);
 
-        tester.assertComponent("tabs:panel:form:configuration", TextField.class);
+        tester.assertComponent("form:tabs:panel:configuration", TextField.class);
 
-        tester.assertComponent("tabs:panel:form:name", TextField.class);
+        tester.assertComponent("form:tabs:panel:name", TextField.class);
 
-        tester.assertComponent("tabs:panel:form:startDelay", NumberTextField.class);
+        tester.assertComponent("form:tabs:panel:startDelay", NumberTextField.class);
 
-        tester.assertComponent("tabs:panel:form:betweenDelay", NumberTextField.class);
+        tester.assertComponent("form:tabs:panel:betweenDelay", NumberTextField.class);
 
-        tester.assertComponent("tabs:panel:form:batchesFound", Label.class);
+        tester.assertComponent("form:tabs:panel:batchesFound", Label.class);
 
-        tester.assertModelValue("tabs:panel:form:batchesFound", "Found 0 batches that match the specified criteria");
+        tester.assertModelValue("form:tabs:panel:batchesFound", "Found 0 batches that match the specified criteria");
 
-        FormTester formTester = tester.newFormTester("tabs:panel:form");
+        FormTester formTester = tester.newFormTester("form");
 
-        formTester.setValue("configuration", null);
+        formTester.setValue("tabs:panel:configuration", null);
 
-        formTester.setValue("betweenDelay", "60");
+        formTester.setValue("tabs:panel:betweenDelay", "60");
 
-        tester.executeAjaxEvent("tabs:panel:form:configuration", "change");
+        tester.executeAjaxEvent("form:tabs:panel:configuration", "change");
 
-        tester.assertModelValue("tabs:panel:form:batchesFound", "Found 2 batches that match the specified criteria");
+        tester.assertModelValue("form:tabs:panel:batchesFound", "Found 2 batches that match the specified criteria");
 
-        formTester.setValue("name", "Q%");
+        formTester.setValue("tabs:panel:name", "Q%");
 
-        tester.executeAjaxEvent("tabs:panel:form:name", "change");
+        tester.executeAjaxEvent("form:tabs:panel:name", "change");
 
-        tester.assertModelValue("tabs:panel:form:batchesFound", "Found 1 batches that match the specified criteria");
+        tester.assertModelValue("form:tabs:panel:batchesFound", "Found 1 batches that match the specified criteria");
 
-        formTester.setValue("name", "%");
+        formTester.setValue("tabs:panel:name", "%");
 
-        tester.executeAjaxEvent("tabs:panel:form:name", "change");
+        tester.executeAjaxEvent("form:tabs:panel:name", "change");
 
-        formTester.submit("run");
+        formTester.submit("tabs:panel:run");
 
         tester.assertModelValue(
-                "tabs:panel:dialog:dialog:modal:overlay:dialog:content:content:form:userPanel",
+                "form:tabs:panel:dialog:dialog:content:form:userPanel",
                 "Are you sure you want to run 2 batches? This will take at least 1 minutes.");
 
         dao.delete(batch1);
@@ -121,27 +121,26 @@ public class BulkOperationsTest extends AbstractWicketTaskManagerTest {
 
         // WicketHierarchyPrinter.print(tester.getLastRenderedPage(), true, true);
 
-        ((TabbedPanel<?>) tester.getComponentFromLastRenderedPage("tabs")).setSelectedTab(1);
+        ((TabbedPanel<?>) tester.getComponentFromLastRenderedPage("form:tabs")).setSelectedTab(1);
 
-        tester.assertComponent("tabs:panel:form:template", DropDownChoice.class);
+        tester.assertComponent("form:tabs:panel:template", DropDownChoice.class);
 
-        tester.assertComponent("tabs:panel:form:fileUpload", FileUploadField.class);
+        tester.assertComponent("form:tabs:panel:fileUpload", FileUploadField.class);
 
-        tester.assertComponent("tabs:panel:form:validate", CheckBox.class);
+        tester.assertComponent("form:tabs:panel:validate", CheckBox.class);
 
-        tester.assertModelValue("tabs:panel:form:validate", true);
+        tester.assertModelValue("form:tabs:panel:validate", true);
 
-        FormTester formTester = tester.newFormTester("tabs:panel:form");
+        FormTester formTester = tester.newFormTester("form");
 
-        formTester.select("template", 0);
+        formTester.select("tabs:panel:template", 0);
 
         File csv = File.createTempFile("import", ".csv");
         FileUtils.writeStringToFile(csv, "name;description\na;aaa\nb;bbb\n", StandardCharsets.UTF_8);
-        formTester.setFile("fileUpload", new org.apache.wicket.util.file.File(csv), "text/csv");
-
-        formTester.submit("import");
+        formTester.setFile("tabs:panel:fileUpload", new org.apache.wicket.util.file.File(csv), "text/csv");
+        formTester.submit("tabs:panel:import");
         tester.assertModelValue(
-                "tabs:panel:dialog:dialog:modal:overlay:dialog:content:content:form:userPanel",
+                "form:tabs:panel:dialog:dialog:content:form:userPanel",
                 "Are you sure you want to import 2 configurations?");
 
         dao.delete(temp);
@@ -186,45 +185,45 @@ public class BulkOperationsTest extends AbstractWicketTaskManagerTest {
 
         tester.assertRenderedPage(BulkOperationsPage.class);
 
-        ((TabbedPanel<?>) tester.getComponentFromLastRenderedPage("tabs")).setSelectedTab(2);
+        ((TabbedPanel<?>) tester.getComponentFromLastRenderedPage("form:tabs")).setSelectedTab(2);
 
         tester.assertRenderedPage(BulkOperationsPage.class);
 
-        tester.assertComponent("tabs:panel:form:workspace", TextField.class);
+        tester.assertComponent("form:tabs:panel:workspace", TextField.class);
 
-        tester.assertComponent("tabs:panel:form:configuration", TextField.class);
+        tester.assertComponent("form:tabs:panel:configuration", TextField.class);
 
-        tester.assertComponent("tabs:panel:form:startDelay", NumberTextField.class);
+        tester.assertComponent("form:tabs:panel:startDelay", NumberTextField.class);
 
-        tester.assertComponent("tabs:panel:form:betweenDelay", NumberTextField.class);
+        tester.assertComponent("form:tabs:panel:betweenDelay", NumberTextField.class);
 
-        tester.assertComponent("tabs:panel:form:configsFound", Label.class);
-
-        tester.assertModelValue(
-                "tabs:panel:form:configsFound", "Found 2 configurations that match the specified criteria");
-
-        FormTester formTester = tester.newFormTester("tabs:panel:form");
-
-        formTester.setValue("configuration", "Q%");
-
-        formTester.setValue("betweenDelay", "60");
-
-        tester.executeAjaxEvent("tabs:panel:form:configuration", "change");
+        tester.assertComponent("form:tabs:panel:configsFound", Label.class);
 
         tester.assertModelValue(
-                "tabs:panel:form:configsFound", "Found 1 configurations that match the specified criteria");
+                "form:tabs:panel:configsFound", "Found 2 configurations that match the specified criteria");
 
-        formTester.setValue("configuration", "%");
+        FormTester formTester = tester.newFormTester("form");
 
-        tester.executeAjaxEvent("tabs:panel:form:configuration", "change");
+        formTester.setValue("tabs:panel:configuration", "Q%");
 
-        formTester.submit("run");
+        formTester.setValue("tabs:panel:betweenDelay", "60");
+
+        tester.executeAjaxEvent("form:tabs:panel:configuration", "change");
 
         tester.assertModelValue(
-                "tabs:panel:dialog:dialog:modal:overlay:dialog:content:content:form:userPanel",
+                "form:tabs:panel:configsFound", "Found 1 configurations that match the specified criteria");
+
+        formTester.setValue("tabs:panel:configuration", "%");
+
+        tester.executeAjaxEvent("form:tabs:panel:configuration", "change");
+
+        formTester.submit("tabs:panel:run");
+
+        tester.assertModelValue(
+                "form:tabs:panel:dialog:dialog:content:form:userPanel",
                 "Are you sure you want to initialize 2 configurations? This will take at least 1 minutes.");
 
-        formTester = tester.newFormTester("tabs:panel:dialog:dialog:modal:overlay:dialog:content:content:form");
+        formTester = tester.newFormTester("form:tabs:panel:dialog:dialog:content:form");
 
         formTester.submit("submit");
 
@@ -235,7 +234,7 @@ public class BulkOperationsTest extends AbstractWicketTaskManagerTest {
                 || batch1.getLatestBatchRun() != null
                         && batch1.getLatestBatchRun().getBatchRun().getStatus() != Status.COMMITTED);
 
-        Thread.sleep(500);
+        Thread.sleep(100);
         config1 = dao.reload(config1);
         assertTrue(config1.isValidated());
 

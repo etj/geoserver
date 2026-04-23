@@ -4,7 +4,6 @@
  */
 package org.geoserver.taskmanager.tasks;
 
-import jakarta.annotation.PostConstruct;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -13,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import org.geoserver.taskmanager.external.DbSource;
 import org.geoserver.taskmanager.external.ExtTypes;
 import org.geoserver.taskmanager.external.impl.DbTableImpl;
@@ -87,15 +87,10 @@ public abstract class AbstractCreateViewTaskTypeImpl implements TaskType {
 
         try (Connection conn = db.getDataSource().getConnection()) {
             try (Statement stmt = conn.createStatement()) {
-                StringBuilder sb = new StringBuilder();
 
-                String schema = SqlUtil.schema(tempViewName);
-                if (schema != null) {
-                    String sqlCreateSchemaIfNotExists =
-                            db.getDialect().createSchema(conn, SqlUtil.schema(tempViewName));
-                    sb.append(sqlCreateSchemaIfNotExists);
-                }
+                String sqlCreateSchemaIfNotExists = db.getDialect().createSchema(conn, SqlUtil.schema(tempViewName));
 
+                StringBuilder sb = new StringBuilder(sqlCreateSchemaIfNotExists);
                 sb.append("CREATE VIEW ").append(tempViewName).append(" AS ").append(definition);
                 LOGGER.log(Level.FINE, "creating temporary View: " + sb.toString());
                 stmt.executeUpdate(sb.toString());

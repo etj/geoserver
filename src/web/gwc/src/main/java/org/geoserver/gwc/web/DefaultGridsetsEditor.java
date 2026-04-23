@@ -5,8 +5,6 @@
  */
 package org.geoserver.gwc.web;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +28,7 @@ import org.geoserver.gwc.web.gridset.GridSetListTablePanel;
 import org.geoserver.gwc.web.gridset.GridSetTableProvider;
 import org.geoserver.web.wicket.GeoServerAjaxFormLink;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
-import org.geoserver.web.wicket.GsIcon;
+import org.geoserver.web.wicket.Icon;
 import org.geoserver.web.wicket.ImageAjaxLink;
 import org.geoserver.web.wicket.Select2DropDownChoice;
 import org.geowebcache.grid.GridSet;
@@ -43,19 +41,6 @@ import org.geowebcache.grid.GridSetBroker;
  * @author groldan
  */
 class DefaultGridsetsEditor extends FormComponentPanel<Set<String>> {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(DefaultGridsetsEditor.class);
-
-    @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-        super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
-        }
-    }
 
     @Serial
     private static final long serialVersionUID = 5098470663723800345L;
@@ -197,7 +182,7 @@ class DefaultGridsetsEditor extends FormComponentPanel<Set<String>> {
                 target.add(availableGridSets);
             }
         };
-        addGridsubsetLink.add(new GsIcon("addIcon", GWCIconFactory.ADD_ICON));
+        addGridsubsetLink.add(new Icon("addIcon", GWCIconFactory.ADD_ICON));
         add(addGridsubsetLink);
     }
 

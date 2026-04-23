@@ -119,7 +119,7 @@ public class MetadataType {
      */
     public List<LinkType> getLink() {
         if (link == null) {
-            link = new ArrayList<>();
+            link = new ArrayList<LinkType>();
         }
 
         return this.link;

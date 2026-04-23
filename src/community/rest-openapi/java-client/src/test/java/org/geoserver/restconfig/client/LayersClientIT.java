@@ -34,17 +34,11 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.RuleChain;
 import org.junit.rules.TestName;
 
 public class LayersClientIT {
 
-    private static GeoServerContainer geoserverContainer = new GeoServerContainer();
-
-    private static IntegrationTestSupport support = new IntegrationTestSupport(geoserverContainer);
-
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(geoserverContainer).around(support);
+    public static @ClassRule IntegrationTestSupport support = new IntegrationTestSupport();
 
     public @Rule TestName testName = new TestName();
     public @Rule ExpectedException ex = ExpectedException.none();

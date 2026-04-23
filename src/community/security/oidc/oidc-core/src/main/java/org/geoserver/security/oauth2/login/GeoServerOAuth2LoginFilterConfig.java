@@ -7,9 +7,9 @@ package org.geoserver.security.oauth2.login;
 import static java.util.Optional.ofNullable;
 import static org.geoserver.security.oauth2.login.GeoServerOAuth2LoginAuthenticationFilterBuilder.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI;
 
-import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.geoserver.config.GeoServer;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.config.PreAuthenticatedUserNameFilterConfig;
@@ -27,7 +27,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFilterConfig
         implements SecurityAuthFilterConfig, GeoServerOAuth2ClientRegistrationId {
 
-    @Serial
     private static final long serialVersionUID = -8581346584859849804L;
 
     /** Supports extraction of roles among the token claims */
@@ -44,8 +43,8 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     }
 
     /**
-     * Constant used to set up the proxy base in tests that are running without a GeoServer instance or an actual HTTP
-     * request context. The value of the variable is set up in the pom.xml, as a system property for surefire, in order
+     * Constant used to setup the proxy base in tests that are running without a GeoServer instance or an actual HTTP
+     * request context. The value of the variable is set-up in the pom.xml, as a system property for surefire, in order
      * to avoid hard-coding the value in the code.
      */
     public static final String OPENID_TEST_GS_PROXY_BASE = "OPENID_TEST_GS_PROXY_BASE";
@@ -54,28 +53,7 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     public static final String OIDC_INCOMING_CODE_ENDPOINT = "web/login/oauth2/code/";
 
     // Common for all providers
-    private String baseRedirectUri = resolveBaseRedirectUri();
-
-    /**
-     * Tracks whether {@link #setBaseRedirectUri(String)} was called in this session. When {@code false} (the default,
-     * and after XStream deserialization since this is transient), {@link #getBaseRedirectUri()} resolves dynamically
-     * from the current Proxy Base URL. When {@code true}, the explicitly set value is returned.
-     *
-     * <p>This allows the dynamic resolution to kick in after config reload (so changes to the global Proxy Base URL are
-     * reflected), while still honoring explicit programmatic or UI-driven overrides within the same session.
-     */
-    private transient boolean baseRedirectUriExplicitlySet = false;
-
-    /**
-     * Track whether per-provider redirect URIs were explicitly set via their respective setters. Same pattern as
-     * {@link #baseRedirectUriExplicitlySet}: transient so XStream deserialization always gets dynamic resolution, but
-     * programmatic overrides are honored within the same session.
-     */
-    private transient boolean oidcRedirectUriExplicitlySet = false;
-
-    private transient boolean googleRedirectUriExplicitlySet = false;
-    private transient boolean gitHubRedirectUriExplicitlySet = false;
-    private transient boolean msRedirectUriExplicitlySet = false;
+    private String baseRedirectUri = baseRedirectUri();
 
     // Google
     private boolean googleEnabled;
@@ -117,13 +95,11 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     /** currently no UI counterpart */
     private String oidcJwsAlgorithmName;
 
-    private String oidcIntrospectionUrl;
-
     private boolean oidcForceAuthorizationUriHttps = true;
     private boolean oidcForceTokenUriHttps = true;
+    private boolean oidcEnforceTokenValidation = true;
     private boolean oidcUsePKCE = false;
     private boolean oidcAuthenticationMethodPostSecret = false;
-    private boolean disableSignatureValidation = false;
     /**
      * Add extra logging. NOTE: this might spill confidential information to the log - do not turn on in normal
      * operation!
@@ -134,19 +110,6 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     private String tokenRolesClaim;
     private String postLogoutRedirectUri;
     private boolean enableRedirectAuthenticationEntryPoint;
-
-    /**
-     * Hybrid mode: accept machine-to-machine requests via Authorization: Bearer <JWT> and validate them using the same
-     * provider configuration already stored in this filter.
-     *
-     * <p>Enabled by default.
-     */
-    private boolean enableResourceServerMode = true;
-
-    // Resource Server (Bearer JWT) optional validations
-    private boolean validateTokenAudience = false;
-    private String validateTokenAudienceClaimName = "aud";
-    private String validateTokenAudienceClaimValue;
 
     // MSGraph
 
@@ -181,19 +144,16 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     }
 
     private String createPostLogoutRedirectUri() {
-        String lBase = resolveBaseRedirectUri();
-        if (lBase == null) {
-            return null;
-        }
+        String lBase = baseRedirectUri();
         if (!lBase.endsWith("/web/")) {
             lBase += "web/";
         }
         return lBase;
     }
 
-    /** @return a URI ending with "/" */
+    /** @return an URI ending with "/" */
     private String baseRedirectUriNormalized() {
-        return ofNullable(getBaseRedirectUri())
+        return ofNullable(baseRedirectUri)
                 .map(s -> s.endsWith("/") ? s : s + "/")
                 .orElse("/");
     }
@@ -212,7 +172,7 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
         if (isOidcEnabled()) {
             lRegIds.add(REG_ID_OIDC);
         }
-        if (lRegIds.size() != 1) {
+        if (lRegIds.isEmpty() || 1 < lRegIds.size()) {
             return null;
         }
         String lBase = baseRedirectUriNormalized();
@@ -221,66 +181,22 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     }
 
     /**
-     * Resolves the base redirect URI dynamically from the current environment. Appends "/" to ensure consistent
-     * trailing slash. Resolution order:
+     * we add "/" at the end since not having it will SOMETIME cause issues. This will either use the proxyBaseURL (if
+     * set), or from ServletUriComponentsBuilder.fromCurrentContextPath().
      *
-     * <ol>
-     *   <li>{@code PROXY_BASE_URL} environment variable / system property (container deployments)
-     *   <li>{@code proxyBaseUrl} from GeoServer settings ({@code global.xml} or per-workspace)
-     *   <li>Current HTTP request context path (when available)
-     *   <li>{@link #OPENID_TEST_GS_PROXY_BASE} system property (test fallback)
-     * </ol>
-     *
-     * @return the resolved base URI, or {@code null} if none of the above sources provides a value
+     * @return
      */
-    private String resolveBaseRedirectUri() {
-        // 1. PROXY_BASE_URL env var / system property — highest priority, used in container
-        //    deployments where the env var overrides global.xml at runtime
-        String envProxyBase = GeoServerExtensions.getProperty("PROXY_BASE_URL");
-        if (StringUtils.hasText(envProxyBase)) {
-            return ensureTrailingSlash(envProxyBase);
+    String baseRedirectUri() {
+        Optional<String> proxbaseUrl = Optional.ofNullable(GeoServerExtensions.bean(GeoServer.class))
+                .map(gs -> gs.getSettings())
+                .map(s -> s.getProxyBaseUrl());
+        if (proxbaseUrl.isPresent() && StringUtils.hasText(proxbaseUrl.get())) {
+            return proxbaseUrl + "/";
         }
-        // 2. proxyBaseUrl from GeoServer settings (global.xml or per-workspace)
-        //    In GeoServer 3.x, getProxyBaseUrl() returns Optional<String> instead of String.
-        //    Calling Optional.toString() produces "Optional[url]", so we must unwrap it.
-        GeoServer gs = GeoServerExtensions.bean(GeoServer.class);
-        if (gs != null && gs.getSettings() != null) {
-            String url = unwrapToString(gs.getSettings().getProxyBaseUrl());
-            if (StringUtils.hasText(url)) {
-                return ensureTrailingSlash(url);
-            }
-        }
-        // 3. derive from current HTTP request context
-        if (RequestContextHolder.getRequestAttributes() != null) {
+        if (RequestContextHolder.getRequestAttributes() != null)
             return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + "/";
-        }
-        // 4. fallback to run tests without a full environment
-        String testBase = GeoServerExtensions.getProperty(OPENID_TEST_GS_PROXY_BASE);
-        return testBase != null ? ensureTrailingSlash(testBase) : null;
-    }
-
-    /** Appends "/" if not already present. */
-    private static String ensureTrailingSlash(String url) {
-        return url.endsWith("/") ? url : url + "/";
-    }
-
-    /**
-     * Converts a value to a plain String, unwrapping {@link java.util.Optional} if the runtime type is Optional.
-     *
-     * <p>In GeoServer 3.x, {@code SettingsInfo.getProxyBaseUrl()} returns {@code Optional<String>}.
-     * {@code Optional.toString()} produces the debug form {@code "Optional[url]"}, not the inner value. This helper
-     * detects that case and extracts the wrapped string.
-     *
-     * <p>Package-visible for unit testing.
-     */
-    static String unwrapToString(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof java.util.Optional<?> opt) {
-            return opt.map(Object::toString).orElse(null);
-        }
-        return value.toString();
+        // fallback to run tests without a full environment
+        return GeoServerExtensions.getProperty(OPENID_TEST_GS_PROXY_BASE);
     }
 
     public String getOidcUserNameAttribute() {
@@ -340,18 +256,14 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
         this.oidcAuthorizationUri = userAuthorizationUri;
     }
 
-    /** @return the redirectUri, dynamically computed unless explicitly set via {@link #setOidcRedirectUri} */
+    /** @return the redirectUri */
     public String getOidcRedirectUri() {
-        if (oidcRedirectUriExplicitlySet) {
-            return oidcRedirectUri;
-        }
-        return redirectUri(REG_ID_OIDC);
+        return oidcRedirectUri;
     }
 
     /** @param redirectUri the redirectUri to set */
     public void setOidcRedirectUri(String redirectUri) {
         this.oidcRedirectUri = redirectUri;
-        this.oidcRedirectUriExplicitlySet = true;
     }
 
     /** @return the checkTokenEndpointUrl */
@@ -361,7 +273,7 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
 
     /** @param checkTokenEndpointUrl the checkTokenEndpointUrl to set */
     public void setOidcUserInfoUri(String checkTokenEndpointUrl) {
-        this.oidcUserInfoUri = StringUtils.hasText(checkTokenEndpointUrl) ? checkTokenEndpointUrl : null;
+        this.oidcUserInfoUri = checkTokenEndpointUrl;
     }
 
     /** @return the logoutUri */
@@ -371,7 +283,7 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
 
     /** @param logoutUri the logoutUri to set */
     public void setOidcLogoutUri(String logoutUri) {
-        this.oidcLogoutUri = StringUtils.hasText(logoutUri) ? logoutUri : null;
+        this.oidcLogoutUri = logoutUri;
     }
 
     /** @return the scopes */
@@ -392,21 +304,6 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     /** @param enableRedirectAuthenticationEntryPoint the enableRedirectAuthenticationEntryPoint to set */
     public void setEnableRedirectAuthenticationEntryPoint(boolean enableRedirectAuthenticationEntryPoint) {
         this.enableRedirectAuthenticationEntryPoint = enableRedirectAuthenticationEntryPoint;
-    }
-
-    /** whether hybrid resource-server mode is enabled (Authorization: Bearer <JWT>) */
-    public boolean isEnableResourceServerMode() {
-        return enableResourceServerMode;
-    }
-
-    /** whether hybrid resource-server mode is enabled (Authorization: Bearer <JWT>) */
-    public boolean getEnableResourceServerMode() {
-        return enableResourceServerMode;
-    }
-
-    /** enableResourceServerMode enable/disable hybrid resource-server mode */
-    public void setEnableResourceServerMode(boolean enableResourceServerMode) {
-        this.enableResourceServerMode = enableResourceServerMode;
     }
 
     public boolean getOidcForceTokenUriHttps() {
@@ -442,7 +339,7 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     }
 
     public void setTokenRolesClaim(String tokenRolesClaim) {
-        this.tokenRolesClaim = StringUtils.hasText(tokenRolesClaim) ? tokenRolesClaim : null;
+        this.tokenRolesClaim = tokenRolesClaim;
     }
 
     public String getOidcResponseMode() {
@@ -450,7 +347,7 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     }
 
     public void setOidcResponseMode(String responseMode) {
-        this.oidcResponseMode = StringUtils.hasText(responseMode) ? responseMode : null;
+        this.oidcResponseMode = responseMode;
     }
 
     public boolean isOidcAuthenticationMethodPostSecret() {
@@ -461,25 +358,12 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
         this.oidcAuthenticationMethodPostSecret = sendClientSecret;
     }
 
-    public boolean isDisableSignatureValidation() {
-        return disableSignatureValidation;
-    }
-
-    public void setDisableSignatureValidation(boolean disableSignatureValidation) {
-        this.disableSignatureValidation = disableSignatureValidation;
-    }
-
-    /**
-     * Returns the post-logout redirect URI, dynamically computed from the current base redirect URI. This ensures
-     * changes to PROXY_BASE_URL are reflected immediately without re-saving the filter.
-     */
     public String getPostLogoutRedirectUri() {
-        String dynamicUri = createPostLogoutRedirectUri();
-        return dynamicUri != null ? dynamicUri : postLogoutRedirectUri;
+        return postLogoutRedirectUri;
     }
 
     public void setPostLogoutRedirectUri(String postLogoutRedirectUri) {
-        this.postLogoutRedirectUri = StringUtils.hasText(postLogoutRedirectUri) ? postLogoutRedirectUri : null;
+        this.postLogoutRedirectUri = postLogoutRedirectUri;
     }
 
     public boolean isOidcUsePKCE() {
@@ -488,6 +372,14 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
 
     public void setOidcUsePKCE(boolean usePKCE) {
         this.oidcUsePKCE = usePKCE;
+    }
+
+    public boolean isOidcEnforceTokenValidation() {
+        return oidcEnforceTokenValidation;
+    }
+
+    public void setOidcEnforceTokenValidation(boolean enforceTokenValidation) {
+        this.oidcEnforceTokenValidation = enforceTokenValidation;
     }
 
     /** @return the googleEnabled */
@@ -590,33 +482,6 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
         msEnabled = pMsEnabled;
     }
 
-    /**
-     * Returns the currently selected (active) provider key, derived from the individual enabled flags. Defaults to
-     * {@link OAuth2Provider#OIDC} if no provider is explicitly enabled.
-     *
-     * @return the property prefix of the active {@link OAuth2Provider}
-     */
-    public String getSelectedProvider() {
-        if (googleEnabled) return OAuth2Provider.GOOGLE.getPropertyPrefix();
-        if (gitHubEnabled) return OAuth2Provider.GITHUB.getPropertyPrefix();
-        if (msEnabled) return OAuth2Provider.MICROSOFT.getPropertyPrefix();
-        // OIDC is the default
-        return OAuth2Provider.OIDC.getPropertyPrefix();
-    }
-
-    /**
-     * Selects the given provider by enabling it and disabling all others. This is the model property backing the
-     * provider selection dropdown in the UI.
-     *
-     * @param provider the {@link OAuth2Provider#getPropertyPrefix() property prefix} of the provider to select
-     */
-    public void setSelectedProvider(String provider) {
-        googleEnabled = OAuth2Provider.GOOGLE.getPropertyPrefix().equals(provider);
-        gitHubEnabled = OAuth2Provider.GITHUB.getPropertyPrefix().equals(provider);
-        msEnabled = OAuth2Provider.MICROSOFT.getPropertyPrefix().equals(provider);
-        oidcEnabled = OAuth2Provider.OIDC.getPropertyPrefix().equals(provider);
-    }
-
     /** @return the msClientId */
     public String getMsClientId() {
         return msClientId;
@@ -647,73 +512,44 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
         msUserNameAttribute = pMsNameAttribute;
     }
 
-    /**
-     * Returns the base redirect URI, dynamically resolved from the current Proxy Base URL. This ensures that changes to
-     * the global Proxy Base URL (or the {@code PROXY_BASE_URL} environment variable) are immediately reflected in the
-     * OIDC redirect URIs without requiring a manual re-save of the filter configuration.
-     *
-     * <p>If {@link #setBaseRedirectUri(String)} was called in this session (e.g. via the admin UI or programmatically),
-     * the explicitly set value is returned instead, honoring the override.
-     *
-     * <p>Falls back to the stored field value when dynamic resolution is not possible (e.g. during deserialization
-     * before GeoServer is fully initialized).
-     *
-     * @return the base redirect URI
-     */
+    /** @return the baseRedirectUri */
     public String getBaseRedirectUri() {
-        if (baseRedirectUriExplicitlySet) {
-            return baseRedirectUri;
-        }
-        String resolved = resolveBaseRedirectUri();
-        return resolved != null ? resolved : baseRedirectUri;
+        return baseRedirectUri;
     }
 
     /** @param pBaseRedirectUri the baseRedirectUri to set */
     public void setBaseRedirectUri(String pBaseRedirectUri) {
         baseRedirectUri = pBaseRedirectUri;
-        baseRedirectUriExplicitlySet = true;
     }
 
-    /** @return the googleRedirectUri, dynamically computed unless explicitly set */
+    /** @return the googleRedirectUri */
     public String getGoogleRedirectUri() {
-        if (googleRedirectUriExplicitlySet) {
-            return googleRedirectUri;
-        }
-        return redirectUri(REG_ID_GOOGLE);
+        return googleRedirectUri;
     }
 
     /** @param pGoogleRedirectUri the googleRedirectUri to set */
     public void setGoogleRedirectUri(String pGoogleRedirectUri) {
         googleRedirectUri = pGoogleRedirectUri;
-        googleRedirectUriExplicitlySet = true;
     }
 
-    /** @return the gitHubRedirectUri, dynamically computed unless explicitly set */
+    /** @return the gitHubRedirectUri */
     public String getGitHubRedirectUri() {
-        if (gitHubRedirectUriExplicitlySet) {
-            return gitHubRedirectUri;
-        }
-        return redirectUri(REG_ID_GIT_HUB);
+        return gitHubRedirectUri;
     }
 
     /** @param pGitHubRedirectUri the gitHubRedirectUri to set */
     public void setGitHubRedirectUri(String pGitHubRedirectUri) {
         gitHubRedirectUri = pGitHubRedirectUri;
-        gitHubRedirectUriExplicitlySet = true;
     }
 
-    /** @return the msRedirectUri, dynamically computed unless explicitly set */
+    /** @return the msRedirectUri */
     public String getMsRedirectUri() {
-        if (msRedirectUriExplicitlySet) {
-            return msRedirectUri;
-        }
-        return redirectUri(REG_ID_MICROSOFT);
+        return msRedirectUri;
     }
 
     /** @param pMsRedirectUri the msRedirectUri to set */
     public void setMsRedirectUri(String pMsRedirectUri) {
         msRedirectUri = pMsRedirectUri;
-        msRedirectUriExplicitlySet = true;
     }
 
     /** @return the msScopes */
@@ -733,7 +569,7 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
 
     /** @param pOidcDiscoveryURL the oidcDiscoveryURL to set */
     public void setOidcDiscoveryUri(String pOidcDiscoveryURL) {
-        oidcDiscoveryUri = StringUtils.hasText(pOidcDiscoveryURL) ? pOidcDiscoveryURL : null;
+        oidcDiscoveryUri = pOidcDiscoveryURL;
     }
 
     /** @return the allowUnSecureLogging */
@@ -753,15 +589,7 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
 
     /** @param pJwsAlgorithmName the jwsAlgorithmName to set */
     public void setOidcJwsAlgorithmName(String pJwsAlgorithmName) {
-        oidcJwsAlgorithmName = StringUtils.hasText(pJwsAlgorithmName) ? pJwsAlgorithmName : null;
-    }
-
-    public String getOidcIntrospectionUrl() {
-        return oidcIntrospectionUrl;
-    }
-
-    public void setOidcIntrospectionUrl(String oidcIntrospectionUrl) {
-        this.oidcIntrospectionUrl = StringUtils.hasText(oidcIntrospectionUrl) ? oidcIntrospectionUrl : null;
+        oidcJwsAlgorithmName = pJwsAlgorithmName;
     }
 
     public String getRoleConverterString() {
@@ -769,7 +597,7 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     }
 
     public void setRoleConverterString(String roleConverterString) {
-        this.roleConverterString = StringUtils.hasText(roleConverterString) ? roleConverterString : null;
+        this.roleConverterString = roleConverterString;
     }
 
     public boolean isOnlyExternalListedRoles() {
@@ -801,34 +629,6 @@ public class GeoServerOAuth2LoginFilterConfig extends PreAuthenticatedUserNameFi
     }
 
     public void setMsGraphAppRoleAssignmentsObjectId(String msGraphAppRoleAssignmentsObjectId) {
-        this.msGraphAppRoleAssignmentsObjectId =
-                StringUtils.hasText(msGraphAppRoleAssignmentsObjectId) ? msGraphAppRoleAssignmentsObjectId : null;
-    }
-    /**
-     * When enabled, the resource server (Bearer JWT) validator will require the configured audience claim to match the
-     * expected value.
-     */
-    public boolean isValidateTokenAudience() {
-        return validateTokenAudience;
-    }
-
-    public void setValidateTokenAudience(boolean validateTokenAudience) {
-        this.validateTokenAudience = validateTokenAudience;
-    }
-
-    public String getValidateTokenAudienceClaimName() {
-        return validateTokenAudienceClaimName;
-    }
-
-    public void setValidateTokenAudienceClaimName(String validateTokenAudienceClaimName) {
-        this.validateTokenAudienceClaimName = validateTokenAudienceClaimName;
-    }
-
-    public String getValidateTokenAudienceClaimValue() {
-        return validateTokenAudienceClaimValue;
-    }
-
-    public void setValidateTokenAudienceClaimValue(String validateTokenAudienceClaimValue) {
-        this.validateTokenAudienceClaimValue = validateTokenAudienceClaimValue;
+        this.msGraphAppRoleAssignmentsObjectId = msGraphAppRoleAssignmentsObjectId;
     }
 }

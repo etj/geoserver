@@ -4,8 +4,11 @@
  */
 package org.geoserver.featurestemplating.builders.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.logging.Logger;
 import org.geoserver.featurestemplating.builders.JSONFieldSupport;
 import org.geoserver.featurestemplating.builders.TemplateBuilder;
@@ -18,8 +21,6 @@ import org.geotools.api.feature.Attribute;
 import org.geotools.api.feature.Feature;
 import org.geotools.util.logging.Logging;
 import org.xml.sax.helpers.NamespaceSupport;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ObjectNode;
 
 /**
  * A builder able to evaluate an $includeFlat directive. The json property will be merged with the including node to
@@ -97,7 +98,9 @@ public class DynamicIncludeFlatBuilder extends DynamicJsonBuilder {
      */
     protected void iterateAndWrite(ObjectNode objectNode, TemplateOutputWriter writer, TemplateBuilderContext context)
             throws IOException {
-        for (String name : objectNode.propertyNames()) {
+        Iterator<String> names = objectNode.fieldNames();
+        while (names != null && names.hasNext()) {
+            String name = names.next();
             writeValue(name, writer, objectNode.findValue(name), context);
         }
     }

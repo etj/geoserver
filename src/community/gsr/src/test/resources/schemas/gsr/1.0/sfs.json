@@ -1,5 +1,5 @@
 {
-   "$schema":"https://json-schema.org/draft/2020-12/schema",
+   "$schema":"http://json-schema.org/draft-03/schema#",
 
     "title":"simple fill symbol",
     "type":"object",
@@ -10,19 +10,21 @@
         "type":{
             "title":"marker type",
             "type":"string",
+            "required":true,
             "enum":["esriSFS"]
         },
         "style":{
             "title":"marker style",
             "description":"value SHOULD be SFSBackwardDiagonal, SFSCross, SFSDiagonalCross, SFSForwardDiagonal, SFSHorizontal, SFSNull, SFSSolid, SFSVertical",
-            "type":"string"
+            "type":"string",
+            "required":true
         },
         "color":{
-            "$ref":"color.json"
+            "$ref":"color.json",
+            "required":true
         },
         "outline":{
             "$ref":"sls.json"
         }
-    },
-    "required":["type","style","color"]
+    }
 }

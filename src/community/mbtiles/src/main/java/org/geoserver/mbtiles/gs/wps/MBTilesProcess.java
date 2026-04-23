@@ -26,6 +26,7 @@ import org.geoserver.wms.MapLayerInfo;
 import org.geoserver.wps.gs.GeoServerProcess;
 import org.geoserver.wps.resource.WPSResourceManager;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
+import org.geotools.api.style.Style;
 import org.geotools.api.util.ProgressListener;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.mbtiles.MBTilesFile;
@@ -138,7 +139,8 @@ public class MBTilesProcess implements GeoServerProcess {
         File file = resources.getOutputResource(null, outputResourceName).file();
 
         // Create the MBTile file
-        try (MBTilesFile mbtile = new MBTilesFile(file, true)) {
+        MBTilesFile mbtile = new MBTilesFile(file, true);
+        try {
             // Initialize the MBTile file in order to avoid exceptions when accessing the geoPackage
             // file
             mbtile.init();
@@ -147,7 +149,7 @@ public class MBTilesProcess implements GeoServerProcess {
             GetMapRequest request = new GetMapRequest();
 
             // Create the layers map for the request
-            ArrayList<MapLayerInfo> layers = new ArrayList<>();
+            ArrayList<MapLayerInfo> layers = new ArrayList<MapLayerInfo>();
 
             // Get the layers from the catalog
             for (String layername : layerz) {
@@ -186,7 +188,6 @@ public class MBTilesProcess implements GeoServerProcess {
                     }
 
                     request.setBbox(bbox);
-                    boundingbox = bbox;
                 } catch (Exception e) {
                     String msg = "Must specify bbox, unable to derive from requested layers";
                     throw new RuntimeException(msg, e);
@@ -223,7 +224,7 @@ public class MBTilesProcess implements GeoServerProcess {
             } else if (styleBody != null && !styleBody.isEmpty()) {
                 request.setStyleBody(styleBody);
             } else {
-                request.setStyles(new ArrayList<>());
+                request.setStyles(new ArrayList<Style>());
                 if (styleNames != null && !styleNames.isEmpty()) {
                     for (String styleName : styleNames) {
                         StyleInfo info = catalog.getStyleByName(styleName);
@@ -242,7 +243,7 @@ public class MBTilesProcess implements GeoServerProcess {
             }
             // Set the format of the mbtiles images
             request.setFormat("none");
-            Map<String, Object> formatOptions = new HashMap<>();
+            Map formatOptions = new HashMap();
             formatOptions.put("format", format);
             // Configure zoom levels if present
             if (minZoom != null) {
@@ -275,6 +276,17 @@ public class MBTilesProcess implements GeoServerProcess {
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
             throw new ProcessException(e);
+        } finally {
+            // Close the connection
+            if (mbtile != null) {
+                try {
+                    mbtile.close();
+                } catch (Exception e) {
+                    if (LOGGER.isLoggable(Level.SEVERE)) {
+                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    }
+                }
+            }
         }
 
         return new URL(resources.getOutputResourceUrl(outputResourceName, "application/x-mbtiles"));

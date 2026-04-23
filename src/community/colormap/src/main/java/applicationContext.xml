@@ -7,8 +7,11 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     
-    <bean id="dynamicColorMap" class="org.geotools.process.raster.DynamicColorMapProcess" />
+    <bean id="dynamicColorMap" class="org.geotools.process.raster.DynamicColorMapProcess">
+    </bean>
 
     <!--  GetLegendGraphics callback -->
-    <bean id="dynamicGetLegendGraphicCallback" class="org.geoserver.wms.dynamic.legendgraphic.DynamicGetLegendGraphicDispatcherCallback" />
+    <bean id="dynamicGetLegendGraphicCallback" class="org.geoserver.wms.dynamic.legendgraphic.DynamicGetLegendGraphicDispatcherCallback">
+        <constructor-arg index="0" ref="catalog"/>
+    </bean>
 </beans>

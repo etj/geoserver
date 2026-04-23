@@ -24,11 +24,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.xml.bind.DataBindingException;
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBException;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +37,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.xml.bind.DataBindingException;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import org.apache.commons.io.FileUtils;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.custommonkey.xmlunit.XpathEngine;
@@ -70,13 +70,12 @@ import org.geoserver.mapml.xml.Feature;
 import org.geoserver.mapml.xml.Input;
 import org.geoserver.mapml.xml.InputType;
 import org.geoserver.mapml.xml.Link;
-import org.geoserver.mapml.xml.MapMLElement;
 import org.geoserver.mapml.xml.Mapml;
 import org.geoserver.mapml.xml.ProjType;
 import org.geoserver.mapml.xml.RelType;
-import org.geoserver.ows.kvp.BBoxKvpParser;
 import org.geoserver.ows.util.KvpUtils;
 import org.geoserver.platform.resource.Resource;
+import org.geoserver.wfs.kvp.BBoxKvpParser;
 import org.geoserver.wms.WMSInfo;
 import org.geotools.api.referencing.FactoryException;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
@@ -776,7 +775,7 @@ public class MapMLWMSTest extends MapMLTestSupport {
     }
 
     @SuppressWarnings("unchecked") // filtering by clazz
-    private <T> List<T> getTypeFromInputOrDataListOrLink(List<MapMLElement> inputOrDatalistOrLink, Class<T> clazz) {
+    private <T> List<T> getTypeFromInputOrDataListOrLink(List<Object> inputOrDatalistOrLink, Class<T> clazz) {
         return (List<T>) inputOrDatalistOrLink.stream()
                 .filter(o -> clazz.isInstance(o))
                 .collect(java.util.stream.Collectors.toList());
@@ -2061,8 +2060,8 @@ public class MapMLWMSTest extends MapMLTestSupport {
         String projType = e.getUnits();
         assertEquals(ProjType.OSMTILE.value(), projType);
 
-        List<MapMLElement> lo = e.getInputOrDatalistOrLink();
-        for (MapMLElement o : lo) {
+        List<Object> lo = e.getInputOrDatalistOrLink();
+        for (Object o : lo) {
             if (o instanceof Link link) {
                 assertNull("map-extent/map-link@href unexpected.", link.getHref());
                 assertNotNull("map-extent/map-link@href must not be null/empty", link.getTref());

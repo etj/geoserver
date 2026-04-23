@@ -32,38 +32,6 @@ public abstract class ComponentInfo<C extends Component> implements Serializable
     /** Controls access to the component */
     ComponentAuthorizer authorizer = ComponentAuthorizer.ALLOW;
 
-    /**
-     * Comma-separated list of page parameter names to carry forward in navigation links (e.g. {@code "workspace"},
-     * {@code "workspace,layer"}, {@code "workspace,group"}). The special value {@code "all"} includes every available
-     * context parameter ({@code workspace}, {@code layer}, {@code name}, {@code group}).
-     *
-     * <p>Defaults to {@code null} (no context parameters forwarded). Must be explicitly set by extension-point beans
-     * that want context-aware navigation.
-     */
-    String contextParams = null;
-
-    public String getContextParams() {
-        return contextParams;
-    }
-
-    public void setContextParams(String contextParams) {
-        this.contextParams = contextParams;
-    }
-
-    /**
-     * Returns {@code true} if the given page parameter name should be forwarded in navigation links, as determined by
-     * the {@link #contextParams} setting.
-     */
-    public boolean includesContextParam(String paramName) {
-        if (contextParams == null || contextParams.isBlank()) return false;
-        String trimmed = contextParams.trim();
-        if ("all".equalsIgnoreCase(trimmed)) return true;
-        for (String p : trimmed.split(",")) {
-            if (paramName.equalsIgnoreCase(p.trim())) return true;
-        }
-        return false;
-    }
-
     /** The id of the component. */
     public String getId() {
         return id;
@@ -119,18 +87,5 @@ public abstract class ComponentInfo<C extends Component> implements Serializable
     /** Sets the authorizer that controls access to the component. */
     public void setAuthorizer(ComponentAuthorizer authorizer) {
         this.authorizer = authorizer;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder(getClass().getSimpleName());
-        sb.append("{");
-        sb.append("id='").append(id).append('\'');
-        sb.append(", title='").append(title).append('\'');
-        sb.append(", description='").append(description).append('\'');
-        sb.append(", componentClass=").append(componentClass);
-        sb.append(", authorizer=").append(authorizer);
-        sb.append('}');
-        return sb.toString();
     }
 }

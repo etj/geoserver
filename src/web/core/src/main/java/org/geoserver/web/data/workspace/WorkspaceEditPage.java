@@ -6,7 +6,6 @@
 package org.geoserver.web.data.workspace;
 
 import static org.geoserver.web.services.BaseServiceAdminPage.WORKSPACE_ADMIN_SERVICE_ACCESS;
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -24,7 +23,6 @@ import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
 import org.apache.wicket.extensions.markup.html.tabs.TabbedPanel;
-import org.apache.wicket.markup.html.WebComponent;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -33,7 +31,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponentPanel;
 import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.image.ContextImage;
+import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -60,6 +58,7 @@ import org.geoserver.ows.util.OwsUtils;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.web.ComponentAuthorizer;
 import org.geoserver.web.GeoServerApplication;
+import org.geoserver.web.GeoServerBasePage;
 import org.geoserver.web.GeoServerSecuredPage;
 import org.geoserver.web.GeoserverAjaxSubmitLink;
 import org.geoserver.web.admin.ContactPanel;
@@ -73,7 +72,6 @@ import org.geoserver.web.services.BaseServiceAdminPage;
 import org.geoserver.web.services.ServiceMenuPageInfo;
 import org.geoserver.web.wicket.CachingImage;
 import org.geoserver.web.wicket.GeoServerDialog;
-import org.geoserver.web.wicket.GsIcon;
 import org.geoserver.web.wicket.HelpLink;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.URIValidator;
@@ -98,12 +96,9 @@ public class WorkspaceEditPage extends GeoServerSecuredPage {
     GeoServerDialog dialog;
     TabbedPanel<ITab> tabbedPanel;
 
-    /** Uses a "name" or "workspace" parameter to locate the workspace */
+    /** Uses a "name" parameter to locate the workspace */
     public WorkspaceEditPage(PageParameters parameters) {
-        String wsName = parameters.get("name").toString(null);
-        if (wsName == null || wsName.isEmpty()) {
-            wsName = parameters.get("workspace").toString(null);
-        }
+        String wsName = parameters.get("name").toString();
         WorkspaceInfo wsi = getCatalog().getWorkspaceByName(wsName);
 
         if (wsi == null) {
@@ -194,15 +189,7 @@ public class WorkspaceEditPage extends GeoServerSecuredPage {
         form.add(tabbedPanel);
         form.add(submitLink());
         form.add(applyLink());
-        form.add(new Link<Void>("cancel") {
-            @Serial
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onClick() {
-                doReturn(WorkspacePage.class);
-            }
-        });
+        form.add(new BookmarkablePageLink<>("cancel", WorkspacePage.class));
         add(form);
     }
 
@@ -379,19 +366,6 @@ public class WorkspaceEditPage extends GeoServerSecuredPage {
 
     class WsEditInfoPanel extends Panel {
 
-        private static final boolean isCssEmpty = IsWicketCssFileEmpty(WorkspaceEditPage.WsEditInfoPanel.class);
-
-        @Override
-        public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-            super.renderHead(response);
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
-        }
-
         @Serial
         private static final long serialVersionUID = -8487041433764733692L;
 
@@ -434,19 +408,6 @@ public class WorkspaceEditPage extends GeoServerSecuredPage {
     }
 
     class SettingsPanel extends FormComponentPanel<Serializable> {
-
-        private static final boolean isCssEmpty = IsWicketCssFileEmpty(WorkspaceEditPage.SettingsPanel.class);
-
-        @Override
-        public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-            super.renderHead(response);
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
-        }
 
         @Serial
         private static final long serialVersionUID = -1580928887379954134L;
@@ -610,19 +571,6 @@ public class WorkspaceEditPage extends GeoServerSecuredPage {
 
     class ServicesPanel extends FormComponentPanel<Serializable> {
 
-        private static final boolean isCssEmpty = IsWicketCssFileEmpty(WorkspaceEditPage.ServicesPanel.class);
-
-        @Override
-        public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
-            super.renderHead(response);
-            // if the panel-specific CSS file contains actual css then have the browser load the css
-            if (!isCssEmpty) {
-                response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                        new org.apache.wicket.request.resource.PackageResourceReference(
-                                getClass(), getClass().getSimpleName() + ".css")));
-            }
-        }
-
         @Serial
         private static final long serialVersionUID = 7375904545106343626L;
 
@@ -672,20 +620,16 @@ public class WorkspaceEditPage extends GeoServerSecuredPage {
                             "title", new StringResourceModel(info.getDescriptionKey(), null, null)));
                     link.add(new Label("link.label", new StringResourceModel(info.getTitleKey(), null, null)));
 
-                    WebComponent image;
-                    String iconValue = info.getIcon();
-                    if (iconValue != null && !iconValue.isEmpty()) {
-                        if (iconValue.startsWith("gs-icon")) {
-                            image = new GsIcon("link.icon", iconValue);
-                        } else if (iconValue.startsWith("/")) {
-                            image = new ContextImage("link.icon", iconValue.substring(1));
-                        } else {
-                            image = new CachingImage(
-                                    "link.icon", new PackageResourceReference(info.getComponentClass(), iconValue));
-                        }
+                    CachingImage image;
+                    if (info.getIcon() != null) {
+                        image = new CachingImage(
+                                "link.icon", new PackageResourceReference(info.getComponentClass(), info.getIcon()));
                     } else {
-                        image = new GsIcon("link.icon", "gs-icon-wrench");
+                        image = new CachingImage(
+                                "link.icon",
+                                new PackageResourceReference(GeoServerBasePage.class, "img/icons/silk/wrench.png"));
                     }
+                    image.add(new AttributeModifier("alt", new ParamResourceModel(info.getTitleKey(), null)));
                     link.add(image);
                     item.add(link);
                     item.setEnabled(isEnabled);

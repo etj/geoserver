@@ -23,10 +23,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
 import org.custommonkey.xmlunit.XpathEngine;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geotools.api.data.DataAccess;
@@ -37,15 +43,8 @@ import org.geotools.feature.NameImpl;
 import org.geotools.jdbc.JDBCFeatureStore;
 import org.junit.Before;
 import org.junit.Test;
-import org.kordamp.json.JSONArray;
-import org.kordamp.json.JSONException;
-import org.kordamp.json.JSONObject;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.w3c.dom.Document;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.StreamWriteFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 /** Contains tests related with JDBC multiple values support. */
 public final class NormalizedMultiValuesTest extends AbstractAppSchemaTestSupport {
@@ -292,12 +291,11 @@ public final class NormalizedMultiValuesTest extends AbstractAppSchemaTestSuppor
     }
 
     private void validateJsonOutput(String jsonString) {
-        ObjectMapper objectMapper = JsonMapper.builder()
-                .enable(StreamWriteFeature.STRICT_DUPLICATE_DETECTION)
-                .build();
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
         try {
             objectMapper.readTree(jsonString);
-        } catch (JacksonException e) {
+        } catch (JsonProcessingException e) {
             throw new RuntimeException("Json format is not valid", e);
         }
     }

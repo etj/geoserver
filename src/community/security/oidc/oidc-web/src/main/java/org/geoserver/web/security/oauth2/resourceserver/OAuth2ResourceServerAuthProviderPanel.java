@@ -4,7 +4,6 @@
  */
 package org.geoserver.web.security.oauth2.resourceserver;
 
-import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +29,6 @@ public class OAuth2ResourceServerAuthProviderPanel
         extends PreAuthenticatedUserNameFilterPanel<GeoServerOAuth2ResourceServerFilterConfig> {
 
     /** serialVersionUID */
-    @Serial
     private static final long serialVersionUID = -3025321797363970333L;
 
     private GeoServerDialog dialog;

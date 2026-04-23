@@ -6,20 +6,8 @@ package org.geoserver.web.demo;
 
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.model.StringResourceModel;
-import org.geoserver.platform.GeoServerExtensions;
 
 public class KMLFormatLink extends CommonFormatLink {
-
-    boolean kmlAvailable = false;
-
-    public KMLFormatLink() {
-        super();
-        try {
-            kmlAvailable = GeoServerExtensions.bean("KMLEncoder") != null;
-        } catch (Exception e) {
-            // KMLEncoder bean not found, KML module moved into extensions
-        }
-    }
 
     @Override
     public ExternalLink getFormatLink(PreviewLayer layer) {
@@ -27,7 +15,7 @@ public class KMLFormatLink extends CommonFormatLink {
                 this.getComponentId(),
                 layer.getKmlLink(),
                 (new StringResourceModel(this.getTitleKey(), null, null)).getString());
-        kmlLink.setVisible(layer.hasServiceSupport("WMS") && kmlAvailable);
+        kmlLink.setVisible(layer.hasServiceSupport("WMS"));
         return kmlLink;
     }
 }
